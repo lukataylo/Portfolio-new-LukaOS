@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(npm install)",
+      "Bash(wc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: LukaOS portfolio\n\n- macOS-style desktop environment with draggable windows\n- Desktop icons positioned on right side\n- Whimsical File/Edit/View menus with fun interactions\n- Social profile previews for GitHub, Twitter, LinkedIn\n- Blog reader, presentation viewer, and sitemap\n- Light/dark theme toggle\n- Context menu with sorting options\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
