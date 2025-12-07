@@ -168,6 +168,12 @@ const App: React.FC = () => {
   };
 
   const handleOpenItem = (item: DesktopItem, sourceRect?: WindowRect) => {
+    // Handle external links - open directly in new tab
+    if (item.type === FileType.EXTERNAL_LINK && item.url) {
+      window.open(item.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     // Logic to find if window already exists
     let targetId = item.id;
     if (item.type === FileType.APP && item.appId) {

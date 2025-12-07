@@ -1,17 +1,18 @@
-import { 
-  FileText, 
-  Lock, 
-  Globe, 
-  Github, 
-  Twitter, 
-  Linkedin, 
-  Cpu, 
+import {
+  FileText,
+  Lock,
+  Globe,
+  Github,
+  Twitter,
+  Linkedin,
+  Cpu,
   Terminal,
   Camera,
   Music,
   Briefcase,
   BookOpen,
-  Map as MapIcon
+  Map as MapIcon,
+  Mail
 } from 'lucide-react';
 import { DesktopItem, FileType, BlogPost } from './types';
 
@@ -232,7 +233,7 @@ export const DOCK_ITEMS: DesktopItem[] = [
     id: 'github',
     title: 'GitHub',
     icon: Github,
-    type: FileType.LINK,
+    type: FileType.EXTERNAL_LINK,
     url: 'https://github.com/lukataylo',
     seoDescription: 'GitHub profile of Luka Dadiani.'
   },
@@ -240,7 +241,7 @@ export const DOCK_ITEMS: DesktopItem[] = [
     id: 'twitter',
     title: 'Twitter',
     icon: Twitter,
-    type: FileType.LINK,
+    type: FileType.EXTERNAL_LINK,
     url: 'https://x.com/lukadadiani',
     seoDescription: 'Social media profile on X / Twitter.'
   },
@@ -248,15 +249,16 @@ export const DOCK_ITEMS: DesktopItem[] = [
     id: 'linkedin',
     title: 'LinkedIn',
     icon: Linkedin,
-    type: FileType.LINK,
+    type: FileType.EXTERNAL_LINK,
     url: 'https://www.linkedin.com/in/luka-dadiani-3293a915',
     seoDescription: 'LinkedIn Professional Profile.'
   },
   {
-    id: 'spotify',
-    title: 'Music',
-    icon: Music,
-    type: FileType.LINK,
-    url: 'https://spotify.com'
+    id: 'email',
+    title: 'Email',
+    icon: Mail,
+    type: FileType.EXTERNAL_LINK,
+    url: 'mailto:luka.taylor@gmail.com',
+    seoDescription: 'Send an email to Luka Dadiani.'
   }
 ];

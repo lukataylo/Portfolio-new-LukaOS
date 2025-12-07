@@ -4,6 +4,7 @@ export enum FileType {
   PRESENTATION = 'PRESENTATION',
   PROTECTED = 'PROTECTED',
   LINK = 'LINK',
+  EXTERNAL_LINK = 'EXTERNAL_LINK', // Opens directly in new tab
   APP = 'APP', // Internal apps like Chat
   BLOG = 'BLOG',
   SITEMAP = 'SITEMAP'
