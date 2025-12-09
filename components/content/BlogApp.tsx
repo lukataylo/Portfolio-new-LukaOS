@@ -1,193 +1,270 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BlogPost } from '../../types';
-import { ArrowLeft, Clock, Calendar, Hash, Heart, Share2, Bookmark } from 'lucide-react';
+import { Search, MoreHorizontal, Plus, Hash, Clock, Pencil } from 'lucide-react';
 
 interface BlogAppProps {
   posts: BlogPost[];
 }
 
+interface EditablePost extends BlogPost {
+  editedTitle?: string;
+  editedContent?: string;
+}
+
 export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
-  const [activePostId, setActivePostId] = useState<string | null>(null);
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [activePostId, setActivePostId] = useState<string | null>(posts[0]?.id || null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [editablePosts, setEditablePosts] = useState<Record<string, EditablePost>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
-  // Simple deep linking listener for hash changes
+  // Initialize editable posts from original posts
   useEffect(() => {
-    const handleHashChange = () => {
-        const hash = window.location.hash;
-        if (hash.startsWith('#/blog/')) {
-            const postId = hash.split('#/blog/')[1];
-            if (posts.some(p => p.id === postId)) {
-                setActivePostId(postId);
-            }
-        } else if (hash === '#/blog') {
-            setActivePostId(null);
-        }
-    };
-
-    handleHashChange(); // Run on mount
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    const initial: Record<string, EditablePost> = {};
+    posts.forEach(post => {
+      initial[post.id] = { ...post };
+    });
+    setEditablePosts(initial);
   }, [posts]);
 
-  const activePost = posts.find(p => p.id === activePostId);
+  const activePost = activePostId ? editablePosts[activePostId] : null;
 
-  const toggleLike = (id: string, e: React.MouseEvent) => {
-      e.stopPropagation();
-      setLikedPosts(prev => 
-        prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-      );
-  };
+  const filteredPosts = posts.filter(post =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const handlePostClick = (id: string) => {
-      window.location.hash = `#/blog/${id}`;
-      setActivePostId(id);
+    setActivePostId(id);
+    setIsEditing(false);
   };
 
-  const handleBack = () => {
-      window.location.hash = '#/blog';
-      setActivePostId(null);
+  const handleContentChange = () => {
+    if (activePostId && contentRef.current) {
+      setEditablePosts(prev => ({
+        ...prev,
+        [activePostId]: {
+          ...prev[activePostId],
+          editedContent: contentRef.current?.innerHTML || prev[activePostId].content
+        }
+      }));
+    }
   };
 
-  if (activePost) {
-    // --- Detail View ---
-    return (
-      <div className="h-full bg-white dark:bg-zinc-950 overflow-y-auto transition-colors">
-        {/* Navigation Bar */}
-        <nav className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800 px-6 py-4 flex justify-between items-center">
-             <button 
-                onClick={handleBack}
-                className="flex items-center gap-2 text-zinc-500 hover:text-black dark:hover:text-white transition-colors text-sm font-mono uppercase tracking-wider"
-             >
-                <ArrowLeft size={16} /> Back
-             </button>
-             <div className="flex gap-4">
-                 <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" aria-label="Share"><Share2 size={18}/></button>
-                 <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" aria-label="Bookmark"><Bookmark size={18}/></button>
-             </div>
-        </nav>
+  const handleTitleChange = () => {
+    if (activePostId && titleRef.current) {
+      setEditablePosts(prev => ({
+        ...prev,
+        [activePostId]: {
+          ...prev[activePostId],
+          editedTitle: titleRef.current?.textContent || prev[activePostId].title
+        }
+      }));
+    }
+  };
 
-        {/* Article Content */}
-        <article className="max-w-2xl mx-auto px-6 py-12 animate-in fade-in slide-in-from-bottom-8 duration-500">
-             {/* Header */}
-             <header className="mb-8">
-                 <div className="flex flex-wrap gap-2 mb-6">
-                    {activePost.tags.map(tag => (
-                        <span key={tag} className="bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 px-3 py-1 rounded-full text-xs font-mono">
-                            #{tag}
-                        </span>
-                    ))}
-                 </div>
-                 <h1 className="text-3xl md:text-5xl font-bold text-black dark:text-white leading-tight mb-6 font-sans tracking-tight">
-                    {activePost.title}
-                 </h1>
-                 
-                 <div className="flex items-center gap-4 border-l-2 border-red-500 pl-4">
-                     <div>
-                         <p className="text-sm font-bold text-black dark:text-white" rel="author">{activePost.author}</p>
-                         <div className="flex items-center gap-4 text-xs text-zinc-500 mt-1 font-mono">
-                             <time className="flex items-center gap-1" dateTime={activePost.date}><Calendar size={12}/> {activePost.date}</time>
-                             <span className="flex items-center gap-1"><Clock size={12}/> {activePost.readTime}</span>
-                         </div>
-                     </div>
-                 </div>
-             </header>
+  const getDisplayContent = (post: EditablePost) => {
+    return post.editedContent || post.content;
+  };
 
-             {activePost.image && (
-                 <figure className="w-full h-64 md:h-80 overflow-hidden rounded-xl mb-12 shadow-sm">
-                     <img src={activePost.image} alt={activePost.title} className="w-full h-full object-cover" />
-                 </figure>
-             )}
+  const getDisplayTitle = (post: EditablePost) => {
+    return post.editedTitle || post.title;
+  };
 
-             {/* Body Text */}
-             <div 
-                className="prose dark:prose-invert prose-lg max-w-none font-mono text-zinc-800 dark:text-zinc-300 leading-loose"
-                dangerouslySetInnerHTML={{ __html: activePost.content }} 
-             />
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-             {/* Footer Interaction */}
-             <div className="mt-16 pt-8 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                 <div className="flex items-center gap-2">
-                     <button 
-                        onClick={(e) => toggleLike(activePost.id, e)}
-                        className={`
-                            flex items-center gap-2 px-4 py-2 rounded-full border transition-all
-                            ${likedPosts.includes(activePost.id) 
-                                ? 'border-red-500 text-red-500 bg-red-50 dark:bg-red-900/10' 
-                                : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-zinc-400'
-                            }
-                        `}
-                     >
-                         <Heart size={18} fill={likedPosts.includes(activePost.id) ? "currentColor" : "none"} />
-                         <span className="text-sm font-bold">{likedPosts.includes(activePost.id) ? 24 : 23}</span>
-                     </button>
-                 </div>
-                 <div className="text-xs text-zinc-400 font-mono uppercase tracking-widest">
-                     End of Transmission
-                 </div>
-             </div>
-        </article>
-      </div>
-    );
-  }
+    if (diffDays < 7) {
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    }
+    return dateStr;
+  };
 
-  // --- List View ---
   return (
-    <div className="h-full bg-zinc-50 dark:bg-zinc-950 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        {/* Header */}
-        <header className="flex items-center justify-between mb-16 border-b border-black dark:border-white pb-4">
-             <h1 className="text-4xl font-bold tracking-tighter text-black dark:text-white">
-                Engineering<span className="text-red-600">.</span>Log
-             </h1>
-             <div className="hidden md:flex gap-6 text-xs font-mono uppercase tracking-widest text-zinc-500">
-                 <span>Archive</span>
-                 <span>RSS</span>
-                 <span>Subscribe</span>
-             </div>
-        </header>
-
-        {/* Post Grid */}
-        <div className="space-y-4">
-             {posts.map((post) => (
-                 <article 
-                    key={post.id}
-                    onClick={() => handlePostClick(post.id)}
-                    className="group relative bg-white dark:bg-zinc-900 p-8 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white transition-all cursor-pointer shadow-sm hover:shadow-md"
-                 >
-                    {/* Hover Indicator */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-black dark:bg-white scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300 rounded-l-lg" />
-                    
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="flex-1">
-                             <div className="flex items-center gap-3 text-xs font-mono text-zinc-500 mb-3">
-                                 <span className="text-red-600 font-bold uppercase">{post.tags[0]}</span>
-                                 <span>•</span>
-                                 <time dateTime={post.date}>{post.date}</time>
-                             </div>
-                             
-                             <h2 className="text-2xl font-bold text-black dark:text-white mb-3 group-hover:text-red-600 transition-colors">
-                                 {post.title}
-                             </h2>
-                             
-                             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 line-clamp-2 font-mono text-sm">
-                                 {post.excerpt}
-                             </p>
-                             
-                             <div className="flex items-center justify-between mt-6">
-                                 <span className="text-xs text-zinc-400 font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">
-                                     {post.readTime}
-                                 </span>
-                                 <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <span className="text-xs font-bold uppercase tracking-wider text-black dark:text-white flex items-center gap-1">
-                                          Read Article <ArrowLeft className="rotate-180" size={12}/>
-                                      </span>
-                                 </div>
-                             </div>
-                        </div>
-                    </div>
-                 </article>
-             ))}
+    <div className="h-full flex bg-[#f5f5f7] dark:bg-[#1c1c1e]">
+      {/* Sidebar */}
+      <div className="w-72 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-[#f5f5f7] dark:bg-[#2c2c2e]">
+        {/* Sidebar Header */}
+        <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
+          {/* Search */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-zinc-200/60 dark:bg-zinc-700/50 rounded-lg pl-9 pr-3 py-2 text-sm text-black dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+            />
+          </div>
         </div>
+
+        {/* Folders/Categories */}
+        <div className="px-3 py-2 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Notes</span>
+            <button className="text-yellow-600 hover:text-yellow-500">
+              <Plus size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Notes List */}
+        <div className="flex-1 overflow-y-auto">
+          {filteredPosts.map((post) => {
+            const displayPost = editablePosts[post.id] || post;
+            const isActive = activePostId === post.id;
+            const hasEdits = displayPost.editedTitle || displayPost.editedContent;
+
+            return (
+              <div
+                key={post.id}
+                onClick={() => handlePostClick(post.id)}
+                className={`
+                  px-4 py-3 cursor-pointer border-b border-zinc-100 dark:border-zinc-800/50
+                  transition-colors
+                  ${isActive
+                    ? 'bg-yellow-500 text-black'
+                    : 'hover:bg-zinc-200/50 dark:hover:bg-zinc-700/30'
+                  }
+                `}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold text-sm truncate ${isActive ? 'text-black' : 'text-black dark:text-white'}`}>
+                      {getDisplayTitle(displayPost)}
+                      {hasEdits && <span className="text-yellow-600 ml-1">•</span>}
+                    </h3>
+                    <div className={`flex items-center gap-2 mt-1 ${isActive ? 'text-black/70' : 'text-zinc-500'}`}>
+                      <span className="text-[11px]">{formatDate(post.date)}</span>
+                      <span className="text-[11px] truncate">{post.excerpt.slice(0, 30)}...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Sidebar Footer */}
+        <div className="p-3 border-t border-zinc-200 dark:border-zinc-800">
+          <span className="text-[11px] text-zinc-500">{posts.length} Notes</span>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col bg-white dark:bg-[#1c1c1e]">
+        {activePost ? (
+          <>
+            {/* Content Header */}
+            <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-[#1c1c1e]">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <Clock size={12} />
+                  <span>{activePost.readTime}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {activePost.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded"
+                    >
+                      <Hash size={10} />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className={`p-2 rounded-lg transition-colors ${isEditing ? 'bg-yellow-500 text-black' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
+                  title={isEditing ? "Editing mode" : "Click to edit"}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500">
+                  <MoreHorizontal size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Editable Notice */}
+            {isEditing && (
+              <div className="px-6 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800/30">
+                <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                  Editing mode — changes are temporary and won't be saved
+                </p>
+              </div>
+            )}
+
+            {/* Note Content */}
+            <div className="flex-1 overflow-y-auto">
+              <article className="max-w-2xl mx-auto px-6 py-8">
+                {/* Title */}
+                <h1
+                  ref={titleRef}
+                  contentEditable={isEditing}
+                  onInput={handleTitleChange}
+                  suppressContentEditableWarning
+                  className={`
+                    text-3xl font-bold text-black dark:text-white mb-2
+                    focus:outline-none
+                    ${isEditing ? 'bg-yellow-50 dark:bg-yellow-900/10 rounded px-2 -mx-2' : ''}
+                  `}
+                >
+                  {getDisplayTitle(activePost)}
+                </h1>
+
+                {/* Date & Author */}
+                <div className="flex items-center gap-3 text-sm text-zinc-500 mb-8 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                  <span>{activePost.date}</span>
+                  <span>•</span>
+                  <span>{activePost.author}</span>
+                </div>
+
+                {/* Featured Image */}
+                {activePost.image && (
+                  <figure className="w-full h-48 overflow-hidden rounded-xl mb-8">
+                    <img
+                      src={activePost.image}
+                      alt={getDisplayTitle(activePost)}
+                      className="w-full h-full object-cover"
+                    />
+                  </figure>
+                )}
+
+                {/* Content */}
+                <div
+                  ref={contentRef}
+                  contentEditable={isEditing}
+                  onInput={handleContentChange}
+                  suppressContentEditableWarning
+                  className={`
+                    prose dark:prose-invert prose-zinc max-w-none
+                    prose-headings:font-semibold prose-headings:text-black dark:prose-headings:text-white
+                    prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed
+                    prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:underline
+                    focus:outline-none
+                    ${isEditing ? 'bg-yellow-50 dark:bg-yellow-900/10 rounded-lg p-4 -mx-4' : ''}
+                  `}
+                  dangerouslySetInnerHTML={{ __html: getDisplayContent(activePost) }}
+                />
+              </article>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-zinc-400">
+              <p className="text-sm">Select a note to view</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

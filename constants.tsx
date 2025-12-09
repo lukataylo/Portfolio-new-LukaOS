@@ -90,12 +90,12 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
   },
   {
     id: 'blog',
-    title: 'Engineering Blog',
+    title: 'Notes',
     icon: BookOpen,
     type: FileType.BLOG,
     blogPosts: BLOG_POSTS,
     seoDescription: 'Technical writings on React, Design Systems, and Product Strategy.',
-    slug: 'blog'
+    slug: 'notes'
   },
   {
     id: 'about-me',
@@ -215,7 +215,7 @@ export const DOCK_ITEMS: DesktopItem[] = [
   },
   {
     id: 'blog-dock',
-    title: 'Blog',
+    title: 'Notes',
     icon: BookOpen,
     type: FileType.APP,
     appId: 'blog'
