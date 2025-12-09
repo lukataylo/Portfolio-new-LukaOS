@@ -669,6 +669,10 @@ const App: React.FC = () => {
     if (isMobile) {
         initialWidth = window.innerWidth - 32;
         initialHeight = window.innerHeight - 100;
+    } else if (realItem.id === 'about-me') {
+        // About Me presentation gets a larger window for better readability
+        initialWidth = 800;
+        initialHeight = 650;
     } else if (realItem.type === FileType.LINK) {
         // Links (Browser) get slightly larger default window
         initialWidth = 800;
