@@ -1,17 +1,39 @@
 {
-  "name": "nothing-os-portfolio",
-  "private": true,
-  "version": "0.0.0",
+  "name": "lukaos-portfolio",
+  "version": "1.0.0",
+  "description": "A macOS-style portfolio website simulating a desktop operating system environment with React, TypeScript, and Tailwind CSS",
+  "author": {
+    "name": "Luka Dadiani",
+    "email": "luka.taylor@gmail.com",
+    "url": "https://meetluka.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukataylo/Portfolio-new-LukaOS"
+  },
+  "homepage": "https://meetluka.com",
+  "keywords": [
+    "portfolio",
+    "react",
+    "typescript",
+    "tailwindcss",
+    "macos",
+    "desktop-environment",
+    "vite",
+    "pwa"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "@google/genai": "^1.31.0",
-    "react": "^19.2.1",
     "lucide-react": "^0.556.0"
   },
   "devDependencies": {
@@ -19,5 +41,8 @@
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

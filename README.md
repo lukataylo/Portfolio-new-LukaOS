@@ -1,5 +1,12 @@
 # LukaOS Portfolio
 
+[![Live Demo](https://img.shields.io/badge/demo-meetluka.com-red?style=flat-square)](https://meetluka.com)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
+[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](./LICENSE)
+
 A sophisticated React-based portfolio website that simulates a desktop operating system environment. It combines the functional metaphors of macOS with a minimalist, brutalist aesthetic inspired by Nothing Phone and PostHog.
 
 **Live Site:** [meetluka.com](https://meetluka.com)
