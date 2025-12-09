@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DesktopItem, WindowState, WindowRect } from '../types';
 
 interface DockProps {
@@ -12,6 +12,8 @@ interface DockProps {
 export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, windows, renderPreview }) => {
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [isLongPress, setIsLongPress] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Track screen size for accurate maximized window previews
   useEffect(() => {
@@ -23,11 +25,39 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
   }, []);
 
   const handleItemClick = (e: React.MouseEvent, item: DesktopItem) => {
+    // Don't click if we're in wobble mode
+    if (isLongPress) {
+      setIsLongPress(false);
+      return;
+    }
     const target = e.currentTarget as HTMLElement;
     const r = target.getBoundingClientRect();
     const rect: WindowRect = { x: r.left, y: r.top, width: r.width, height: r.height };
     onAppClick(item, rect);
   };
+
+  // Long press to activate wobble mode (like iOS)
+  const handleLongPressStart = useCallback(() => {
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPress(true);
+    }, 500); // 500ms for long press
+  }, []);
+
+  const handleLongPressEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  // Click outside to exit wobble mode
+  useEffect(() => {
+    if (isLongPress) {
+      const handleClickOutside = () => setIsLongPress(false);
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [isLongPress]);
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
@@ -122,8 +152,15 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
               <button
                 onClick={(e) => handleItemClick(e, item)}
                 onMouseEnter={() => setHoveredItemId(item.id)}
-                onMouseLeave={() => setHoveredItemId(null)}
-                className="group relative flex flex-col items-center justify-center transition-all hover:-translate-y-2 duration-300"
+                onMouseLeave={() => {
+                  setHoveredItemId(null);
+                  handleLongPressEnd();
+                }}
+                onMouseDown={handleLongPressStart}
+                onMouseUp={handleLongPressEnd}
+                onTouchStart={handleLongPressStart}
+                onTouchEnd={handleLongPressEnd}
+                className={`group relative flex flex-col items-center justify-center transition-all hover:-translate-y-2 duration-300 ${isLongPress ? 'dock-wobble' : ''}`}
               >
                 <div className={`
                   w-12 h-12 flex items-center justify-center

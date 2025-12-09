@@ -7,7 +7,21 @@ export enum FileType {
   EXTERNAL_LINK = 'EXTERNAL_LINK', // Opens directly in new tab
   APP = 'APP', // Internal apps like Chat
   BLOG = 'BLOG',
-  SITEMAP = 'SITEMAP'
+  SITEMAP = 'SITEMAP',
+  BOOKS = 'BOOKS',
+  TERMINAL = 'TERMINAL',
+  MAIL = 'MAIL'
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  category: string;
+  rating: number; // out of 10
+  cover: string;
+  amazonUrl: string;
+  review: string;
 }
 
 export interface ContentSlide {
@@ -39,6 +53,7 @@ export interface DesktopItem {
   appId?: string; // For internal apps
   lockedContent?: ContentSlide[]; // Content revealed after unlock
   blogPosts?: BlogPost[]; // For blog app
+  books?: Book[]; // For books app
   seoDescription?: string; // Explicit description for SEO tags
   slug?: string; // For routing
 }

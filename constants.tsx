@@ -10,11 +10,13 @@ import {
   Camera,
   Music,
   Briefcase,
-  BookOpen,
+  StickyNote,
   Map as MapIcon,
-  Mail
+  Mail,
+  Library,
+  Folder
 } from 'lucide-react';
-import { DesktopItem, FileType, BlogPost } from './types';
+import { DesktopItem, FileType, BlogPost, Book } from './types';
 
 export const INITIAL_WINDOW_WIDTH = 600;
 export const INITIAL_WINDOW_HEIGHT = 500;
@@ -79,6 +81,135 @@ const BLOG_POSTS: BlogPost[] = [
   }
 ];
 
+const BOOKS: Book[] = [
+  {
+    id: 'zero-to-one',
+    title: 'Zero to One',
+    author: 'Peter Thiel',
+    category: 'Business & Startups',
+    rating: 9,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1414347376i/18050143.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/Zero-One-Notes-Start-Future/dp/0753555204',
+    review: `A masterclass in contrarian thinking. Thiel challenges the conventional wisdom that competition is good and instead argues that the best businesses are monopolies that create something entirely new.
+
+The book's central thesis—that we should aim to go from zero to one (creating something new) rather than from one to n (copying what works)—has fundamentally shaped how I think about product strategy and innovation.
+
+Essential reading for anyone in tech or entrepreneurship. The chapters on secrets and definite optimism are particularly thought-provoking.`
+  },
+  {
+    id: 'how-big-things-get-done',
+    title: 'How Big Things Get Done',
+    author: 'Bent Flyvbjerg & Dan Gardner',
+    category: 'Project Management',
+    rating: 8,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1666573028i/61327449.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/How-Big-Things-Get-Done/dp/1529091578',
+    review: `A fascinating deep-dive into why megaprojects fail and what we can learn from the rare ones that succeed. Flyvbjerg's research on "reference class forecasting" and the planning fallacy is incredibly applicable to product development.
+
+The key insight: think slow, act fast. Spend more time in planning and design before committing resources, then execute quickly. The Pixar and Frank Gehry case studies are excellent.
+
+Changed how I approach project estimation and risk assessment.`
+  },
+  {
+    id: 'boom',
+    title: 'Boom',
+    author: 'Byrne Hobart & Tobias Huber',
+    category: 'Economics & Technology',
+    rating: 8,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1725379098i/212374671.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/Boom-Bubbles-Future-Byrne-Hobart/dp/1954118082',
+    review: `A contrarian take on financial bubbles—arguing they're not just destructive but can be productive forces that fund transformative technologies. The thesis that bubbles help concentrate capital and talent in emerging sectors is compelling.
+
+The historical analysis of railway manias, dot-com, and clean energy bubbles provides useful frameworks for understanding current market dynamics.
+
+Particularly relevant for anyone working in or investing in emerging tech sectors.`
+  },
+  {
+    id: 'stubborn-attachments',
+    title: 'Stubborn Attachments',
+    author: 'Tyler Cowen',
+    category: 'Philosophy & Economics',
+    rating: 7,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1529514049i/31283667.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/Stubborn-Attachments-Prosperous-Responsible-Individuals/dp/1732265135',
+    review: `Cowen makes a philosophical case for prioritising sustainable economic growth above almost everything else. His argument that growth compounds over generations and benefits future people is logically tight.
+
+The book is dense but short—it packs big ideas into a compact format. The concept of "Wealth Plus" (GDP plus environmental and other considerations) is a useful mental model.
+
+A thought-provoking read, even if you don't fully agree with the conclusions.`
+  },
+  {
+    id: 'vietnam-war',
+    title: 'Vietnam: An Epic Tragedy',
+    author: 'Max Hastings',
+    category: 'History',
+    rating: 9,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1532552019i/35154379.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/Vietnam-Epic-Tragedy-1945-1975/dp/0008133018',
+    review: `An absolutely monumental work of history. Hastings draws on sources from all sides—American, Vietnamese, French—to paint a comprehensive picture of the war's tragedy and folly.
+
+What sets this apart from other Vietnam histories is the human detail. The individual stories of soldiers, civilians, and leaders on all sides make the statistics feel real.
+
+A masterpiece of military history. Long but never dull. Essential for understanding modern geopolitics and the limits of military power.`
+  },
+  {
+    id: 'price-of-time',
+    title: 'The Price of Time',
+    author: 'Edward Chancellor',
+    category: 'Finance & Economics',
+    rating: 8,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1657029432i/61428626.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/Price-Time-Real-Story-Interest/dp/0241569990',
+    review: `A sweeping history of interest rates and their role in economic development. Chancellor argues convincingly that artificially low interest rates cause asset bubbles, inequality, and economic stagnation.
+
+The historical perspective—from ancient Mesopotamia through to today's central banking—is fascinating. The book helps explain many of the economic phenomena we've seen in the past two decades.
+
+Dense but rewarding. Essential reading for understanding monetary policy's real-world effects.`
+  },
+  {
+    id: 'meet-me-fountain',
+    title: 'Meet Me by the Fountain',
+    author: 'Alexandra Lange',
+    category: 'Architecture & Design',
+    rating: 7,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1642092447i/58950012.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/Meet-Me-Fountain-Inside-Shopping/dp/1526614847',
+    review: `A love letter to the shopping mall as an architectural and social phenomenon. Lange traces the mall's evolution from Victor Gruen's utopian visions to today's struggling retail spaces.
+
+The book reframes malls not just as places of consumption but as important public spaces—particularly for teenagers, the elderly, and those without access to traditional civic spaces.
+
+Thought-provoking for anyone interested in urban design, retail, or how physical spaces shape human behaviour.`
+  },
+  {
+    id: 'bandit-capitalism',
+    title: 'Bandit Capitalism',
+    author: 'Bob Wylie',
+    category: 'Business & Finance',
+    rating: 7,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1594716970i/54503557.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/Bandit-Capitalism-Carillion-British-Business/dp/1785904906',
+    review: `A forensic examination of the Carillion collapse and what it reveals about modern British capitalism. Wylie traces how outsourcing, complex financial engineering, and regulatory capture led to one of the UK's biggest corporate disasters.
+
+The book is particularly good on the human cost—the workers, pensioners, and suppliers left holding the bag while executives walked away.
+
+Essential reading for understanding public-private partnerships and the risks of outsourcing public services.`
+  },
+  {
+    id: 'about-face',
+    title: 'About Face',
+    author: 'David H. Hackworth',
+    category: 'Military & Memoir',
+    rating: 8,
+    cover: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1320531044i/180809.jpg',
+    amazonUrl: 'https://www.amazon.co.uk/About-Face-David-H-Hackworth/dp/0671695347',
+    review: `One of the most decorated soldiers in US history tells his story—from Korea through Vietnam. Hackworth's critique of military bureaucracy and careerism is scathing and still relevant.
+
+The battlefield descriptions are vivid and often harrowing. But it's his analysis of what makes units effective (small unit leadership, realistic training, soldier welfare) that's most valuable.
+
+A masterclass in leadership, even if you're not in the military. The lessons about institutional dysfunction apply to any large organisation.`
+  }
+];
+
 export const DESKTOP_ITEMS: DesktopItem[] = [
   {
     id: 'sitemap',
@@ -91,11 +222,20 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
   {
     id: 'blog',
     title: 'Notes',
-    icon: BookOpen,
+    icon: StickyNote,
     type: FileType.BLOG,
     blogPosts: BLOG_POSTS,
     seoDescription: 'Technical writings on React, Design Systems, and Product Strategy.',
     slug: 'notes'
+  },
+  {
+    id: 'books',
+    title: 'Library',
+    icon: Library,
+    type: FileType.BOOKS,
+    books: BOOKS,
+    seoDescription: 'Book reviews and recommendations on business, economics, history, and design.',
+    slug: 'library'
   },
   {
     id: 'about-me',
@@ -208,7 +348,7 @@ export const DOCK_ITEMS: DesktopItem[] = [
   {
     id: 'finder',
     title: 'Finder',
-    icon: Terminal,
+    icon: Folder,
     type: FileType.APP,
     appId: 'sitemap', // Updated finder to open Sitemap for better navigation
     seoDescription: 'System Finder and File Navigation.'
@@ -216,9 +356,16 @@ export const DOCK_ITEMS: DesktopItem[] = [
   {
     id: 'blog-dock',
     title: 'Notes',
-    icon: BookOpen,
+    icon: StickyNote,
     type: FileType.APP,
     appId: 'blog'
+  },
+  {
+    id: 'terminal',
+    title: 'Terminal',
+    icon: Terminal,
+    type: FileType.TERMINAL,
+    seoDescription: 'AI-powered terminal assistant. Ask questions about the portfolio.'
   },
   // AI Assistant hidden for now
   // {
@@ -255,10 +402,9 @@ export const DOCK_ITEMS: DesktopItem[] = [
   },
   {
     id: 'email',
-    title: 'Email',
+    title: 'New Message',
     icon: Mail,
-    type: FileType.EXTERNAL_LINK,
-    url: 'mailto:luka.taylor@gmail.com',
+    type: FileType.MAIL,
     seoDescription: 'Send an email to Luka Dadiani.'
   }
 ];

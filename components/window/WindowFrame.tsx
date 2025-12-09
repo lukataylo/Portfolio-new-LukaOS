@@ -27,13 +27,21 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  
+  const [isBouncing, setIsBouncing] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+
   // Start in 'closed' state to render the initial frame at the icon's position
   const [animState, setAnimState] = useState<AnimationState>('closed');
-  
+
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
   const windowStartRect = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const resizeDir = useRef<ResizeDirection | null>(null);
+
+  // Shake detection refs
+  const lastDragX = useRef<number>(0);
+  const shakeDirectionChanges = useRef<number>(0);
+  const lastDirection = useRef<'left' | 'right' | null>(null);
+  const shakeStartTime = useRef<number>(0);
 
   // Animation Lifecycle
   useEffect(() => {
@@ -150,7 +158,41 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       if (isDragging) {
         const deltaX = clientX - dragStartPos.current.x;
         const deltaY = clientY - dragStartPos.current.y;
-        
+
+        // Shake detection logic
+        const currentX = windowStartRect.current.x + deltaX;
+        const xDiff = currentX - lastDragX.current;
+        const currentDirection = xDiff > 5 ? 'right' : xDiff < -5 ? 'left' : null;
+
+        if (currentDirection && currentDirection !== lastDirection.current) {
+          // Direction changed
+          if (shakeDirectionChanges.current === 0) {
+            shakeStartTime.current = Date.now();
+          }
+          shakeDirectionChanges.current++;
+          lastDirection.current = currentDirection;
+
+          // If we detected 6+ direction changes in under 1 second, it's a shake
+          const timeSinceStart = Date.now() - shakeStartTime.current;
+          if (shakeDirectionChanges.current >= 6 && timeSinceStart < 1000) {
+            setIsShaking(true);
+            setTimeout(() => {
+              handleCloseRequest();
+            }, 300);
+            // Reset shake detection
+            shakeDirectionChanges.current = 0;
+            lastDirection.current = null;
+          }
+
+          // Reset if too slow
+          if (timeSinceStart > 1000) {
+            shakeDirectionChanges.current = 1;
+            shakeStartTime.current = Date.now();
+          }
+        }
+
+        lastDragX.current = currentX;
+
         onMove(
           windowState.id,
           windowStartRect.current.x + deltaX,
@@ -203,9 +245,53 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     };
 
     const handleMouseUp = () => {
+      // Check if window is off-screen and bounce it back
+      if (isDragging) {
+        const padding = 50; // Minimum visible pixels
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const winWidth = windowState.size.width;
+        const winHeight = windowState.size.height;
+        let newX = windowState.position.x;
+        let newY = windowState.position.y;
+        let needsBounce = false;
+
+        // Check left boundary (window went too far left)
+        if (windowState.position.x + winWidth < padding) {
+          newX = padding - winWidth + 100;
+          needsBounce = true;
+        }
+        // Check right boundary (window went too far right)
+        if (windowState.position.x > screenWidth - padding) {
+          newX = screenWidth - padding - 100;
+          needsBounce = true;
+        }
+        // Check top boundary (window went above viewport)
+        if (windowState.position.y < 36) { // Menu bar height
+          newY = 50;
+          needsBounce = true;
+        }
+        // Check bottom boundary (window went too far down)
+        if (windowState.position.y > screenHeight - padding) {
+          newY = screenHeight - padding - 100;
+          needsBounce = true;
+        }
+
+        if (needsBounce) {
+          setIsBouncing(true);
+          onMove(windowState.id, newX, newY);
+          setTimeout(() => setIsBouncing(false), 500);
+        }
+      }
+
       setIsDragging(false);
       setIsResizing(false);
       resizeDir.current = null;
+
+      // Reset shake detection
+      shakeDirectionChanges.current = 0;
+      lastDirection.current = null;
+      lastDragX.current = 0;
     };
 
     if (isDragging || isResizing) {
@@ -237,7 +323,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   // Define transition strings
   const getTransition = () => {
     if (isDragging || isResizing) return 'none';
-    
+
+    // Bounce back animation with spring effect
+    if (isBouncing) {
+      return 'left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    }
+
     if (animState === 'opening') {
         // Overshoot on transform for the "pop" effect
         // Smooth ease-out on layout properties to follow the transform
@@ -247,7 +338,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         // Snappy closing
         return 'all 0.3s cubic-bezier(0.32, 0, 0.67, 0)';
     }
-    
+
     // Default for Maximize/Restore interactions
     return 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
   };
@@ -319,11 +410,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   return (
     <div
       className={`
-        absolute flex flex-col shadow-2xl 
-        border border-zinc-200 dark:border-zinc-800 
-        bg-white dark:bg-[#0f0f0f] 
+        absolute flex flex-col shadow-2xl
+        border border-zinc-200 dark:border-zinc-800
+        bg-white dark:bg-[#0f0f0f]
         ${!windowState.isMaximized ? 'rounded-lg' : ''}
         ${isAnimating ? 'pointer-events-none overflow-hidden' : ''}
+        ${isShaking ? 'window-shaking' : ''}
       `}
       style={style}
       onClick={() => onFocus(windowState.id)}

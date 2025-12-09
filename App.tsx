@@ -9,11 +9,15 @@ import { PasswordLock } from './components/content/PasswordLock';
 import { ChatApp } from './components/content/ChatApp';
 import { BrowserApp } from './components/content/BrowserApp';
 import { BlogApp } from './components/content/BlogApp';
+import { BooksApp } from './components/content/BooksApp';
+import { TerminalApp } from './components/content/TerminalApp';
+import { MailCompose } from './components/content/MailCompose';
 import { SkeletonLoader } from './components/content/SkeletonLoader';
 import { SitemapViewer } from './components/content/SitemapViewer';
 import { ContextMenu } from './components/ContextMenu';
 import { CookieNotice } from './components/CookieNotice';
-import { Sun, Moon } from 'lucide-react';
+import { Spotlight } from './components/Spotlight';
+import { Sun, Moon, Search } from 'lucide-react';
 import { generateChatResponse } from './services/geminiService';
 
 // Helper component to simulate fetching data
@@ -47,6 +51,14 @@ const App: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [funMessage, setFunMessage] = useState<string | null>(null);
 
+  // Spotlight State
+  const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
+
+  // Easter Egg States
+  const [konamiActivated, setKonamiActivated] = useState(false);
+  const [clockMode, setClockMode] = useState<'normal' | 'binary' | 'hex' | 'coffee'>('normal');
+  const [clockClicks, setClockClicks] = useState(0);
+
   // Lifted States
   const [unlockedItemIds, setUnlockedItemIds] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -57,6 +69,83 @@ const App: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Konami Code Easter Egg (↑↑↓↓←→←→BA)
+  useEffect(() => {
+    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+    let konamiIndex = 0;
+
+    const handleKonami = (e: KeyboardEvent) => {
+      if (e.code === konamiCode[konamiIndex]) {
+        konamiIndex++;
+        if (konamiIndex === konamiCode.length) {
+          setKonamiActivated(true);
+          setFunMessage('🎮 KONAMI CODE ACTIVATED! Retro mode enabled!');
+          setTimeout(() => setFunMessage(null), 3000);
+          // Reset after 10 seconds
+          setTimeout(() => setKonamiActivated(false), 10000);
+          konamiIndex = 0;
+        }
+      } else {
+        konamiIndex = 0;
+      }
+    };
+
+    window.addEventListener('keydown', handleKonami);
+    return () => window.removeEventListener('keydown', handleKonami);
+  }, []);
+
+  // Clock click handler - cycle through time formats
+  const handleClockClick = () => {
+    const newClicks = clockClicks + 1;
+    setClockClicks(newClicks);
+
+    if (newClicks >= 4) {
+      setClockClicks(0);
+      setClockMode('normal');
+    } else if (newClicks === 1) {
+      setClockMode('binary');
+      setFunMessage('🤖 Binary time activated');
+      setTimeout(() => setFunMessage(null), 2000);
+    } else if (newClicks === 2) {
+      setClockMode('hex');
+      setFunMessage('💻 Hex time activated');
+      setTimeout(() => setFunMessage(null), 2000);
+    } else if (newClicks === 3) {
+      setClockMode('coffee');
+      setFunMessage('☕ It\'s always coffee time');
+      setTimeout(() => setFunMessage(null), 2000);
+    }
+  };
+
+  // Format time based on mode
+  const formatTime = () => {
+    const hours = time.getHours();
+    const minutes = time.getMinutes();
+
+    switch (clockMode) {
+      case 'binary':
+        return `${hours.toString(2).padStart(5, '0')}:${minutes.toString(2).padStart(6, '0')}`;
+      case 'hex':
+        return `0x${hours.toString(16).toUpperCase()}:${minutes.toString(16).toUpperCase().padStart(2, '0')}`;
+      case 'coffee':
+        return '☕:☕☕';
+      default:
+        return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  };
+
+  // Spotlight keyboard shortcut (Cmd+Space or Ctrl+Space)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.code === 'Space') {
+        e.preventDefault();
+        setIsSpotlightOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // --- ROUTER & SEO LOGIC ---
@@ -357,6 +446,16 @@ const App: React.FC = () => {
             <BlogApp posts={item.blogPosts || []} />
           </DelayedLoader>
         );
+      case FileType.BOOKS:
+        return (
+          <DelayedLoader>
+            <BooksApp books={item.books || []} />
+          </DelayedLoader>
+        );
+      case FileType.TERMINAL:
+        return <TerminalApp />;
+      case FileType.MAIL:
+        return <MailCompose recipientEmail="luka.taylor@gmail.com" recipientName="Luka Dadiani" />;
       case FileType.SITEMAP:
         return (
           <SitemapViewer
@@ -398,6 +497,12 @@ const App: React.FC = () => {
         return <BrowserApp initialUrl={item.url || ''} />;
       case FileType.BLOG:
         return <BlogApp posts={item.blogPosts || []} />;
+      case FileType.BOOKS:
+        return <BooksApp books={item.books || []} />;
+      case FileType.TERMINAL:
+        return <TerminalApp />;
+      case FileType.MAIL:
+        return <MailCompose recipientEmail="luka.taylor@gmail.com" recipientName="Luka Dadiani" />;
       case FileType.SITEMAP:
         return (
           <SitemapViewer
@@ -414,7 +519,7 @@ const App: React.FC = () => {
   return (
     <div className={`${theme === 'dark' ? 'dark' : ''}`}>
       <div
-        className="min-h-screen relative overflow-hidden bg-[#f0f0f0] dark:bg-[#0f0f0f] transition-colors duration-500"
+        className={`min-h-screen relative overflow-hidden bg-[#f0f0f0] dark:bg-[#0f0f0f] transition-colors duration-500 ${konamiActivated ? 'konami-retro' : ''}`}
         onContextMenu={handleContextMenu}
         onClick={() => setContextMenu(null)}
       >
@@ -565,6 +670,13 @@ const App: React.FC = () => {
               </span>
             )}
             <button
+              onClick={() => setIsSpotlightOpen(true)}
+              className="p-1.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              title="Search (Cmd+Space)"
+            >
+              <Search size={14} className="text-zinc-600 dark:text-zinc-400" />
+            </button>
+            <button
               onClick={toggleTheme}
               className="p-1.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
               title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
@@ -575,8 +687,12 @@ const App: React.FC = () => {
                 <Sun size={14} className="text-zinc-600 dark:text-zinc-400" />
               )}
             </button>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono">
-              {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <span
+              onClick={handleClockClick}
+              className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono cursor-pointer hover:text-black dark:hover:text-white transition-colors"
+              title="Click to change time format"
+            >
+              {formatTime()}
             </span>
           </div>
         </header>
@@ -638,6 +754,14 @@ const App: React.FC = () => {
 
         {/* Cookie Notice */}
         <CookieNotice />
+
+        {/* Spotlight Search */}
+        <Spotlight
+          isOpen={isSpotlightOpen}
+          onClose={() => setIsSpotlightOpen(false)}
+          items={[...DESKTOP_ITEMS, ...DOCK_ITEMS.filter(item => item.type !== FileType.EXTERNAL_LINK)]}
+          onSelectItem={handleOpenItem}
+        />
       </div>
     </div>
   );
