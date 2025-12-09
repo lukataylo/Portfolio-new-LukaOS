@@ -21,6 +21,7 @@ import { CookieNotice } from './components/CookieNotice';
 import { Spotlight } from './components/Spotlight';
 import { MobileAppDrawer } from './components/MobileAppDrawer';
 import { ClockWidget, WeatherWidget, GitHubWidget } from './components/widgets';
+import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings, Folder } from 'lucide-react';
 import { generateChatResponse } from './services/geminiService';
 import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
@@ -97,6 +98,12 @@ const App: React.FC = () => {
   const [clockMode, setClockMode] = useState<'normal' | 'binary' | 'hex' | 'coffee'>('normal');
   const [clockClicks, setClockClicks] = useState(0);
 
+  // Welcome Back Modal State
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
+  const [awayDuration, setAwayDuration] = useState(0);
+  const lastActiveTime = useRef<number>(Date.now());
+  const AWAY_THRESHOLD = 60 * 1000; // 1 minute minimum to show modal
+
   // Lifted States
   const [unlockedItemIds, setUnlockedItemIds] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -130,6 +137,27 @@ const App: React.FC = () => {
       saveIconPositions(iconPositions);
     }
   }, [iconPositions]);
+
+  // Welcome back modal - detect when user returns after being away
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // User is leaving - record the time
+        lastActiveTime.current = Date.now();
+      } else if (document.visibilityState === 'visible') {
+        // User is returning - check how long they were away
+        const timeAway = Date.now() - lastActiveTime.current;
+        if (timeAway >= AWAY_THRESHOLD && windows.length > 0) {
+          // Only show if they have windows open and were away for at least the threshold
+          setAwayDuration(timeAway / (1000 * 60)); // Convert to minutes
+          setShowWelcomeBack(true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [windows.length, AWAY_THRESHOLD]);
 
   // Get saved icon position
   const getIconPosition = useCallback((itemId: string): { x: number; y: number } | null => {
@@ -1309,6 +1337,13 @@ const App: React.FC = () => {
 
         {/* Cookie Notice */}
         <CookieNotice />
+
+        {/* Welcome Back Modal */}
+        <WelcomeBackModal
+          isOpen={showWelcomeBack}
+          onClose={() => setShowWelcomeBack(false)}
+          awayDuration={awayDuration}
+        />
 
         {/* Spotlight Search */}
         <Spotlight
