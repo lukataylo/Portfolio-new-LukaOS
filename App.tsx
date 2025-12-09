@@ -54,7 +54,10 @@ const App: React.FC = () => {
   const [draggingIconId, setDraggingIconId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragCurrentPos, setDragCurrentPos] = useState<{ x: number; y: number } | null>(null);
+  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [hasDraggedEnough, setHasDraggedEnough] = useState(false);
   const desktopRef = useRef<HTMLDivElement>(null);
+  const DRAG_THRESHOLD = 5; // Minimum pixels to move before considering it a drag
 
   // Reduce motion preference
   const [reduceMotion, setReduceMotion] = useState(() => loadReduceMotion());
@@ -143,12 +146,17 @@ const App: React.FC = () => {
       y: clientY - iconRect.top
     });
     setDragCurrentPos({ x: clientX, y: clientY });
+    setDragStartPos({ x: clientX, y: clientY });
+    setHasDraggedEnough(false);
   }, []);
 
   const handleIconDragEnd = useCallback(() => {
-    if (!desktopRef.current || !draggingIconId || !dragCurrentPos) {
+    // Only save position if we actually dragged (moved past threshold)
+    if (!desktopRef.current || !draggingIconId || !dragCurrentPos || !hasDraggedEnough) {
       setDraggingIconId(null);
       setDragCurrentPos(null);
+      setDragStartPos(null);
+      setHasDraggedEnough(false);
       return;
     }
 
@@ -175,19 +183,41 @@ const App: React.FC = () => {
 
     setDraggingIconId(null);
     setDragCurrentPos(null);
-  }, [draggingIconId, dragCurrentPos, dragOffset]);
+    setDragStartPos(null);
+    setHasDraggedEnough(false);
+  }, [draggingIconId, dragCurrentPos, dragOffset, hasDraggedEnough]);
 
   // Track mouse/touch movement during icon drag
   useEffect(() => {
-    if (!draggingIconId) return;
+    if (!draggingIconId || !dragStartPos) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      setDragCurrentPos({ x: e.clientX, y: e.clientY });
+      const newPos = { x: e.clientX, y: e.clientY };
+      setDragCurrentPos(newPos);
+
+      // Check if we've moved past the threshold
+      if (!hasDraggedEnough) {
+        const dx = Math.abs(newPos.x - dragStartPos.x);
+        const dy = Math.abs(newPos.y - dragStartPos.y);
+        if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+          setHasDraggedEnough(true);
+        }
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 0) {
-        setDragCurrentPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+        const newPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        setDragCurrentPos(newPos);
+
+        // Check if we've moved past the threshold
+        if (!hasDraggedEnough) {
+          const dx = Math.abs(newPos.x - dragStartPos.x);
+          const dy = Math.abs(newPos.y - dragStartPos.y);
+          if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+            setHasDraggedEnough(true);
+          }
+        }
       }
     };
 
@@ -206,7 +236,7 @@ const App: React.FC = () => {
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchend', handleMouseUp);
     };
-  }, [draggingIconId, handleIconDragEnd]);
+  }, [draggingIconId, dragStartPos, hasDraggedEnough, handleIconDragEnd]);
 
   // Konami Code Easter Egg (↑↑↓↓←→←→BA)
   useEffect(() => {
@@ -1165,7 +1195,7 @@ const App: React.FC = () => {
               <div
                 key={item.id}
                 className="pointer-events-auto"
-                style={{ opacity: draggingIconId === item.id ? 0.3 : 1 }}
+                style={{ opacity: draggingIconId === item.id && hasDraggedEnough ? 0.3 : 1 }}
               >
                 <DesktopIcon
                   item={item}
@@ -1191,7 +1221,7 @@ const App: React.FC = () => {
             return (
               <div
                 key={item.id}
-                style={{ opacity: draggingIconId === item.id ? 0.3 : 1 }}
+                style={{ opacity: draggingIconId === item.id && hasDraggedEnough ? 0.3 : 1 }}
               >
                 <DesktopIcon
                   item={item}
@@ -1210,8 +1240,8 @@ const App: React.FC = () => {
             );
           })}
 
-          {/* Drag Ghost - follows cursor during drag */}
-          {draggingIconId && dragCurrentPos && (() => {
+          {/* Drag Ghost - follows cursor during drag (only show after threshold) */}
+          {draggingIconId && dragCurrentPos && hasDraggedEnough && (() => {
             const draggingItem = desktopItems.find(i => i.id === draggingIconId);
             if (!draggingItem) return null;
             const Icon = draggingItem.icon;

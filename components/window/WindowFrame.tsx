@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { WindowState } from '../../types';
+import { X, Minus, Maximize2, RotateCcw, Copy } from 'lucide-react';
 
 interface WindowFrameProps {
   windowState: WindowState;
@@ -30,6 +32,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const [isBouncing, setIsBouncing] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [snapPreview, setSnapPreview] = useState<'left' | 'right' | 'full' | null>(null);
+  const [windowContextMenu, setWindowContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   // Store pre-snap size/position for restoration
   const preSnapState = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -504,17 +507,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       {/* Resize Handles - Only when not maximized and not animating */}
       {!windowState.isMaximized && !isAnimating && (
         <>
-            {/* Sides */}
-            <div className="absolute top-0 left-0 w-full h-2 cursor-n-resize z-50" onMouseDown={(e) => handleResizeStart(e, 'n')} onTouchStart={(e) => handleResizeTouchStart(e, 'n')} />
-            <div className="absolute bottom-0 left-0 w-full h-2 cursor-s-resize z-50" onMouseDown={(e) => handleResizeStart(e, 's')} onTouchStart={(e) => handleResizeTouchStart(e, 's')} />
-            <div className="absolute top-0 left-0 w-2 h-full cursor-w-resize z-50" onMouseDown={(e) => handleResizeStart(e, 'w')} onTouchStart={(e) => handleResizeTouchStart(e, 'w')} />
-            <div className="absolute top-0 right-0 w-2 h-full cursor-e-resize z-50" onMouseDown={(e) => handleResizeStart(e, 'e')} onTouchStart={(e) => handleResizeTouchStart(e, 'e')} />
-            
-            {/* Corners */}
-            <div className="absolute top-0 left-0 w-6 h-6 cursor-nw-resize z-50" onMouseDown={(e) => handleResizeStart(e, 'nw')} onTouchStart={(e) => handleResizeTouchStart(e, 'nw')} />
-            <div className="absolute top-0 right-0 w-6 h-6 cursor-ne-resize z-50" onMouseDown={(e) => handleResizeStart(e, 'ne')} onTouchStart={(e) => handleResizeTouchStart(e, 'ne')} />
-            <div className="absolute bottom-0 left-0 w-6 h-6 cursor-sw-resize z-50" onMouseDown={(e) => handleResizeStart(e, 'sw')} onTouchStart={(e) => handleResizeTouchStart(e, 'sw')} />
-            <div className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize z-50" onMouseDown={(e) => handleResizeStart(e, 'se')} onTouchStart={(e) => handleResizeTouchStart(e, 'se')} />
+            {/* Sides - fixed pixel sizes to prevent scaling issues */}
+            <div className="absolute top-0 left-0 w-full cursor-n-resize z-50" style={{ height: '8px' }} onMouseDown={(e) => handleResizeStart(e, 'n')} onTouchStart={(e) => handleResizeTouchStart(e, 'n')} />
+            <div className="absolute bottom-0 left-0 w-full cursor-s-resize z-50" style={{ height: '8px' }} onMouseDown={(e) => handleResizeStart(e, 's')} onTouchStart={(e) => handleResizeTouchStart(e, 's')} />
+            <div className="absolute top-0 left-0 h-full cursor-w-resize z-50" style={{ width: '8px' }} onMouseDown={(e) => handleResizeStart(e, 'w')} onTouchStart={(e) => handleResizeTouchStart(e, 'w')} />
+            <div className="absolute top-0 right-0 h-full cursor-e-resize z-50" style={{ width: '8px' }} onMouseDown={(e) => handleResizeStart(e, 'e')} onTouchStart={(e) => handleResizeTouchStart(e, 'e')} />
+
+            {/* Corners - fixed pixel sizes */}
+            <div className="absolute top-0 left-0 cursor-nw-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'nw')} onTouchStart={(e) => handleResizeTouchStart(e, 'nw')} />
+            <div className="absolute top-0 right-0 cursor-ne-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'ne')} onTouchStart={(e) => handleResizeTouchStart(e, 'ne')} />
+            <div className="absolute bottom-0 left-0 cursor-sw-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'sw')} onTouchStart={(e) => handleResizeTouchStart(e, 'sw')} />
+            <div className="absolute bottom-0 right-0 cursor-se-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'se')} onTouchStart={(e) => handleResizeTouchStart(e, 'se')} />
         </>
       )}
 
@@ -529,7 +532,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Close */}
           <button
             onClick={(e) => { e.stopPropagation(); handleCloseRequest(); }}
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 border border-red-600 transition-colors flex items-center justify-center group-hover:scale-110 active:scale-90"
+            className="rounded-full bg-red-500 hover:bg-red-600 border border-red-600 transition-colors flex items-center justify-center flex-shrink-0"
+            style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
             onTouchEnd={(e) => { e.stopPropagation(); handleCloseRequest(); }}
             aria-label="Close window"
             title="Close"
@@ -539,7 +543,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Minimize */}
           <button
             onClick={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
-            className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-yellow-400 border border-zinc-400 dark:border-zinc-600 transition-colors group-hover:scale-110 active:scale-90"
+            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-yellow-400 border border-zinc-400 dark:border-zinc-600 transition-colors flex-shrink-0"
+            style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
             onTouchEnd={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
             aria-label="Minimize window"
             title="Minimize"
@@ -548,7 +553,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Maximize */}
           <button
             onClick={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
-            className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-green-500 border border-zinc-400 dark:border-zinc-600 transition-colors group-hover:scale-110 active:scale-90"
+            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-green-500 border border-zinc-400 dark:border-zinc-600 transition-colors flex-shrink-0"
+            style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
             onTouchEnd={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
             aria-label={windowState.isMaximized ? "Restore window" : "Maximize window"}
             title={windowState.isMaximized ? "Restore" : "Maximize"}
@@ -561,9 +567,95 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       </div>
 
       {/* Content Area */}
-        <div className="flex-1 overflow-hidden relative bg-white dark:bg-zinc-950">
+        <div
+          className="flex-1 overflow-hidden relative bg-white dark:bg-zinc-950"
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setWindowContextMenu({ x: e.clientX, y: e.clientY });
+          }}
+        >
           {children}
         </div>
+
+        {/* Window Context Menu - rendered via portal to escape transform context */}
+        {windowContextMenu && createPortal(
+          <>
+            {/* Backdrop to close menu */}
+            <div
+              className="fixed inset-0 z-[200]"
+              onClick={() => setWindowContextMenu(null)}
+              onContextMenu={(e) => { e.preventDefault(); setWindowContextMenu(null); }}
+            />
+
+            {/* Context Menu */}
+            <div
+              className="fixed z-[201] min-w-[160px] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-100 rounded-lg backdrop-blur-3xl"
+              style={{
+                top: Math.min(windowContextMenu.y, window.innerHeight - 180),
+                left: Math.min(windowContextMenu.x, window.innerWidth - 180)
+              }}
+            >
+              <div className="flex flex-col gap-1">
+                <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-400 font-bold border-b border-zinc-100 dark:border-zinc-900 mb-1">
+                  Window Actions
+                </div>
+
+                <button
+                  onClick={() => { onMinimize(windowState.id); setWindowContextMenu(null); }}
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                >
+                  <Minus size={14} className="group-hover:text-yellow-500 transition-colors" />
+                  <span className="font-mono text-xs">Minimize</span>
+                </button>
+
+                <button
+                  onClick={() => { onMaximize(windowState.id); setWindowContextMenu(null); }}
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                >
+                  <Maximize2 size={14} className="group-hover:text-green-500 transition-colors" />
+                  <span className="font-mono text-xs">{windowState.isMaximized ? 'Restore' : 'Maximize'}</span>
+                </button>
+
+                <div className="h-px bg-zinc-100 dark:bg-zinc-900 my-1 mx-2" />
+
+                <button
+                  onClick={() => {
+                    // Refresh by re-focusing the window (triggers re-render in some apps)
+                    onFocus(windowState.id);
+                    setWindowContextMenu(null);
+                  }}
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                >
+                  <RotateCcw size={14} className="group-hover:text-blue-500 transition-colors" />
+                  <span className="font-mono text-xs">Refresh</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(windowState.title);
+                    setWindowContextMenu(null);
+                  }}
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                >
+                  <Copy size={14} className="group-hover:text-purple-500 transition-colors" />
+                  <span className="font-mono text-xs">Copy Title</span>
+                </button>
+
+                <div className="h-px bg-zinc-100 dark:bg-zinc-900 my-1 mx-2" />
+
+                <button
+                  onClick={() => { handleCloseRequest(); setWindowContextMenu(null); }}
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors group text-left"
+                >
+                  <X size={14} className="group-hover:text-red-600 transition-colors" />
+                  <span className="font-mono text-xs">Close Window</span>
+                </button>
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
       </div>
     </>
   );
