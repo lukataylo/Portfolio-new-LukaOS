@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DESKTOP_ITEMS, DOCK_ITEMS, INITIAL_WINDOW_HEIGHT, INITIAL_WINDOW_WIDTH } from './constants';
 import { DesktopItem, WindowState, FileType, ChatMessage, WindowRect } from './types';
 import { DesktopIcon } from './components/DesktopIcon';
@@ -14,11 +14,16 @@ import { TerminalApp } from './components/content/TerminalApp';
 import { MailCompose } from './components/content/MailCompose';
 import { SkeletonLoader } from './components/content/SkeletonLoader';
 import { SitemapViewer } from './components/content/SitemapViewer';
+import { FinderApp } from './components/content/FinderApp';
+import { SystemPreferences } from './components/content/SystemPreferences';
 import { ContextMenu } from './components/ContextMenu';
 import { CookieNotice } from './components/CookieNotice';
 import { Spotlight } from './components/Spotlight';
-import { Sun, Moon, Search } from 'lucide-react';
+import { MobileAppDrawer } from './components/MobileAppDrawer';
+import { ClockWidget, WeatherWidget, GitHubWidget } from './components/widgets';
+import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings, Folder } from 'lucide-react';
 import { generateChatResponse } from './services/geminiService';
+import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
 
 // Helper component to simulate fetching data
 const DelayedLoader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,11 +43,24 @@ const App: React.FC = () => {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [time, setTime] = useState(new Date());
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => loadTheme());
 
-  // Desktop Items State (for sorting)
+  // Desktop Items State (for sorting and positioning)
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>(DESKTOP_ITEMS);
+  const [iconPositions, setIconPositions] = useState<IconPosition[]>(() => loadIconPositions());
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Drag & Drop state
+  const [draggingIconId, setDraggingIconId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragCurrentPos, setDragCurrentPos] = useState<{ x: number; y: number } | null>(null);
+  const desktopRef = useRef<HTMLDivElement>(null);
+
+  // Reduce motion preference
+  const [reduceMotion, setReduceMotion] = useState(() => loadReduceMotion());
+
+  // Widget visibility
+  const [showWidgets, setShowWidgets] = useState(true);
 
   // Context Menu State
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
@@ -53,6 +71,23 @@ const App: React.FC = () => {
 
   // Spotlight State
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
+
+  // App Switcher State (Cmd+Tab)
+  const [isAppSwitcherOpen, setIsAppSwitcherOpen] = useState(false);
+  const [appSwitcherIndex, setAppSwitcherIndex] = useState(0);
+
+  // Notification Center State
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message: string; time: Date }>>([]);
+
+  // Sound State
+  const [soundEnabled, setSoundEnabled] = useState(() => loadSoundEnabled());
+
+  // Mobile App Drawer State
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
+  // Loading cursor state (beach ball effect)
+  const [isLoading, setIsLoading] = useState(false);
 
   // Easter Egg States
   const [konamiActivated, setKonamiActivated] = useState(false);
@@ -70,6 +105,108 @@ const App: React.FC = () => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Persist theme changes
+  useEffect(() => {
+    saveTheme(theme);
+  }, [theme]);
+
+  // Persist sound preference
+  useEffect(() => {
+    saveSoundEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  // Persist reduce motion preference
+  useEffect(() => {
+    saveReduceMotion(reduceMotion);
+  }, [reduceMotion]);
+
+  // Persist icon positions
+  useEffect(() => {
+    if (iconPositions.length > 0) {
+      saveIconPositions(iconPositions);
+    }
+  }, [iconPositions]);
+
+  // Get saved icon position
+  const getIconPosition = useCallback((itemId: string): { x: number; y: number } | null => {
+    const saved = iconPositions.find(p => p.id === itemId);
+    if (saved) return { x: saved.x, y: saved.y };
+    return null;
+  }, [iconPositions]);
+
+  // Desktop drag handlers
+  const handleIconDragStart = useCallback((itemId: string, clientX: number, clientY: number, iconRect: DOMRect) => {
+    setDraggingIconId(itemId);
+    setDragOffset({
+      x: clientX - iconRect.left,
+      y: clientY - iconRect.top
+    });
+    setDragCurrentPos({ x: clientX, y: clientY });
+  }, []);
+
+  const handleIconDragEnd = useCallback(() => {
+    if (!desktopRef.current || !draggingIconId || !dragCurrentPos) {
+      setDraggingIconId(null);
+      setDragCurrentPos(null);
+      return;
+    }
+
+    const desktopRect = desktopRef.current.getBoundingClientRect();
+    const gridSize = 100; // Snap to 100px grid
+
+    // Calculate position relative to desktop
+    let x = dragCurrentPos.x - desktopRect.left - dragOffset.x;
+    let y = dragCurrentPos.y - desktopRect.top - dragOffset.y;
+
+    // Snap to grid
+    x = Math.round(x / gridSize) * gridSize;
+    y = Math.round(y / gridSize) * gridSize;
+
+    // Constrain to desktop bounds
+    x = Math.max(0, Math.min(x, desktopRect.width - 112));
+    y = Math.max(0, Math.min(y, desktopRect.height - 100));
+
+    // Update positions
+    setIconPositions(prev => {
+      const existing = prev.filter(p => p.id !== draggingIconId);
+      return [...existing, { id: draggingIconId, x, y }];
+    });
+
+    setDraggingIconId(null);
+    setDragCurrentPos(null);
+  }, [draggingIconId, dragCurrentPos, dragOffset]);
+
+  // Track mouse/touch movement during icon drag
+  useEffect(() => {
+    if (!draggingIconId) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setDragCurrentPos({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        setDragCurrentPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    const handleMouseUp = () => {
+      handleIconDragEnd();
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [draggingIconId, handleIconDragEnd]);
 
   // Konami Code Easter Egg (↑↑↓↓←→←→BA)
   useEffect(() => {
@@ -147,6 +284,168 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Keyboard shortcuts for window management
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if not in an input field
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      // Cmd+W - Close active window
+      if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
+        e.preventDefault();
+        if (activeWindowId) {
+          playSound('close');
+          closeWindow(activeWindowId);
+        }
+      }
+
+      // Cmd+M - Minimize active window
+      if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
+        e.preventDefault();
+        if (activeWindowId) {
+          playSound('minimize');
+          minimizeWindow(activeWindowId);
+        }
+      }
+
+      // Cmd+Q - Quit (fun message)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'q') {
+        e.preventDefault();
+        setFunMessage("🚫 Quit? But we were just getting started!");
+        setTimeout(() => setFunMessage(null), 3000);
+      }
+
+      // Cmd+Tab - App Switcher
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Tab') {
+        e.preventDefault();
+        const openWindows = windows.filter(w => !w.isMinimized);
+        if (openWindows.length > 1) {
+          if (!isAppSwitcherOpen) {
+            setIsAppSwitcherOpen(true);
+            setAppSwitcherIndex(0);
+            playSound('pop');
+          } else {
+            // Cycle through windows
+            setAppSwitcherIndex(prev => (prev + 1) % openWindows.length);
+          }
+        }
+      }
+
+      // Escape - Close app switcher or spotlight
+      if (e.key === 'Escape') {
+        if (isAppSwitcherOpen) {
+          setIsAppSwitcherOpen(false);
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // When Cmd/Ctrl is released, switch to selected window
+      if ((e.key === 'Meta' || e.key === 'Control') && isAppSwitcherOpen) {
+        const openWindows = windows.filter(w => !w.isMinimized);
+        if (openWindows[appSwitcherIndex]) {
+          bringToFront(openWindows[appSwitcherIndex].id);
+        }
+        setIsAppSwitcherOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [activeWindowId, windows, isAppSwitcherOpen, appSwitcherIndex]);
+
+  // Sound effect helper
+  const playSound = (type: 'pop' | 'close' | 'minimize' | 'notification' | 'click') => {
+    if (!soundEnabled) return;
+
+    // Create audio context for sounds
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      switch (type) {
+        case 'pop':
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.05);
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+          break;
+        case 'close':
+          oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.15);
+          gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.15);
+          break;
+        case 'minimize':
+          oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
+          gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+          break;
+        case 'notification':
+          oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+          oscillator.frequency.setValueAtTime(1100, audioContext.currentTime + 0.1);
+          oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.3);
+          break;
+        case 'click':
+          oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
+          gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.05);
+          break;
+      }
+    } catch (e) {
+      // Audio not supported
+    }
+  };
+
+  // Add welcome notification on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      addNotification('Welcome!', 'Welcome to LukaOS. Try Cmd+Space for search!');
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Add notification helper
+  const addNotification = (title: string, message: string) => {
+    const newNotification = {
+      id: `notif-${Date.now()}`,
+      title,
+      message,
+      time: new Date()
+    };
+    setNotifications(prev => [newNotification, ...prev].slice(0, 10)); // Keep max 10
+    playSound('notification');
+  };
+
+  // Remove notification
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
 
   // --- ROUTER & SEO LOGIC ---
   useEffect(() => {
@@ -232,6 +531,13 @@ const App: React.FC = () => {
         setDesktopItems(DESKTOP_ITEMS); // Reset to default order or just re-render
         setIsRefreshing(false);
     }, 500);
+  };
+
+  const cleanUpIcons = () => {
+    setIconPositions([]); // Clear all saved positions
+    setContextMenu(null);
+    // Also clear from localStorage
+    localStorage.removeItem('lukaos-icon-positions');
   };
 
   const handleChatSend = async (text: string) => {
@@ -390,7 +696,77 @@ const App: React.FC = () => {
     ));
   };
 
-  const moveWindow = (id: string, x: number, y: number) => {
+  // Window tiling - snap to edges
+  const handleWindowSnapCheck = useCallback((id: string, x: number, y: number) => {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight - 36 - 60; // Minus menu bar (36px) and dock (~60px)
+    const snapThreshold = 30;
+
+    // Left edge - snap to left half
+    if (x <= snapThreshold) {
+      return { x: 0, y: 36, width: screenWidth / 2, height: screenHeight };
+    }
+    // Right edge - snap to right half
+    if (x >= screenWidth - snapThreshold) {
+      return { x: screenWidth / 2, y: 36, width: screenWidth / 2, height: screenHeight };
+    }
+    // Top edge - maximize
+    if (y <= snapThreshold + 36) {
+      return { x: 0, y: 36, width: screenWidth, height: screenHeight };
+    }
+
+    return null;
+  }, []);
+
+  const moveWindow = (id: string, x: number, y: number, shouldSnap?: boolean) => {
+    if (shouldSnap) {
+      const snapResult = handleWindowSnapCheck(id, x, y);
+      if (snapResult) {
+        // Save pre-snap state before snapping
+        setWindows(prev => prev.map(w => {
+          if (w.id !== id) return w;
+
+          // Only save preSnapRect if not already snapped
+          const preSnapRect = w.isSnapped ? w.preSnapRect : {
+            x: w.position.x,
+            y: w.position.y,
+            width: w.size.width,
+            height: w.size.height
+          };
+
+          return {
+            ...w,
+            position: { x: snapResult.x, y: snapResult.y },
+            size: { width: snapResult.width, height: snapResult.height },
+            isMaximized: snapResult.width === window.innerWidth,
+            isSnapped: true,
+            preSnapRect
+          };
+        }));
+        return;
+      } else {
+        // Dragging away from snap zone - restore previous size if was snapped
+        setWindows(prev => prev.map(w => {
+          if (w.id !== id) return w;
+
+          if (w.isSnapped && w.preSnapRect) {
+            // Restore to pre-snap size, but position at cursor
+            return {
+              ...w,
+              position: { x: x - w.preSnapRect.width / 2, y },
+              size: { width: w.preSnapRect.width, height: w.preSnapRect.height },
+              isMaximized: false,
+              isSnapped: false,
+              preSnapRect: undefined
+            };
+          }
+
+          return { ...w, position: { x, y } };
+        }));
+        return;
+      }
+    }
+
     setWindows(prev => prev.map(w =>
       w.id === id ? { ...w, position: { x, y } } : w
     ));
@@ -464,6 +840,22 @@ const App: React.FC = () => {
             onItemClick={handleOpenItem}
           />
         );
+      case FileType.FINDER:
+        return (
+          <FinderApp
+            items={[...DESKTOP_ITEMS, ...DOCK_ITEMS.filter(i => i.type !== FileType.EXTERNAL_LINK && i.type !== FileType.FINDER)]}
+            onItemClick={handleOpenItem}
+          />
+        );
+      case FileType.PREFERENCES:
+        return (
+          <SystemPreferences
+            theme={theme}
+            onThemeChange={setTheme}
+            soundEnabled={soundEnabled}
+            onSoundChange={setSoundEnabled}
+          />
+        );
       default:
         return <div className="p-4">Unknown content type</div>;
     }
@@ -511,13 +903,37 @@ const App: React.FC = () => {
             onItemClick={() => {}}
           />
         );
+      case FileType.FINDER:
+        return (
+          <FinderApp
+            items={[...DESKTOP_ITEMS, ...DOCK_ITEMS.filter(i => i.type !== FileType.EXTERNAL_LINK && i.type !== FileType.FINDER)]}
+            onItemClick={() => {}}
+          />
+        );
+      case FileType.PREFERENCES:
+        return (
+          <SystemPreferences
+            theme={theme}
+            onThemeChange={() => {}}
+            soundEnabled={soundEnabled}
+            onSoundChange={() => {}}
+          />
+        );
       default:
         return <div className="p-4">Unknown content type</div>;
     }
   };
 
   return (
-    <div className={`${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'motion-reduce' : ''}`}>
+      {/* Skip Navigation Link for Accessibility */}
+      <a
+        href="#main-desktop"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[1000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
       <div
         className={`min-h-screen relative overflow-hidden bg-[#f0f0f0] dark:bg-[#0f0f0f] transition-colors duration-500 ${konamiActivated ? 'konami-retro' : ''}`}
         onContextMenu={handleContextMenu}
@@ -662,10 +1078,10 @@ const App: React.FC = () => {
               </div>
             </nav>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {/* Fun Message Toast */}
             {funMessage && (
-              <span className="text-[10px] font-mono text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-right-4 duration-300 max-w-[200px] truncate">
+              <span className="text-[10px] font-mono text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-right-4 duration-300 max-w-[200px] truncate mr-2">
                 {funMessage}
               </span>
             )}
@@ -675,6 +1091,29 @@ const App: React.FC = () => {
               title="Search (Cmd+Space)"
             >
               <Search size={14} className="text-zinc-600 dark:text-zinc-400" />
+            </button>
+            <button
+              onClick={() => setSoundEnabled(prev => !prev)}
+              className="p-1.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              title={soundEnabled ? 'Mute sounds' : 'Enable sounds'}
+            >
+              {soundEnabled ? (
+                <Volume2 size={14} className="text-zinc-600 dark:text-zinc-400" />
+              ) : (
+                <VolumeX size={14} className="text-zinc-400 dark:text-zinc-600" />
+              )}
+            </button>
+            <button
+              onClick={() => setIsNotificationCenterOpen(prev => !prev)}
+              className="p-1.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors relative"
+              title="Notifications"
+            >
+              <Bell size={14} className="text-zinc-600 dark:text-zinc-400" />
+              {notifications.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full text-[8px] text-white flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              )}
             </button>
             <button
               onClick={toggleTheme}
@@ -689,7 +1128,7 @@ const App: React.FC = () => {
             </button>
             <span
               onClick={handleClockClick}
-              className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono cursor-pointer hover:text-black dark:hover:text-white transition-colors"
+              className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono cursor-pointer hover:text-black dark:hover:text-white transition-colors ml-1"
               title="Click to change time format"
             >
               {formatTime()}
@@ -703,16 +1142,100 @@ const App: React.FC = () => {
         )}
 
         {/* Desktop Area */}
-        <main className={`pt-14 pb-28 px-6 min-h-screen transition-opacity duration-300 ${isRefreshing ? 'opacity-50' : 'opacity-100'}`}>
-          <div className="absolute top-14 right-4 bottom-28 flex flex-col flex-wrap-reverse content-end gap-2 items-end">
-            {desktopItems.map((item) => (
-              <DesktopIcon
+        <main
+          id="main-desktop"
+          ref={desktopRef}
+          className={`relative pt-14 pb-28 px-6 min-h-screen transition-opacity duration-300 ${isRefreshing ? 'opacity-50' : 'opacity-100'}`}
+          role="main"
+          aria-label="Desktop workspace"
+        >
+          {/* Widgets Area (left side) */}
+          {showWidgets && (
+            <div className="fixed top-16 left-4 z-10 flex flex-col gap-3 hidden lg:flex">
+              <ClockWidget />
+              <WeatherWidget />
+              <GitHubWidget />
+            </div>
+          )}
+
+          {/* Desktop Icons */}
+          {/* Icons without custom positions - default right-side layout */}
+          <div className="absolute top-14 right-4 bottom-28 flex flex-col flex-wrap-reverse content-end gap-2 items-end pointer-events-none">
+            {desktopItems.filter(item => !iconPositions.find(p => p.id === item.id)).map((item, index) => (
+              <div
                 key={item.id}
-                item={item}
-                onDoubleClick={handleOpenItem}
-              />
+                className="pointer-events-auto"
+                style={{ opacity: draggingIconId === item.id ? 0.3 : 1 }}
+              >
+                <DesktopIcon
+                  item={item}
+                  onDoubleClick={handleOpenItem}
+                  isDragging={false}
+                  customPosition={null}
+                  onDragStart={(e) => {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const clientX = 'clientX' in e ? e.clientX : e.touches[0]?.clientX ?? 0;
+                    const clientY = 'clientY' in e ? e.clientY : e.touches[0]?.clientY ?? 0;
+                    handleIconDragStart(item.id, clientX, clientY, rect);
+                  }}
+                  onDragEnd={() => handleIconDragEnd()}
+                />
+              </div>
             ))}
           </div>
+
+          {/* Icons with custom positions - positioned absolutely on desktop */}
+          {desktopItems.filter(item => iconPositions.find(p => p.id === item.id)).map((item) => {
+            const savedPos = iconPositions.find(p => p.id === item.id);
+            if (!savedPos) return null;
+            return (
+              <div
+                key={item.id}
+                style={{ opacity: draggingIconId === item.id ? 0.3 : 1 }}
+              >
+                <DesktopIcon
+                  item={item}
+                  onDoubleClick={handleOpenItem}
+                  isDragging={false}
+                  customPosition={{ x: savedPos.x, y: savedPos.y }}
+                  onDragStart={(e) => {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const clientX = 'clientX' in e ? e.clientX : e.touches[0]?.clientX ?? 0;
+                    const clientY = 'clientY' in e ? e.clientY : e.touches[0]?.clientY ?? 0;
+                    handleIconDragStart(item.id, clientX, clientY, rect);
+                  }}
+                  onDragEnd={() => handleIconDragEnd()}
+                />
+              </div>
+            );
+          })}
+
+          {/* Drag Ghost - follows cursor during drag */}
+          {draggingIconId && dragCurrentPos && (() => {
+            const draggingItem = desktopItems.find(i => i.id === draggingIconId);
+            if (!draggingItem) return null;
+            const Icon = draggingItem.icon;
+            return (
+              <div
+                className="fixed pointer-events-none z-[2000]"
+                style={{
+                  left: dragCurrentPos.x - dragOffset.x,
+                  top: dragCurrentPos.y - dragOffset.y,
+                }}
+              >
+                <div className="flex flex-col items-center justify-center p-2 w-28 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm shadow-2xl ring-2 ring-blue-500 scale-105">
+                  <div className="relative mb-2">
+                    <div className="w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shadow-lg">
+                      <Icon className="w-7 h-7 text-black dark:text-white" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold tracking-wider text-center text-black dark:text-zinc-300 uppercase bg-white/50 dark:bg-black/50 px-2 py-1 rounded backdrop-blur-sm truncate w-full shadow-sm">
+                    {draggingItem.title}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </main>
 
         {/* Windows */}
@@ -738,6 +1261,7 @@ const App: React.FC = () => {
           openItemIds={getOpenItemIds()}
           windows={windows}
           renderPreview={renderPreviewContent}
+          allItems={[...DESKTOP_ITEMS, ...DOCK_ITEMS]}
         />
 
         {/* Context Menu */}
@@ -749,6 +1273,7 @@ const App: React.FC = () => {
             onSortByName={sortByName}
             onSortByType={sortByType}
             onRefresh={refreshDesktop}
+            onCleanUp={cleanUpIcons}
           />
         )}
 
@@ -762,6 +1287,132 @@ const App: React.FC = () => {
           items={[...DESKTOP_ITEMS, ...DOCK_ITEMS.filter(item => item.type !== FileType.EXTERNAL_LINK)]}
           onSelectItem={handleOpenItem}
         />
+
+        {/* App Switcher (Cmd+Tab) */}
+        {isAppSwitcherOpen && (
+          <>
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200]" />
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl p-4">
+                <div className="flex items-center gap-4">
+                  {windows.filter(w => !w.isMinimized).map((win, index) => {
+                    const item = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find(i => i.id === win.itemId);
+                    const Icon = item?.icon;
+                    const isSelected = index === appSwitcherIndex;
+
+                    return (
+                      <div
+                        key={win.id}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                          isSelected ? 'bg-blue-500 scale-110' : 'bg-zinc-100 dark:bg-zinc-800'
+                        }`}
+                      >
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                          isSelected ? 'bg-white/20' : 'bg-white dark:bg-zinc-700'
+                        }`}>
+                          {Icon && <Icon size={28} className={isSelected ? 'text-white' : 'text-black dark:text-white'} />}
+                        </div>
+                        <span className={`text-[10px] font-medium truncate max-w-[80px] ${
+                          isSelected ? 'text-white' : 'text-zinc-600 dark:text-zinc-300'
+                        }`}>
+                          {win.title}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-center text-[10px] text-zinc-400 mt-3">
+                  Release ⌘ to switch
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Notification Center */}
+        {isNotificationCenterOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-[150]"
+              onClick={() => setIsNotificationCenterOpen(false)}
+            />
+            <div className="fixed top-10 right-2 w-80 max-h-[500px] overflow-hidden z-[151] animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-black dark:text-white">Notifications</h3>
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={() => setNotifications([])}
+                      className="text-[10px] text-blue-500 hover:text-blue-600"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-[400px] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <Bell size={32} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-2" />
+                      <p className="text-xs text-zinc-400">No notifications</p>
+                    </div>
+                  ) : (
+                    notifications.map(notif => (
+                      <div
+                        key={notif.id}
+                        className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-black dark:text-white">{notif.title}</p>
+                            <p className="text-xs text-zinc-500 mt-0.5">{notif.message}</p>
+                            <p className="text-[10px] text-zinc-400 mt-1">
+                              {notif.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => removeNotification(notif.id)}
+                            className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-colors"
+                          >
+                            <X size={12} className="text-zinc-400" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Mobile App Drawer */}
+        <MobileAppDrawer
+          items={[...DESKTOP_ITEMS, ...DOCK_ITEMS]}
+          onAppClick={handleOpenItem}
+          isOpen={isMobileDrawerOpen}
+          onClose={() => setIsMobileDrawerOpen(false)}
+          onOpen={() => setIsMobileDrawerOpen(true)}
+        />
+
+        {/* Loading Cursor (Beach Ball) */}
+        {isLoading && (
+          <div className="fixed inset-0 z-[300] pointer-events-none flex items-center justify-center">
+            <div className="w-8 h-8 animate-spin">
+              <svg viewBox="0 0 32 32" className="w-full h-full">
+                <defs>
+                  <linearGradient id="beachball" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ff6b6b" />
+                    <stop offset="25%" stopColor="#4ecdc4" />
+                    <stop offset="50%" stopColor="#45b7d1" />
+                    <stop offset="75%" stopColor="#96e6a1" />
+                    <stop offset="100%" stopColor="#ff6b6b" />
+                  </linearGradient>
+                </defs>
+                <circle cx="16" cy="16" r="14" fill="none" stroke="url(#beachball)" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

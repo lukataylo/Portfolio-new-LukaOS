@@ -29,6 +29,14 @@
       }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LukaOS">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <style>
       body {
         font-family: 'Space Mono', monospace;
@@ -110,6 +118,116 @@
       .window-shaking {
         animation: windowShake 0.3s ease-in-out;
       }
+
+      /* Beach Ball Loading Cursor */
+      @keyframes beachballSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .beach-ball-loading {
+        animation: beachballSpin 1s linear infinite;
+      }
+
+      /* Safe area for mobile */
+      .h-safe-area-inset-bottom {
+        height: env(safe-area-inset-bottom, 0px);
+      }
+
+      /* Spring animations for windows */
+      @keyframes springBounce {
+        0% { transform: scale(0.95) translateY(10px); opacity: 0; }
+        50% { transform: scale(1.02) translateY(-5px); }
+        70% { transform: scale(0.99) translateY(2px); }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
+      }
+      .window-spring-enter {
+        animation: springBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      }
+
+      /* Genie effect for minimize */
+      @keyframes genieMinimize {
+        0% { transform: scale(1) translateY(0); opacity: 1; }
+        50% { transform: scale(0.5) translateY(100px); opacity: 0.6; }
+        100% { transform: scale(0.1) translateY(calc(100vh - 150px)); opacity: 0; }
+      }
+      .window-genie-minimize {
+        animation: genieMinimize 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      /* Snap preview indicator */
+      @keyframes snapPulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.5; }
+      }
+      .snap-preview {
+        animation: snapPulse 0.8s ease-in-out infinite;
+      }
+
+      /* Reduce motion support */
+      @media (prefers-reduced-motion: reduce) {
+        .window-spring-enter,
+        .window-genie-minimize,
+        .beach-ball-loading,
+        .dock-wobble,
+        .window-shaking {
+          animation: none !important;
+        }
+        * {
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* User-set reduce motion */
+      .motion-reduce .window-spring-enter,
+      .motion-reduce .window-genie-minimize,
+      .motion-reduce .beach-ball-loading,
+      .motion-reduce .dock-wobble,
+      .motion-reduce .window-shaking {
+        animation: none !important;
+      }
+      .motion-reduce * {
+        transition-duration: 0.1ms !important;
+      }
+
+      /* Screen reader only utility */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Focus visible for keyboard navigation */
+      .focus-visible:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+      }
+
+      /* Mobile touch optimizations */
+      @media (max-width: 768px) {
+        .touch-manipulation {
+          touch-action: manipulation;
+        }
+
+        /* Larger tap targets on mobile */
+        button, a {
+          min-height: 44px;
+          min-width: 44px;
+        }
+
+        /* Disable hover effects on touch */
+        @media (hover: none) {
+          .hover\:bg-zinc-100:hover,
+          .hover\:bg-zinc-200:hover {
+            background-color: inherit;
+          }
+        }
+      }
     </style>
   <script type="importmap">
 {
@@ -140,5 +258,19 @@
       </ul>
     </noscript>
   <script type="module" src="/index.tsx"></script>
+    <script>
+      // Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW registered:', registration.scope);
+            })
+            .catch(error => {
+              console.log('SW registration failed:', error);
+            });
+        });
+      }
+    </script>
 </body>
 </html>

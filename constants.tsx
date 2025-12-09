@@ -14,7 +14,8 @@ import {
   Map as MapIcon,
   Mail,
   Library,
-  Folder
+  Folder,
+  Settings
 } from 'lucide-react';
 import { DesktopItem, FileType, BlogPost, Book } from './types';
 
@@ -349,9 +350,15 @@ export const DOCK_ITEMS: DesktopItem[] = [
     id: 'finder',
     title: 'Finder',
     icon: Folder,
-    type: FileType.APP,
-    appId: 'sitemap', // Updated finder to open Sitemap for better navigation
-    seoDescription: 'System Finder and File Navigation.'
+    type: FileType.FINDER,
+    seoDescription: 'Browse all files and folders in LukaOS.'
+  },
+  {
+    id: 'preferences',
+    title: 'Settings',
+    icon: Settings,
+    type: FileType.PREFERENCES,
+    seoDescription: 'System Preferences and Settings.'
   },
   {
     id: 'blog-dock',

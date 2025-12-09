@@ -7,7 +7,7 @@ interface WindowFrameProps {
   onMinimize: (id: string) => void;
   onMaximize: (id: string) => void;
   onFocus: (id: string) => void;
-  onMove: (id: string, x: number, y: number) => void;
+  onMove: (id: string, x: number, y: number, shouldSnap?: boolean) => void;
   onResize: (id: string, width: number, height: number) => void;
   children: React.ReactNode;
 }
@@ -29,6 +29,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [isBouncing, setIsBouncing] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
+  const [snapPreview, setSnapPreview] = useState<'left' | 'right' | 'full' | null>(null);
+
+  // Store pre-snap size/position for restoration
+  const preSnapState = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
 
   // Start in 'closed' state to render the initial frame at the icon's position
   const [animState, setAnimState] = useState<AnimationState>('closed');
@@ -74,15 +78,16 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
   // Dragging Title Bar
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (windowState.isMaximized) return;
-    
-    e.stopPropagation(); 
+    // Allow dragging from maximized/snapped windows (will trigger unsnap)
+    if (windowState.isMaximized && !windowState.isSnapped) return;
+
+    e.stopPropagation();
     onFocus(windowState.id);
-    
+
     setIsDragging(true);
     dragStartPos.current = { x: e.clientX, y: e.clientY };
-    windowStartRect.current = { 
-        x: windowState.position.x, 
+    windowStartRect.current = {
+        x: windowState.position.x,
         y: windowState.position.y,
         width: windowState.size.width,
         height: windowState.size.height
@@ -109,10 +114,11 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   
   // Touch Handling for Drag
   const handleTouchStart = (e: React.TouchEvent) => {
-      if (windowState.isMaximized) return;
+      // Allow dragging from maximized/snapped windows (will trigger unsnap)
+      if (windowState.isMaximized && !windowState.isSnapped) return;
       e.stopPropagation();
       onFocus(windowState.id);
-      
+
       const touch = e.touches[0];
       setIsDragging(true);
       dragStartPos.current = { x: touch.clientX, y: touch.clientY };
@@ -193,11 +199,24 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
         lastDragX.current = currentX;
 
-        onMove(
-          windowState.id,
-          windowStartRect.current.x + deltaX,
-          windowStartRect.current.y + deltaY
-        );
+        const newX = windowStartRect.current.x + deltaX;
+        const newY = windowStartRect.current.y + deltaY;
+
+        // Check for snap zones and show preview
+        const screenWidth = window.innerWidth;
+        const snapThreshold = 30;
+
+        if (clientX <= snapThreshold) {
+          setSnapPreview('left');
+        } else if (clientX >= screenWidth - snapThreshold) {
+          setSnapPreview('right');
+        } else if (clientY <= snapThreshold + 36) {
+          setSnapPreview('full');
+        } else {
+          setSnapPreview(null);
+        }
+
+        onMove(windowState.id, newX, newY);
       } else if (isResizing && resizeDir.current) {
         const deltaX = clientX - dragStartPos.current.x;
         const deltaY = clientY - dragStartPos.current.y;
@@ -244,7 +263,35 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent | TouchEvent) => {
+      let clientX = 0;
+      let clientY = 0;
+      if ('changedTouches' in e) {
+        clientX = e.changedTouches[0]?.clientX ?? 0;
+        clientY = e.changedTouches[0]?.clientY ?? 0;
+      } else {
+        clientX = (e as MouseEvent).clientX;
+        clientY = (e as MouseEvent).clientY;
+      }
+
+      // Check for window snap on drag end
+      if (isDragging && snapPreview) {
+        // Trigger snap via onMove with snap flag
+        onMove(windowState.id, clientX, clientY, true);
+        setSnapPreview(null);
+        setIsDragging(false);
+        setIsResizing(false);
+        return;
+      }
+
+      // If dragging away from a snapped window without hitting a snap zone, restore size
+      if (isDragging && windowState.isSnapped && !snapPreview) {
+        onMove(windowState.id, clientX, clientY, true);
+        setIsDragging(false);
+        setIsResizing(false);
+        return;
+      }
+
       // Check if window is off-screen and bounce it back
       if (isDragging) {
         const padding = 50; // Minimum visible pixels
@@ -286,6 +333,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
       setIsDragging(false);
       setIsResizing(false);
+      setSnapPreview(null);
       resizeDir.current = null;
 
       // Reset shake detection
@@ -347,9 +395,9 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       style = {
           ...style,
           left: 0,
-          top: 0,
+          top: 36, // Below menu bar (36px height)
           width: '100vw',
-          height: '100vh',
+          height: 'calc(100vh - 36px)', // Full height minus menu bar
           borderRadius: 0,
           transform: 'scale(1)',
       };
@@ -407,19 +455,52 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   // Apply transition
   style.transition = getTransition();
 
+  // Snap preview dimensions
+  const getSnapPreviewStyle = (): React.CSSProperties | null => {
+    if (!snapPreview) return null;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight - 36 - 60; // Minus menu bar and dock
+
+    switch (snapPreview) {
+      case 'left':
+        return { left: 0, top: 36, width: screenWidth / 2, height: screenHeight };
+      case 'right':
+        return { left: screenWidth / 2, top: 36, width: screenWidth / 2, height: screenHeight };
+      case 'full':
+        return { left: 0, top: 36, width: screenWidth, height: screenHeight };
+      default:
+        return null;
+    }
+  };
+
+  const snapPreviewStyle = getSnapPreviewStyle();
+
   return (
-    <div
-      className={`
-        absolute flex flex-col shadow-2xl
-        border border-zinc-200 dark:border-zinc-800
-        bg-white dark:bg-[#0f0f0f]
-        ${!windowState.isMaximized ? 'rounded-lg' : ''}
-        ${isAnimating ? 'pointer-events-none overflow-hidden' : ''}
-        ${isShaking ? 'window-shaking' : ''}
-      `}
-      style={style}
-      onClick={() => onFocus(windowState.id)}
-    >
+    <>
+      {/* Snap Preview Indicator */}
+      {snapPreview && snapPreviewStyle && (
+        <div
+          className="fixed snap-preview bg-blue-500/20 border-2 border-blue-500 rounded-lg pointer-events-none z-[999]"
+          style={snapPreviewStyle}
+        />
+      )}
+
+      <div
+        className={`
+          absolute flex flex-col shadow-2xl
+          border border-zinc-200 dark:border-zinc-800
+          bg-white dark:bg-[#0f0f0f]
+          ${!windowState.isMaximized ? 'rounded-lg' : ''}
+          ${isAnimating ? 'pointer-events-none overflow-hidden' : ''}
+          ${isShaking ? 'window-shaking' : ''}
+          ${animState === 'opening' ? 'window-spring-enter' : ''}
+        `}
+        style={style}
+        onClick={() => onFocus(windowState.id)}
+        role="dialog"
+        aria-label={windowState.title}
+        aria-modal="false"
+      >
       {/* Resize Handles - Only when not maximized and not animating */}
       {!windowState.isMaximized && !isAnimating && (
         <>
@@ -446,25 +527,31 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       >
         <div className="flex gap-1.5 group relative z-[60]">
           {/* Close */}
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); handleCloseRequest(); }}
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 border border-red-600 transition-colors flex items-center justify-center group-hover:scale-110 active:scale-90" 
+            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 border border-red-600 transition-colors flex items-center justify-center group-hover:scale-110 active:scale-90"
             onTouchEnd={(e) => { e.stopPropagation(); handleCloseRequest(); }}
+            aria-label="Close window"
+            title="Close"
           >
           </button>
-          
+
           {/* Minimize */}
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
-            className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-yellow-400 border border-zinc-400 dark:border-zinc-600 transition-colors group-hover:scale-110 active:scale-90" 
+            className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-yellow-400 border border-zinc-400 dark:border-zinc-600 transition-colors group-hover:scale-110 active:scale-90"
             onTouchEnd={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
+            aria-label="Minimize window"
+            title="Minimize"
           />
-          
+
           {/* Maximize */}
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
-            className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-green-500 border border-zinc-400 dark:border-zinc-600 transition-colors group-hover:scale-110 active:scale-90" 
+            className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-green-500 border border-zinc-400 dark:border-zinc-600 transition-colors group-hover:scale-110 active:scale-90"
             onTouchEnd={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
+            aria-label={windowState.isMaximized ? "Restore window" : "Maximize window"}
+            title={windowState.isMaximized ? "Restore" : "Maximize"}
           />
         </div>
         <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 font-bold">
@@ -474,9 +561,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden relative bg-white dark:bg-zinc-950">
-        {children}
+        <div className="flex-1 overflow-hidden relative bg-white dark:bg-zinc-950">
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

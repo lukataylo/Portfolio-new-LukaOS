@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDownAZ, LayoutGrid, RotateCcw } from 'lucide-react';
+import { ArrowDownAZ, LayoutGrid, RotateCcw, Sparkles } from 'lucide-react';
 
 interface ContextMenuProps {
   x: number;
@@ -8,10 +8,11 @@ interface ContextMenuProps {
   onSortByName: () => void;
   onSortByType: () => void;
   onRefresh: () => void;
+  onCleanUp: () => void;
 }
 
-export const ContextMenu: React.FC<ContextMenuProps> = ({ 
-  x, y, onClose, onSortByName, onSortByType, onRefresh 
+export const ContextMenu: React.FC<ContextMenuProps> = ({
+  x, y, onClose, onSortByName, onSortByType, onRefresh, onCleanUp
 }) => {
   // Prevent menu from going off-screen
   const adjustedX = Math.min(x, window.innerWidth - 200);
@@ -43,7 +44,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             <span className="font-mono text-xs">Sort by Name</span>
           </button>
           
-          <button 
+          <button
             onClick={() => { onSortByType(); onClose(); }}
             className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
           >
@@ -51,9 +52,17 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             <span className="font-mono text-xs">Sort by Type</span>
           </button>
 
+          <button
+            onClick={() => { onCleanUp(); onClose(); }}
+            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+          >
+            <Sparkles size={14} className="group-hover:text-red-600 transition-colors" />
+            <span className="font-mono text-xs">Clean Up</span>
+          </button>
+
           <div className="h-px bg-zinc-100 dark:bg-zinc-900 my-1 mx-2" />
 
-          <button 
+          <button
             onClick={() => { onRefresh(); onClose(); }}
             className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
           >

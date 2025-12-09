@@ -7,13 +7,28 @@ interface DockProps {
   openItemIds: string[];
   windows: WindowState[];
   renderPreview: (itemId: string) => React.ReactNode;
+  allItems?: DesktopItem[]; // All items including desktop items for dynamic dock icons
 }
 
-export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, windows, renderPreview }) => {
+export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, windows, renderPreview, allItems = [] }) => {
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [isLongPress, setIsLongPress] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Create a list of items to show in dock:
+  // 1. All permanent dock items
+  // 2. Any open windows from desktop items that aren't already in dock
+  const dockItemIds = new Set(items.map(i => i.id));
+  const dynamicItems = allItems.filter(item => {
+    // Only include if it's open and not already in dock items
+    const isOpen = openItemIds.includes(item.id);
+    const notInDock = !dockItemIds.has(item.id);
+    return isOpen && notInDock;
+  });
+
+  // Combine permanent dock items with dynamic items
+  const displayItems = [...items, ...dynamicItems];
 
   // Track screen size for accurate maximized window previews
   useEffect(() => {
@@ -60,17 +75,22 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
   }, [isLongPress]);
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+    <nav
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999]"
+      role="toolbar"
+      aria-label="Application dock"
+    >
       <div className="
-        flex items-center gap-4 px-6 py-4
+        flex items-center gap-2 px-4 py-2
         bg-white/70 dark:bg-zinc-900/80 backdrop-blur-xl
         border border-zinc-200 dark:border-zinc-800
-        rounded-3xl shadow-2xl transition-colors
+        rounded-2xl shadow-2xl transition-colors
       ">
-        {items.map((item) => {
+        {displayItems.map((item) => {
           const Icon = item.icon;
           const isOpen = openItemIds.includes(item.id) || (item.appId && openItemIds.includes(item.appId));
           const isHovered = hoveredItemId === item.id;
+          const isDynamic = !dockItemIds.has(item.id); // Is this a dynamically added item?
           
           // Determine the window ID to preview
           const targetItemId = item.appId ? item.appId : item.id;
@@ -99,8 +119,11 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
           const scale = Math.min(scaleX, scaleY);
 
           return (
-            <div key={item.id} className="relative flex flex-col items-center">
-                
+            <div
+              key={item.id}
+              className={`relative flex flex-col items-center ${isDynamic ? 'animate-in fade-in slide-in-from-bottom-4 duration-300' : ''}`}
+            >
+
               {/* Window Preview Bubble */}
               {isHovered && targetWindow && (
                 <div className="absolute -top-52 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-200 z-50 pointer-events-none">
@@ -161,17 +184,19 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
                 onTouchStart={handleLongPressStart}
                 onTouchEnd={handleLongPressEnd}
                 className={`group relative flex flex-col items-center justify-center transition-all hover:-translate-y-2 duration-300 ${isLongPress ? 'dock-wobble' : ''}`}
+                aria-label={`Open ${item.title}${isOpen ? ' (running)' : ''}`}
+                title={item.title}
               >
                 <div className={`
-                  w-12 h-12 flex items-center justify-center
+                  w-10 h-10 flex items-center justify-center
                   rounded-xl border transition-all duration-300
-                  ${targetWindow?.isMinimized 
-                    ? 'bg-zinc-100 dark:bg-zinc-800/50 border-zinc-300 dark:border-zinc-700 opacity-70 grayscale' 
+                  ${targetWindow?.isMinimized
+                    ? 'bg-zinc-100 dark:bg-zinc-800/50 border-zinc-300 dark:border-zinc-700 opacity-70 grayscale'
                     : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-100 group-hover:border-zinc-400 dark:group-hover:border-white'
                   }
                   shadow-sm
                 `}>
-                  <Icon className="w-6 h-6 text-black dark:text-white group-hover:text-black transition-colors" />
+                  <Icon className="w-5 h-5 text-black dark:text-white group-hover:text-black transition-colors" />
                 </div>
                 
                 {/* Tooltip (Only show if NOT showing preview to avoid clutter) */}
@@ -198,6 +223,6 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 };

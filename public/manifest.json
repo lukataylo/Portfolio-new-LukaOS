@@ -1,0 +1,61 @@
+{
+  "name": "LukaOS Portfolio",
+  "short_name": "LukaOS",
+  "description": "Interactive OS-style portfolio of Luka Dadiani, Product Manager & Designer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#dc2626",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["portfolio", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "LukaOS Desktop View"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "LukaOS Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "About Me",
+      "short_name": "About",
+      "url": "/#/about",
+      "icons": [{ "src": "/icons/about-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Notes",
+      "short_name": "Notes",
+      "url": "/#/notes",
+      "icons": [{ "src": "/icons/notes-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Terminal",
+      "short_name": "Terminal",
+      "url": "/#/terminal",
+      "icons": [{ "src": "/icons/terminal-96.png", "sizes": "96x96" }]
+    }
+  ]
+}
