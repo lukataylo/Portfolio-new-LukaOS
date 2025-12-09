@@ -432,11 +432,69 @@ const App: React.FC = () => {
         {/* Menu Bar */}
         <header className="fixed top-0 left-0 right-0 h-9 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4 z-50 transition-colors">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-600 rounded-full" />
-              <span className="text-xs font-bold uppercase tracking-widest text-black dark:text-white">
-                LukaOS
-              </span>
+            {/* LukaOS Menu (Apple-style) */}
+            <div className="relative">
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => setActiveMenu(activeMenu === 'about' ? null : 'about')}
+              >
+                <div className={`w-3 h-3 bg-red-600 rounded-full transition-transform ${activeMenu === 'about' ? 'scale-125' : ''}`} />
+                <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${activeMenu === 'about' ? 'text-red-600' : 'text-black dark:text-white'}`}>
+                  LukaOS
+                </span>
+              </div>
+              {activeMenu === 'about' && (
+                <div className="absolute top-8 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl p-0 w-[320px] z-50 animate-in fade-in slide-in-from-top-2 duration-150 overflow-hidden">
+                  {/* Header */}
+                  <div className="p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white dark:bg-black rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shadow-sm">
+                        <div className="w-4 h-4 bg-red-600 rounded-full" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-black dark:text-white text-sm">LukaOS</h3>
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Version 1.0.0</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* About Me */}
+                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">About</h4>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                      Hi, I'm <span className="font-bold text-black dark:text-white">Luka Dadiani</span> — a Product Manager & Senior Designer based in London with 9+ years of experience building user-centred digital products.
+                    </p>
+                  </div>
+
+                  {/* Why This Site */}
+                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Why This Design?</h4>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed mb-2">
+                      Every portfolio looks the same. But doing something <em>different</em> often means worse UX.
+                    </p>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                      Good UX is <span className="font-bold text-black dark:text-white">immediately recognisable</span>. This site uses a familiar metaphor — the desktop OS — to stand out while remaining intuitive.
+                    </p>
+                  </div>
+
+                  {/* Inspiration */}
+                  <div className="p-4">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Inspired By</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-[10px] px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">macOS</span>
+                      <span className="text-[10px] px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">Nothing Phone</span>
+                      <span className="text-[10px] px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">PostHog</span>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800">
+                    <p className="text-[9px] text-zinc-400 text-center">
+                      Built with React + TypeScript + Tailwind
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
             <nav className="hidden md:flex gap-4 ml-8 relative">
               {/* File Menu */}
