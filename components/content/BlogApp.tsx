@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BlogPost } from '../../types';
-import { Search, MoreHorizontal, Plus, Hash, Clock, Pencil } from 'lucide-react';
+import { Search, MoreHorizontal, Plus, Hash, Clock } from 'lucide-react';
 
 interface BlogAppProps {
   posts: BlogPost[];
@@ -15,7 +15,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
   const [activePostId, setActivePostId] = useState<string | null>(posts[0]?.id || null);
   const [searchQuery, setSearchQuery] = useState('');
   const [editablePosts, setEditablePosts] = useState<Record<string, EditablePost>>({});
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true); // Editable by default
   const contentRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
@@ -126,7 +126,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
                 key={post.id}
                 onClick={() => handlePostClick(post.id)}
                 className={`
-                  px-4 py-3 cursor-pointer border-b border-zinc-100 dark:border-zinc-800/50
+                  px-4 py-4 cursor-pointer border-b border-zinc-100 dark:border-zinc-800/50
                   transition-colors
                   ${isActive
                     ? 'bg-yellow-500 text-black'
@@ -136,13 +136,13 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className={`font-semibold text-sm truncate ${isActive ? 'text-black' : 'text-black dark:text-white'}`}>
+                    <h3 className={`font-semibold text-sm truncate mb-1.5 ${isActive ? 'text-black' : 'text-black dark:text-white'}`}>
                       {getDisplayTitle(displayPost)}
                       {hasEdits && <span className="text-yellow-600 ml-1">•</span>}
                     </h3>
-                    <div className={`flex items-center gap-2 mt-1 ${isActive ? 'text-black/70' : 'text-zinc-500'}`}>
+                    <div className={`flex items-center gap-2 ${isActive ? 'text-black/70' : 'text-zinc-500'}`}>
                       <span className="text-[11px]">{formatDate(post.date)}</span>
-                      <span className="text-[11px] truncate">{post.excerpt.slice(0, 30)}...</span>
+                      <span className="text-[11px] truncate">{post.excerpt.slice(0, 35)}...</span>
                     </div>
                   </div>
                 </div>
@@ -181,48 +181,29 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className={`p-2 rounded-lg transition-colors ${isEditing ? 'bg-yellow-500 text-black' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500'}`}
-                  title={isEditing ? "Editing mode" : "Click to edit"}
-                >
-                  <Pencil size={16} />
-                </button>
                 <button className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500">
                   <MoreHorizontal size={16} />
                 </button>
               </div>
             </div>
 
-            {/* Editable Notice */}
-            {isEditing && (
-              <div className="px-6 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800/30">
-                <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                  Editing mode — changes are temporary and won't be saved
-                </p>
-              </div>
-            )}
 
             {/* Note Content */}
             <div className="flex-1 overflow-y-auto">
-              <article className="max-w-2xl mx-auto px-6 py-8">
+              <article className="max-w-2xl mx-auto px-8 py-10">
                 {/* Title */}
                 <h1
                   ref={titleRef}
                   contentEditable={isEditing}
                   onInput={handleTitleChange}
                   suppressContentEditableWarning
-                  className={`
-                    text-3xl font-bold text-black dark:text-white mb-2
-                    focus:outline-none
-                    ${isEditing ? 'bg-yellow-50 dark:bg-yellow-900/10 rounded px-2 -mx-2' : ''}
-                  `}
+                  className="text-3xl font-bold text-black dark:text-white mb-4 leading-tight focus:outline-none"
                 >
                   {getDisplayTitle(activePost)}
                 </h1>
 
                 {/* Date & Author */}
-                <div className="flex items-center gap-3 text-sm text-zinc-500 mb-8 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center gap-3 text-sm text-zinc-500 mb-10 pb-5 border-b border-zinc-200 dark:border-zinc-700">
                   <span>{activePost.date}</span>
                   <span>•</span>
                   <span>{activePost.author}</span>
@@ -230,7 +211,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
 
                 {/* Featured Image */}
                 {activePost.image && (
-                  <figure className="w-full h-48 overflow-hidden rounded-xl mb-8">
+                  <figure className="w-full h-56 overflow-hidden rounded-xl mb-10 shadow-sm">
                     <img
                       src={activePost.image}
                       alt={getDisplayTitle(activePost)}
@@ -245,14 +226,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
                   contentEditable={isEditing}
                   onInput={handleContentChange}
                   suppressContentEditableWarning
-                  className={`
-                    prose dark:prose-invert prose-zinc max-w-none
-                    prose-headings:font-semibold prose-headings:text-black dark:prose-headings:text-white
-                    prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed
-                    prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:underline
-                    focus:outline-none
-                    ${isEditing ? 'bg-yellow-50 dark:bg-yellow-900/10 rounded-lg p-4 -mx-4' : ''}
-                  `}
+                  className="prose dark:prose-invert prose-zinc max-w-none prose-headings:font-semibold prose-headings:text-black dark:prose-headings:text-white prose-headings:mt-8 prose-headings:mb-4 prose-h3:text-xl prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed prose-p:text-base prose-p:mb-5 prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:underline focus:outline-none leading-7"
                   dangerouslySetInnerHTML={{ __html: getDisplayContent(activePost) }}
                 />
               </article>
