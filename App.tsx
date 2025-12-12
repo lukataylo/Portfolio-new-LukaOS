@@ -1061,13 +1061,30 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Inspiration */}
-                  <div className="p-4">
+                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Inspired By</h4>
                     <div className="flex flex-wrap gap-2">
                       <span className="text-[10px] px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">macOS</span>
                       <span className="text-[10px] px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">Nothing Phone</span>
                       <span className="text-[10px] px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">PostHog</span>
                     </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="p-2">
+                    <button
+                      onClick={() => {
+                        const prefsItem = DOCK_ITEMS.find(item => item.id === 'preferences');
+                        if (prefsItem) {
+                          handleOpenItem(prefsItem);
+                        }
+                        setActiveMenu(null);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
+                    >
+                      <Settings size={16} className="text-zinc-400 group-hover:text-red-600 transition-colors" />
+                      <span className="text-xs font-medium">System Preferences...</span>
+                    </button>
                   </div>
 
                   {/* Footer */}
