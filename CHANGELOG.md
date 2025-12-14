@@ -55,7 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Easter Eggs
 - Konami code activates retro CRT mode
 - Clock click cycles through time formats
-- Window shake to close
 - Hidden terminal commands
 - Dock wobble mode
 

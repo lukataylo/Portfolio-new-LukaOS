@@ -244,7 +244,6 @@ Configured for GitHub Pages:
 
 - **Konami Code** (`↑↑↓↓←→←→BA`): Activates retro CRT mode
 - **Clock Click**: Cycles through Normal → Binary → Hex → Coffee time
-- **Window Shake**: Rapidly drag a window side-to-side to close it
 - **Terminal Commands**: Try `help`, `clear`, `whoami`, `ls`, or hidden commands
 - **Dock Wobble**: Long-press dock icons for iOS-style wobble mode
 

@@ -30,7 +30,6 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isBouncing, setIsBouncing] = useState(false);
-  const [isShaking, setIsShaking] = useState(false);
   const [snapPreview, setSnapPreview] = useState<'left' | 'right' | 'full' | null>(null);
   const [windowContextMenu, setWindowContextMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -43,12 +42,6 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
   const windowStartRect = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const resizeDir = useRef<ResizeDirection | null>(null);
-
-  // Shake detection refs
-  const lastDragX = useRef<number>(0);
-  const shakeDirectionChanges = useRef<number>(0);
-  const lastDirection = useRef<'left' | 'right' | null>(null);
-  const shakeStartTime = useRef<number>(0);
 
   // Animation Lifecycle
   useEffect(() => {
@@ -167,40 +160,6 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       if (isDragging) {
         const deltaX = clientX - dragStartPos.current.x;
         const deltaY = clientY - dragStartPos.current.y;
-
-        // Shake detection logic
-        const currentX = windowStartRect.current.x + deltaX;
-        const xDiff = currentX - lastDragX.current;
-        const currentDirection = xDiff > 5 ? 'right' : xDiff < -5 ? 'left' : null;
-
-        if (currentDirection && currentDirection !== lastDirection.current) {
-          // Direction changed
-          if (shakeDirectionChanges.current === 0) {
-            shakeStartTime.current = Date.now();
-          }
-          shakeDirectionChanges.current++;
-          lastDirection.current = currentDirection;
-
-          // If we detected 6+ direction changes in under 1 second, it's a shake
-          const timeSinceStart = Date.now() - shakeStartTime.current;
-          if (shakeDirectionChanges.current >= 6 && timeSinceStart < 1000) {
-            setIsShaking(true);
-            setTimeout(() => {
-              handleCloseRequest();
-            }, 300);
-            // Reset shake detection
-            shakeDirectionChanges.current = 0;
-            lastDirection.current = null;
-          }
-
-          // Reset if too slow
-          if (timeSinceStart > 1000) {
-            shakeDirectionChanges.current = 1;
-            shakeStartTime.current = Date.now();
-          }
-        }
-
-        lastDragX.current = currentX;
 
         const newX = windowStartRect.current.x + deltaX;
         const newY = windowStartRect.current.y + deltaY;
@@ -338,11 +297,6 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       setIsResizing(false);
       setSnapPreview(null);
       resizeDir.current = null;
-
-      // Reset shake detection
-      shakeDirectionChanges.current = 0;
-      lastDirection.current = null;
-      lastDragX.current = 0;
     };
 
     if (isDragging || isResizing) {
@@ -495,7 +449,6 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           bg-white dark:bg-[#0f0f0f]
           ${!windowState.isMaximized ? 'rounded-lg' : ''}
           ${isAnimating ? 'pointer-events-none overflow-hidden' : ''}
-          ${isShaking ? 'window-shaking' : ''}
           ${animState === 'opening' ? 'window-spring-enter' : ''}
         `}
         style={style}
