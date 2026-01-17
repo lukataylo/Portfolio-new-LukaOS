@@ -16,6 +16,7 @@ import { SkeletonLoader } from './components/content/SkeletonLoader';
 import { SitemapViewer } from './components/content/SitemapViewer';
 import { FinderApp } from './components/content/FinderApp';
 import { SystemPreferences } from './components/content/SystemPreferences';
+import { ContentEditorApp } from './components/content/ContentEditorApp';
 import { ContextMenu } from './components/ContextMenu';
 import { CookieNotice } from './components/CookieNotice';
 import { Spotlight } from './components/Spotlight';
@@ -25,6 +26,8 @@ import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings, Folder } from 'lucide-react';
 import { generateChatResponse } from './services/geminiService';
 import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
+import { useAdmin } from './contexts/AdminContext';
+import { useContent } from './hooks/useContent';
 
 // Helper component to simulate fetching data
 const DelayedLoader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -46,8 +49,38 @@ const App: React.FC = () => {
   const [time, setTime] = useState(new Date());
   const [theme, setTheme] = useState<'light' | 'dark'>(() => loadTheme());
 
-  // Desktop Items State (for sorting and positioning)
+  // Admin mode
+  const { isAdminMode, isAuthenticated } = useAdmin();
+
+  // Content management (CMS)
+  const {
+    blogPosts,
+    books,
+    desktopItems: managedDesktopItems,
+    isLoaded: contentLoaded,
+    saveContent,
+    addBlogPost,
+    updateBlogPost,
+    deleteBlogPost,
+    addBook,
+    updateBook,
+    deleteBook,
+    updateDesktopItem,
+    updateSlide,
+    addSlide,
+    deleteSlide,
+    resetToDefaults
+  } = useContent();
+
+  // Desktop Items State (for sorting and positioning) - use managed items when loaded
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>(DESKTOP_ITEMS);
+
+  // Sync managed desktop items when content is loaded
+  useEffect(() => {
+    if (contentLoaded) {
+      setDesktopItems(managedDesktopItems);
+    }
+  }, [contentLoaded, managedDesktopItems]);
   const [iconPositions, setIconPositions] = useState<IconPosition[]>(() => loadIconPositions());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -488,6 +521,37 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Admin mode - open/close Content Editor window
+  useEffect(() => {
+    const editorWindowId = 'window-content-editor';
+    const existingEditor = windows.find(w => w.id === editorWindowId);
+
+    if (isAdminMode && !existingEditor) {
+      // Open the Content Editor window
+      const maxZ = windows.length > 0 ? Math.max(10, ...windows.map(w => w.zIndex)) : 10;
+      const newWindow: WindowState = {
+        id: editorWindowId,
+        itemId: 'content-editor',
+        title: 'Content_Editor',
+        isOpen: true,
+        isMinimized: false,
+        isMaximized: false,
+        zIndex: maxZ + 1,
+        position: { x: 100, y: 100 },
+        size: { width: 900, height: 650 }
+      };
+      setWindows(prev => [...prev, newWindow]);
+      setActiveWindowId(editorWindowId);
+    } else if (!isAdminMode && existingEditor) {
+      // Close the Content Editor window
+      setWindows(prev => prev.filter(w => w.id !== editorWindowId));
+      if (activeWindowId === editorWindowId) {
+        const remaining = windows.filter(w => w.id !== editorWindowId && !w.isMinimized);
+        setActiveWindowId(remaining.length > 0 ? remaining[remaining.length - 1].id : null);
+      }
+    }
+  }, [isAdminMode]);
+
   // Add notification helper
   const addNotification = (title: string, message: string) => {
     const newNotification = {
@@ -845,11 +909,34 @@ const App: React.FC = () => {
   };
 
   const renderWindowContent = (win: WindowState) => {
-    const item = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find(i => i.id === win.itemId);
+    const item = [...desktopItems, ...DOCK_ITEMS].find(i => i.id === win.itemId);
 
     // Handle AI Chat App
     if (win.itemId === 'ai-chat') {
       return <ChatApp messages={chatMessages} onSendMessage={handleChatSend} />;
+    }
+
+    // Handle Content Editor (admin mode)
+    if (win.itemId === 'content-editor') {
+      return (
+        <ContentEditorApp
+          blogPosts={blogPosts}
+          books={books}
+          desktopItems={desktopItems}
+          onUpdateBlogPost={updateBlogPost}
+          onAddBlogPost={addBlogPost}
+          onDeleteBlogPost={deleteBlogPost}
+          onUpdateBook={updateBook}
+          onAddBook={addBook}
+          onDeleteBook={deleteBook}
+          onUpdateDesktopItem={updateDesktopItem}
+          onUpdateSlide={updateSlide}
+          onAddSlide={addSlide}
+          onDeleteSlide={deleteSlide}
+          onSave={saveContent}
+          onReset={resetToDefaults}
+        />
+      );
     }
 
     if (!item) return <div className="p-4">Content not found</div>;
@@ -881,13 +968,13 @@ const App: React.FC = () => {
       case FileType.BLOG:
         return (
           <DelayedLoader>
-            <BlogApp posts={item.blogPosts || []} />
+            <BlogApp posts={blogPosts} />
           </DelayedLoader>
         );
       case FileType.BOOKS:
         return (
           <DelayedLoader>
-            <BooksApp books={item.books || []} />
+            <BooksApp books={books} />
           </DelayedLoader>
         );
       case FileType.TERMINAL:
@@ -925,7 +1012,7 @@ const App: React.FC = () => {
 
   // Render content for Dock previews (same as window content but without loader delay for snappier previews)
   const renderPreviewContent = (itemId: string) => {
-    const item = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find(i => i.id === itemId);
+    const item = [...desktopItems, ...DOCK_ITEMS].find(i => i.id === itemId);
 
     if (itemId === 'ai-chat') {
       return <ChatApp messages={chatMessages} onSendMessage={async () => {}} />;
@@ -950,9 +1037,9 @@ const App: React.FC = () => {
       case FileType.LINK:
         return <BrowserApp initialUrl={item.url || ''} />;
       case FileType.BLOG:
-        return <BlogApp posts={item.blogPosts || []} />;
+        return <BlogApp posts={blogPosts} />;
       case FileType.BOOKS:
-        return <BooksApp books={item.books || []} />;
+        return <BooksApp books={books} />;
       case FileType.TERMINAL:
         return <TerminalApp />;
       case FileType.MAIL:
