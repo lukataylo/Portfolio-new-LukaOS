@@ -727,12 +727,14 @@ const App: React.FC = () => {
 
     // Determine initial size based on type and screen size
     const isMobile = window.innerWidth < 768;
+    const MENU_BAR_HEIGHT = 36;
     let initialWidth = INITIAL_WINDOW_WIDTH;
     let initialHeight = INITIAL_WINDOW_HEIGHT;
 
     if (isMobile) {
         initialWidth = window.innerWidth - 32;
-        initialHeight = window.innerHeight - 100;
+        // Account for menu bar at top and dock/padding at bottom
+        initialHeight = window.innerHeight - MENU_BAR_HEIGHT - 12 - 60;
     } else if (realItem.id === 'about-me') {
         // About Me presentation gets a larger window for better readability
         initialWidth = 800;
@@ -751,8 +753,9 @@ const App: React.FC = () => {
     }
 
     // Calculate Position: Cascade from active window OR default diagonal
+    // On mobile, start below the menu bar
     let startX = isMobile ? 16 : 100;
-    let startY = isMobile ? 16 : 100;
+    let startY = isMobile ? MENU_BAR_HEIGHT + 12 : 100;
     
     // Find active window to cascade from
     const activeWindow = windows.find(w => w.id === activeWindowId);
