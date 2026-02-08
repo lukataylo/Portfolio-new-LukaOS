@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BlogPost } from '../../types';
-import { Search, MoreHorizontal, Plus, Hash, Clock } from 'lucide-react';
+import { Search, MoreHorizontal, Plus, Hash, Clock, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 interface BlogAppProps {
   posts: BlogPost[];
@@ -16,6 +16,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [editablePosts, setEditablePosts] = useState<Record<string, EditablePost>>({});
   const [isEditing, setIsEditing] = useState(true); // Editable by default
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
@@ -86,9 +87,9 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
   };
 
   return (
-    <div className="h-full flex bg-[#f5f5f7] dark:bg-[#1c1c1e]">
+    <div className="h-full flex bg-[#f2f2f7] dark:bg-[#1c1c1e]">
       {/* Sidebar */}
-      <div className="w-72 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-[#f5f5f7] dark:bg-[#2c2c2e]">
+      <div className={`${isSidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-72 opacity-100'} transition-all duration-200 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-[#f2f2f7] dark:bg-[#2c2c2e] overflow-hidden`}>
         {/* Sidebar Header */}
         <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
           {/* Search */}
@@ -136,11 +137,11 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className={`font-semibold text-sm truncate mb-1.5 ${isActive ? 'text-black' : 'text-black dark:text-white'}`}>
+                    <h3 className={`font-semibold text-sm truncate mb-1.5 ${isActive ? 'text-black' : 'text-zinc-900 dark:text-zinc-100'}`}>
                       {getDisplayTitle(displayPost)}
                       {hasEdits && <span className="text-yellow-600 ml-1">•</span>}
                     </h3>
-                    <div className={`flex items-center gap-2 ${isActive ? 'text-black/70' : 'text-zinc-500'}`}>
+                    <div className={`flex items-center gap-2 ${isActive ? 'text-black/70' : 'text-zinc-500 dark:text-zinc-400'}`}>
                       <span className="text-[11px]">{formatDate(post.date)}</span>
                       <span className="text-[11px] truncate">{post.excerpt.slice(0, 35)}...</span>
                     </div>
@@ -153,7 +154,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
 
         {/* Sidebar Footer */}
         <div className="p-3 border-t border-zinc-200 dark:border-zinc-800">
-          <span className="text-[11px] text-zinc-500">{posts.length} Notes</span>
+          <span className="text-[11px] text-zinc-500 dark:text-zinc-400">{posts.length} Notes</span>
         </div>
       </div>
 
@@ -162,13 +163,20 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
         {activePost ? (
           <>
             {/* Content Header */}
-            <div className="flex items-center justify-between px-6 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-[#1c1c1e]">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-[#1c1c1e]">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  onClick={() => setIsSidebarCollapsed(prev => !prev)}
+                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"
+                  aria-label={isSidebarCollapsed ? 'Show notes list' : 'Hide notes list'}
+                >
+                  {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+                </button>
                 <div className="flex items-center gap-2 text-xs text-zinc-500">
                   <Clock size={12} />
                   <span>{activePost.readTime}</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
                   {activePost.tags.map(tag => (
                     <span
                       key={tag}
