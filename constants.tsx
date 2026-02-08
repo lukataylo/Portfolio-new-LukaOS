@@ -25,23 +25,55 @@ export const INITIAL_WINDOW_HEIGHT = 500;
 const BLOG_POSTS: BlogPost[] = [
   {
     id: 'post-1',
-    title: 'The Search for Digital Minimalism',
-    excerpt: 'Why we are returning to brutalist aesthetics and raw data in an age of AI-generated noise.',
-    date: 'Oct 24, 2024',
-    readTime: '5 min read',
-    author: 'Senior Engineer',
-    tags: ['Design', 'Philosophy', 'UX'],
+    title: 'When Adults Were Wrong',
+    excerpt: 'A reflection on projection, fear, and why inherited narratives often say more about the speaker than reality.',
+    date: 'Feb 08, 2026',
+    readTime: '7 min read',
+    author: 'Luka Dadiani',
+    tags: ['Reflection', 'Mindset', 'Life'],
     image: 'https://picsum.photos/800/400?random=10',
     content: `
-      <p>In a world increasingly saturated with high-fidelity graphics, immersive 3D environments, and AI-generated "perfection," there is a growing counter-movement. We crave the raw, the unfiltered, and the functional. This is not just nostalgia for the early web; it is a rejection of the dopamine-loop design patterns that have come to dominate our screens.</p>
-      
-      <h3>The Return of the Terminal</h3>
-      <p>Why are developers obsessing over terminal-based portfolios? It represents a return to control. The command line is honest. It does exactly what you tell it to do, nothing more, nothing less. It hides nothing behind a glossy gradient.</p>
-      
-      <p>When I set out to build this OS-style portfolio, the goal wasn't just to mimic macOS. It was to strip it back. To remove the blur (mostly), the bounce, and the shine, and replace it with mono-spaced typography and clear, stark borders.</p>
-      
-      <h3>Function over Form? No, Function IS Form.</h3>
-      <p>The "Nothing" aesthetic—popularized by the tech brand—suggests that the transparent workings of a device are beautiful in themselves. We shouldn't hide the grid. We shouldn't hide the pixels. We should celebrate the machine.</p>
+      <p>I grew up hearing a lot of confident advice from adults. A lot of it sounded wise. Some of it was useful. Some of it was just fear dressed up as certainty.</p>
+
+      <p>As I have got older, one pattern keeps coming back: many warnings I received were less about reality and more about other people’s unresolved anxiety.</p>
+
+      <h3>“You won’t like the big city. People are cold. You’ll struggle to make friends.”</h3>
+      <p>I heard this one a lot. The city was framed as anonymous and distant — a place where connection is impossible unless you are lucky. My actual experience has been the opposite.</p>
+
+      <p>Yes, people are busy. Yes, nobody is waiting at your door with friendship. But if you invest effort — book clubs, events, saying yes to invitations, following up — people are open.</p>
+
+      <p>The city did not fail me. Passive expectations did.</p>
+
+      <h3>“It is hard to make it.”</h3>
+      <p>This one is technically true in the way all vague statements are true. Life is expensive. Trade-offs are real. But the sentence is often used as a full stop, not a description.</p>
+
+      <p>I was able to buy a home in the centre and walk to the office every day. Not because I found a secret shortcut — because I made explicit sacrifices, especially on space, and optimised around what actually improved my life.</p>
+
+      <p>I chose proximity over square footage. Time over ego. Daily quality of life over abstract status.</p>
+
+      <h3>“You’ll miss your country. You’ll regret not studying Georgian grammar.”</h3>
+      <p>I heard this with total confidence. It turned out to be false. I do not miss the country, and I do not regret not memorising grammar rules that had no meaningful use in my life.</p>
+
+      <p>This is where identity pressure gets disguised as prediction. People project a moral story onto your choices — loyalty, roots, tradition, what a “good person” should value.</p>
+
+      <h3>“You’ll miss being a kid.”</h3>
+      <p>This is usually presented as universal truth. I do not buy it.</p>
+
+      <p>I think many adults who say this are describing their own unresolved trade-offs: anxiety, responsibility overload, and emotional fatigue. That is real. But it is not the same as childhood being objectively better.</p>
+
+      <p>For me, adulthood is better. More complexity, yes — but also more agency, more choice, and more self-respect.</p>
+
+      <h3>What I think is really going on</h3>
+      <p>Most of these “truths” came from the same causes: projection, defensive pessimism, identity preservation, and unprocessed regret.</p>
+
+      <p>Advice is often autobiography in disguise.</p>
+
+      <h3>What I have learned</h3>
+      <p>I still listen to older people, but now I filter. Is this observation or projection? Is this caution or fear? Is this my path, or their story?</p>
+
+      <p>Most advice is useful as data, not as law. The biggest shift in my life came when I stopped treating inherited narratives as truth and started treating them as hypotheses.</p>
+
+      <p>Some were right. Many were not. The only way to know was to run the experiment myself.</p>
     `
   },
   {
