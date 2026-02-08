@@ -205,7 +205,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
                   contentEditable={isEditing}
                   onInput={handleTitleChange}
                   suppressContentEditableWarning
-                  className="text-3xl font-bold text-black dark:text-white mb-4 leading-tight focus:outline-none"
+                  className="text-3xl font-bold text-zinc-900 dark:!text-zinc-100 mb-4 leading-tight focus:outline-none"
                 >
                   {getDisplayTitle(activePost)}
                 </h1>
@@ -234,7 +234,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
                   contentEditable={isEditing}
                   onInput={handleContentChange}
                   suppressContentEditableWarning
-                  className="prose dark:prose-invert prose-zinc max-w-none prose-headings:font-semibold prose-headings:text-black dark:prose-headings:text-white prose-headings:mt-8 prose-headings:mb-4 prose-h3:text-xl prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed prose-p:text-base prose-p:mb-5 prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:underline focus:outline-none leading-7"
+                  className="prose dark:prose-invert prose-zinc max-w-none text-zinc-700 dark:!text-zinc-200 prose-headings:font-semibold prose-headings:text-zinc-900 dark:prose-headings:!text-zinc-100 prose-headings:mt-8 prose-headings:mb-4 prose-h3:text-xl prose-p:text-inherit prose-p:leading-relaxed prose-p:text-base prose-p:mb-5 prose-strong:text-inherit prose-li:text-inherit prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:underline focus:outline-none leading-7"
                   dangerouslySetInnerHTML={{ __html: getDisplayContent(activePost) }}
                 />
               </article>
