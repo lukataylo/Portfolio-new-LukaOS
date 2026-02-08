@@ -113,21 +113,43 @@ const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'post-3',
-    title: 'Building a Web-Based OS',
-    excerpt: 'A technical deep dive into z-indexing, drag physics, and window management in the browser.',
-    date: 'Nov 15, 2024',
-    readTime: '12 min read',
-    author: 'Senior Engineer',
-    tags: ['Case Study', 'Tutorial', 'Technical'],
+    title: 'The Future of Product Management',
+    excerpt: 'In the AI transition, role boundaries are collapsing — and product work is becoming radically more fluid.',
+    date: 'Feb 08, 2026',
+    readTime: '6 min read',
+    author: 'Luka Dadiani',
+    tags: ['Product', 'AI', 'Future of Work'],
     image: 'https://picsum.photos/800/400?random=12',
     content: `
-      <p>Creating a desktop environment in the browser is the ultimate test of DOM manipulation and state management. The browser was designed to display documents, not to manage stacking contexts of overlapping, draggable windows.</p>
-      
-      <h3>The Z-Index War</h3>
-      <p>The hardest part isn't dragging (thanks to HTML5 Drag API or simple mouse events); it's determining what is "on top." You can't just increment z-index forever. You need a centralized window manager that tracks an \`activeWindowId\` and re-calculates the stack order whenever a window is focused.</p>
-      
-      <h3>Performance</h3>
-      <p>Rendering live blur effects (\`backdrop-filter\`) behind multiple moving windows can crush the GPU. For this project, I opted for simple opacity and border tricks to maintain 60fps even on mobile devices. The "Nothing" aesthetic helps here—dots and lines are cheap to render.</p>
+      <p>One of the clearest shifts I can see right now is that traditional product roles are collapsing into one another.</p>
+
+      <p>What used to be clean hand-offs are becoming overlapping capabilities.</p>
+
+      <h3>Role boundaries are blurring</h3>
+      <p>Product managers can now vibe-code prototypes and run UX research directly, without waiting for multiple teams to line up.</p>
+
+      <p>Product designers can now code, fix bugs, and ship pull requests.</p>
+
+      <p>Developers can now write their own PRDs, frame user problems, and make product decisions with much more context than before.</p>
+
+      <p>This is not just tooling progress. It is a structural shift in how products are imagined, validated, and built.</p>
+
+      <h3>From hand-offs to loops</h3>
+      <p>The old model was linear: strategy, then design, then build, then feedback. The new model is tighter and more iterative. One person can move through multiple layers of the stack in a single day.</p>
+
+      <p>That changes team dynamics, hiring profiles, and what we consider “senior” in any discipline.</p>
+
+      <h3>What this means in practice</h3>
+      <p>I think we are moving towards hybrid operators: people who can think commercially, design clearly, and execute technically.</p>
+
+      <p>Specialisation will still matter, but rigid role identity will matter less than the ability to ship outcomes.</p>
+
+      <h3>The uncertain part</h3>
+      <p>In this AI transition, we do not yet know exactly what the end state looks like, or what each of us will ultimately spend most of our time doing.</p>
+
+      <p>But one thing already feels obvious: knowledge work will look radically different from what we considered normal even a few years ago.</p>
+
+      <p>The people who adapt fastest will not be those defending old job descriptions. They will be those willing to learn across boundaries and keep moving.</p>
     `
   }
 ];
