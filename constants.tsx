@@ -78,19 +78,37 @@ const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'post-2',
-    title: 'React 19 & The Future of State',
-    excerpt: 'Exploring server components, actions, and the new use() hook in production applications.',
-    date: 'Nov 02, 2024',
-    readTime: '8 min read',
-    author: 'Senior Engineer',
-    tags: ['React', 'Engineering', 'Frontend'],
+    title: 'A Note on Agency and Anxiety',
+    excerpt: 'Why anxiety is often misdirected energy — and how turning it into action creates better outcomes.',
+    date: 'Feb 08, 2026',
+    readTime: '5 min read',
+    author: 'Luka Dadiani',
+    tags: ['Mindset', 'Agency', 'AI'],
     content: `
-      <p>React 19 is not just an update; it's a paradigm shift. For years, we've managed complex async states using \`useEffect\` and third-party libraries. With the introduction of Actions and the native \`use\` API, the mental model is simplifying.</p>
-      
-      <h3>Goodbye, useEffect?</h3>
-      <p>Well, not entirely. But for data fetching, absolutely. The ability to suspend rendering natively while waiting for a promise to resolve cleans up components significantly. We no longer need \`isLoading\` flags littered across every component state.</p>
-      
-      <p>In this operating system project, I utilized standard React state management, but if I were to rebuild the "Filesystem," I would heavily leverage Server Components to stream file content on demand, rather than bundling it all into the client.</p>
+      <p>As I have grown older, I have found anxiety to be a fairly pointless emotion.</p>
+
+      <p>We inherited it from our ancestors scanning the bushes for danger. That system had a purpose. But in modern life, most anxiety is not helping us survive — it is just looping without producing action.</p>
+
+      <p>If you do clear planning and resolve identity questions ahead of time, there is usually much less to worry about than it first appears.</p>
+
+      <h3>From anxiety to action</h3>
+      <p>I have found it easier to transform anxiety into action. A useful reframe is this: anxiety is often excitement with no direction. Give it direction.</p>
+
+      <p>Ask: what is one concrete thing I can do today?</p>
+
+      <h3>The AI example</h3>
+      <p>A recent example is the anxiety around AI jobs and the future. Many people worry about what AI will do to designers and developers.</p>
+
+      <p>I see this differently. Instead of worrying, I treat it as an opportunity — to build, to start something, to create real value, and potentially to become far more economically independent than before.</p>
+
+      <p>More importantly, moments of change are exactly when you can shape the world for the better. Disruption is not only a threat; it is also a window.</p>
+
+      <h3>Control what you can</h3>
+      <p>I try not to worry about things I cannot control. I focus on what I can influence: my skills, my decisions, my output, my standards, and the people I choose to work with.</p>
+
+      <p>Optimism, to me, is not blind positivity. It is a strategic choice to act where action is possible.</p>
+
+      <p>When change arrives, I would rather move than freeze.</p>
     `
   },
   {
