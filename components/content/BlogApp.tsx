@@ -234,7 +234,7 @@ export const BlogApp: React.FC<BlogAppProps> = ({ posts }) => {
                   contentEditable={isEditing}
                   onInput={handleContentChange}
                   suppressContentEditableWarning
-                  className="prose dark:prose-invert prose-zinc max-w-none text-zinc-700 dark:!text-zinc-200 prose-headings:font-semibold prose-headings:text-zinc-900 dark:prose-headings:!text-zinc-100 prose-headings:mt-8 prose-headings:mb-4 prose-h3:text-xl prose-p:text-inherit prose-p:leading-relaxed prose-p:text-base prose-p:mb-5 prose-strong:text-inherit prose-li:text-inherit prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:underline focus:outline-none leading-7"
+                  className="prose dark:prose-invert prose-zinc max-w-none text-zinc-700 dark:!text-zinc-200 prose-headings:font-semibold prose-headings:text-zinc-900 dark:prose-headings:!text-zinc-100 prose-headings:mt-8 prose-headings:mb-4 prose-h3:text-xl prose-p:leading-relaxed prose-p:text-base prose-p:mb-5 prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:underline focus:outline-none leading-7 [&_p]:text-zinc-700 dark:[&_p]:!text-zinc-200 [&_li]:text-zinc-700 dark:[&_li]:!text-zinc-200 [&_h1]:text-zinc-900 dark:[&_h1]:!text-zinc-100 [&_h2]:text-zinc-900 dark:[&_h2]:!text-zinc-100 [&_h3]:text-zinc-900 dark:[&_h3]:!text-zinc-100 [&_strong]:text-zinc-900 dark:[&_strong]:!text-zinc-100"
                   dangerouslySetInnerHTML={{ __html: getDisplayContent(activePost) }}
                 />
               </article>
