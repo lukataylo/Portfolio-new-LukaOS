@@ -20,11 +20,17 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
   // 1. All permanent dock items
   // 2. Any open windows from desktop items that aren't already in dock
   const dockItemIds = new Set(items.map(i => i.id));
+  // Include both the dock item's own id and any mapped appId it represents
+  // (e.g. dock item id "blog-dock" represents app/window id "blog").
+  const dockRepresentedIds = new Set(
+    items.flatMap(i => (i.appId ? [i.id, i.appId] : [i.id]))
+  );
+
   const dynamicItems = allItems.filter(item => {
-    // Only include if it's open and not already in dock items
-    const isOpen = openItemIds.includes(item.id);
-    const notInDock = !dockItemIds.has(item.id);
-    return isOpen && notInDock;
+    // Only include if it's open and not already represented in the permanent dock
+    const isOpen = openItemIds.includes(item.id) || (item.appId ? openItemIds.includes(item.appId) : false);
+    const representedInDock = dockRepresentedIds.has(item.id) || (item.appId ? dockRepresentedIds.has(item.appId) : false);
+    return isOpen && !representedInDock;
   });
 
   // Combine permanent dock items with dynamic items
