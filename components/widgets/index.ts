@@ -9,3 +9,4 @@
 export { ClockWidget } from './ClockWidget';
 export { WeatherWidget } from './WeatherWidget';
 export { GitHubWidget } from './GitHubWidget';
+export { MenuBarClock } from './MenuBarClock';

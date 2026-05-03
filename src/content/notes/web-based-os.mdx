@@ -1,0 +1,26 @@
+export const frontmatter = {
+  id: 'post-3',
+  title: 'Building a Web-Based OS',
+  excerpt: 'A technical deep dive into z-indexing, drag physics, and window management in the browser.',
+  date: 'Nov 15, 2024',
+  readTime: '12 min read',
+  author: 'Luka Dadiani',
+  tags: ['Case Study', 'Tutorial', 'Technical'],
+};
+
+Creating a desktop environment in the browser is the ultimate test of DOM manipulation
+and state management. The browser was designed to display documents, not to manage
+stacking contexts of overlapping, draggable windows.
+
+### Z-index isn't enough
+
+The naive approach is to bump z-index every time a window is focused. This works until
+you have modals, dropdowns, drag ghosts, and snap previews — all of which need to live
+*above* windows but *below* each other in a deliberate order. Use a token scale, not raw
+numbers.
+
+### Drag physics
+
+Naïve mousemove handlers fire hundreds of times per second and trigger React re-renders
+with every move. Batch via `requestAnimationFrame` so the DOM only updates once per
+paint. The difference on mid-range mobile is the difference between butter and broken.

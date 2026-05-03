@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { DesktopItem, WindowState, WindowRect } from '../types';
 
 interface DockProps {
@@ -168,7 +168,9 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
                                     transform: `scale(${scale})`
                                 }}
                              >
-                                {renderPreview(targetItemId)}
+                                <Suspense fallback={<div className="w-full h-full bg-zinc-100 dark:bg-zinc-900 animate-pulse" />}>
+                                  {renderPreview(targetItemId)}
+                                </Suspense>
                              </div>
                         </div>
                         

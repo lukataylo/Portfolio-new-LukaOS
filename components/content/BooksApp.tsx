@@ -16,6 +16,53 @@ interface BooksAppProps {
   books: Book[];
 }
 
+/** Stable hue derived from the title — used for the typographic fallback cover. */
+const hashHue = (s: string): number => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h) % 360;
+};
+
+/**
+ * Renders a book cover image. If the network request fails (CORS, hot-link
+ * blocking, dead CDN), falls back to a typographic placeholder so the layout
+ * never breaks.
+ */
+const BookCover: React.FC<{ book: Book; sizeClass?: string }> = ({ book, sizeClass = 'w-full h-full' }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed || !book.cover) {
+    const hue = hashHue(book.title);
+    return (
+      <div
+        className={`${sizeClass} flex flex-col justify-between p-3 select-none`}
+        style={{
+          background: `linear-gradient(155deg, hsl(${hue} 35% 92%), hsl(${(hue + 30) % 360} 25% 78%))`,
+          color: `hsl(${hue} 50% 18%)`,
+        }}
+        aria-label={`${book.title} by ${book.author}`}
+      >
+        <span className="text-[8px] font-mono uppercase tracking-wider opacity-60">
+          {book.category}
+        </span>
+        <div>
+          <p className="text-sm font-bold leading-tight line-clamp-4">{book.title}</p>
+          <p className="text-[10px] mt-2 opacity-70 line-clamp-2">{book.author}</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <img
+      src={book.cover}
+      alt={`Cover of ${book.title} by ${book.author}`}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      className={`${sizeClass} object-cover`}
+    />
+  );
+};
+
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   return (
     <div className="flex items-center gap-2">
@@ -73,11 +120,7 @@ export const BooksApp: React.FC<BooksAppProps> = ({ books }) => {
             {/* Cover */}
             <div className="flex justify-center mb-8">
               <div className="w-40 h-60 rounded-md overflow-hidden shadow-2xl bg-zinc-100 dark:bg-zinc-800">
-                <img
-                  src={selectedBook.cover}
-                  alt={selectedBook.title}
-                  className="w-full h-full object-cover"
-                />
+                <BookCover book={selectedBook} />
               </div>
             </div>
 
@@ -149,11 +192,7 @@ export const BooksApp: React.FC<BooksAppProps> = ({ books }) => {
                   >
                     {/* Cover */}
                     <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-sm group-hover:shadow-lg transition-all duration-200 group-hover:scale-[1.02]">
-                      <img
-                        src={book.cover}
-                        alt={book.title}
-                        className="w-full h-full object-cover"
-                      />
+                      <BookCover book={book} />
                       {/* Rating */}
                       <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[10px] font-mono text-white">
                         {book.rating}/10

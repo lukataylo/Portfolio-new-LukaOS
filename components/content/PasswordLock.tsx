@@ -3,12 +3,12 @@ import { Lock } from 'lucide-react';
 
 interface PasswordLockProps {
   correctPassword?: string;
-  isUnlocked: boolean;
+  isUnlocked?: boolean;
   onUnlock: () => void;
   children?: React.ReactNode;
 }
 
-export const PasswordLock: React.FC<PasswordLockProps> = ({ correctPassword, isUnlocked, onUnlock, children }) => {
+export const PasswordLock: React.FC<PasswordLockProps> = ({ correctPassword, isUnlocked = false, onUnlock, children }) => {
   const [input, setInput] = useState('');
   const [error, setError] = useState(false);
 

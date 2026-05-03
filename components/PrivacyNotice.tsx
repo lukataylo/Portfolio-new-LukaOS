@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Cookie, X } from 'lucide-react';
 
-export const CookieNotice: React.FC = () => {
+export const PrivacyNotice: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   if (!isVisible) return null;

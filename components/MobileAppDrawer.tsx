@@ -148,7 +148,7 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
 
           {/* App Grid */}
           <div
-            className="px-4 pb-8 max-h-[70vh] overflow-y-auto"
+            className="px-4 pb-8 max-h-[70dvh] overflow-y-auto pb-safe"
             style={{ display: isOpen ? 'block' : 'none' }}
           >
             <div className="grid grid-cols-4 gap-4">
@@ -159,9 +159,10 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
                     key={item.id}
                     onClick={() => handleAppClick(item)}
                     className="flex flex-col items-center gap-2 p-2 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all"
+                    aria-label={`Open ${item.title}`}
                   >
                     <div className="w-14 h-14 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 rounded-2xl flex items-center justify-center shadow-sm border border-zinc-200 dark:border-zinc-700">
-                      <Icon size={28} className="text-zinc-600 dark:text-zinc-300" />
+                      <Icon size={28} className="text-zinc-600 dark:text-zinc-300" aria-hidden="true" />
                     </div>
                     <span className="text-[10px] text-zinc-600 dark:text-zinc-400 text-center line-clamp-2 leading-tight">
                       {item.title}
@@ -171,9 +172,6 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
               })}
             </div>
           </div>
-
-          {/* Safe area padding */}
-          <div className="h-safe-area-inset-bottom bg-white/90 dark:bg-zinc-900/90" />
         </div>
       </div>
     </>

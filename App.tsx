@@ -1,52 +1,40 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { DESKTOP_ITEMS, DOCK_ITEMS, INITIAL_WINDOW_HEIGHT, INITIAL_WINDOW_WIDTH } from './constants';
 import { DesktopItem, WindowState, FileType, ChatMessage, WindowRect } from './types';
 import { DesktopIcon } from './components/DesktopIcon';
 import { Dock } from './components/Dock';
 import { WindowFrame } from './components/window/WindowFrame';
-import { PresentationViewer } from './components/content/PresentationViewer';
+// Eagerly imported (small / always needed):
 import { PasswordLock } from './components/content/PasswordLock';
-import { ChatApp } from './components/content/ChatApp';
-import { BrowserApp } from './components/content/BrowserApp';
-import { BlogApp } from './components/content/BlogApp';
-import { BooksApp } from './components/content/BooksApp';
-import { TerminalApp } from './components/content/TerminalApp';
-import { MailCompose } from './components/content/MailCompose';
 import { SkeletonLoader } from './components/content/SkeletonLoader';
-import { SitemapViewer } from './components/content/SitemapViewer';
-import { FinderApp } from './components/content/FinderApp';
-import { SystemPreferences } from './components/content/SystemPreferences';
-import { ContentEditorApp } from './components/content/ContentEditorApp';
+// Lazy-loaded content apps — each ships in its own chunk and only downloads on demand.
+const PresentationViewer = lazy(() => import('./components/content/PresentationViewer').then(m => ({ default: m.PresentationViewer })));
+const ChatApp = lazy(() => import('./components/content/ChatApp').then(m => ({ default: m.ChatApp })));
+const BrowserApp = lazy(() => import('./components/content/BrowserApp').then(m => ({ default: m.BrowserApp })));
+const BlogApp = lazy(() => import('./components/content/BlogApp').then(m => ({ default: m.BlogApp })));
+const BooksApp = lazy(() => import('./components/content/BooksApp').then(m => ({ default: m.BooksApp })));
+const TerminalApp = lazy(() => import('./components/content/TerminalApp').then(m => ({ default: m.TerminalApp })));
+const MailCompose = lazy(() => import('./components/content/MailCompose').then(m => ({ default: m.MailCompose })));
+const SitemapViewer = lazy(() => import('./components/content/SitemapViewer').then(m => ({ default: m.SitemapViewer })));
+const FinderApp = lazy(() => import('./components/content/FinderApp').then(m => ({ default: m.FinderApp })));
+const SystemPreferences = lazy(() => import('./components/content/SystemPreferences').then(m => ({ default: m.SystemPreferences })));
+const ContentEditorApp = lazy(() => import('./components/content/ContentEditorApp').then(m => ({ default: m.ContentEditorApp })));
 import { ContextMenu } from './components/ContextMenu';
-import { CookieNotice } from './components/CookieNotice';
+import { PrivacyNotice } from './components/PrivacyNotice';
 import { Spotlight } from './components/Spotlight';
 import { MobileAppDrawer } from './components/MobileAppDrawer';
-import { ClockWidget, WeatherWidget, GitHubWidget } from './components/widgets';
+import { ClockWidget, WeatherWidget, GitHubWidget, MenuBarClock } from './components/widgets';
 import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings, Folder } from 'lucide-react';
-import { generateChatResponse } from './services/geminiService';
+// Gemini SDK is dynamically imported on first use to keep the initial bundle small.
 import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
 import { useAdmin } from './contexts/AdminContext';
 import { useContent } from './hooks/useContent';
-
-// Helper component to simulate fetching data
-const DelayedLoader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    // Simulate network delay
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) return <SkeletonLoader />;
-  return <>{children}</>;
-};
+import { MENU_BAR_H, DOCK_H, SNAP_THRESHOLD } from './src/constants/layout';
 
 const App: React.FC = () => {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
-  const [time, setTime] = useState(new Date());
   const [theme, setTheme] = useState<'light' | 'dark'>(() => loadTheme());
 
   // Admin mode
@@ -128,8 +116,6 @@ const App: React.FC = () => {
 
   // Easter Egg States
   const [konamiActivated, setKonamiActivated] = useState(false);
-  const [clockMode, setClockMode] = useState<'normal' | 'binary' | 'hex' | 'coffee'>('normal');
-  const [clockClicks, setClockClicks] = useState(0);
 
   // Welcome Back Modal State
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
@@ -142,12 +128,6 @@ const App: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { role: 'model', text: 'System Online. I am the portfolio assistant. Ask me about the projects or the engineer.' }
   ]);
-
-  // Clock
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Persist theme changes
   useEffect(() => {
@@ -248,46 +228,55 @@ const App: React.FC = () => {
     setHasDraggedEnough(false);
   }, [draggingIconId, dragCurrentPos, dragOffset, hasDraggedEnough]);
 
-  // Track mouse/touch movement during icon drag
-  useEffect(() => {
-    if (!draggingIconId || !dragStartPos) return;
+  // Stable refs for drag state — avoids re-binding listeners on every mousemove.
+  const handleIconDragEndRef = useRef(handleIconDragEnd);
+  handleIconDragEndRef.current = handleIconDragEnd;
+  const dragStartPosRef = useRef(dragStartPos);
+  dragStartPosRef.current = dragStartPos;
+  const hasDraggedEnoughRef = useRef(hasDraggedEnough);
+  hasDraggedEnoughRef.current = hasDraggedEnough;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const newPos = { x: e.clientX, y: e.clientY };
+  // Track mouse/touch movement during icon drag.
+  // Listeners attach once per drag session and use refs internally so we don't churn.
+  useEffect(() => {
+    if (!draggingIconId) return;
+
+    let rafId: number | null = null;
+    let pendingPos: { x: number; y: number } | null = null;
+
+    const flush = () => {
+      rafId = null;
+      if (!pendingPos) return;
+      const newPos = pendingPos;
+      pendingPos = null;
       setDragCurrentPos(newPos);
 
-      // Check if we've moved past the threshold
-      if (!hasDraggedEnough) {
-        const dx = Math.abs(newPos.x - dragStartPos.x);
-        const dy = Math.abs(newPos.y - dragStartPos.y);
-        if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
-          setHasDraggedEnough(true);
-        }
+      const start = dragStartPosRef.current;
+      if (!start || hasDraggedEnoughRef.current) return;
+      const dx = Math.abs(newPos.x - start.x);
+      const dy = Math.abs(newPos.y - start.y);
+      if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+        setHasDraggedEnough(true);
       }
     };
+
+    const queue = (x: number, y: number) => {
+      pendingPos = { x, y };
+      if (rafId === null) rafId = requestAnimationFrame(flush);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => queue(e.clientX, e.clientY);
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        const newPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        setDragCurrentPos(newPos);
-
-        // Check if we've moved past the threshold
-        if (!hasDraggedEnough) {
-          const dx = Math.abs(newPos.x - dragStartPos.x);
-          const dy = Math.abs(newPos.y - dragStartPos.y);
-          if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
-            setHasDraggedEnough(true);
-          }
-        }
-      }
+      if (e.touches.length === 0) return;
+      if (e.cancelable) e.preventDefault();
+      queue(e.touches[0].clientX, e.touches[0].clientY);
     };
 
-    const handleMouseUp = () => {
-      handleIconDragEnd();
-    };
+    const handleMouseUp = () => handleIconDragEndRef.current();
 
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('touchend', handleMouseUp);
 
@@ -296,8 +285,9 @@ const App: React.FC = () => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchend', handleMouseUp);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [draggingIconId, dragStartPos, hasDraggedEnough, handleIconDragEnd]);
+  }, [draggingIconId]);
 
   // Konami Code Easter Egg (↑↑↓↓←→←→BA)
   useEffect(() => {
@@ -324,45 +314,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKonami);
   }, []);
 
-  // Clock click handler - cycle through time formats
-  const handleClockClick = () => {
-    const newClicks = clockClicks + 1;
-    setClockClicks(newClicks);
-
-    if (newClicks >= 4) {
-      setClockClicks(0);
-      setClockMode('normal');
-    } else if (newClicks === 1) {
-      setClockMode('binary');
-      setFunMessage('🤖 Binary time activated');
-      setTimeout(() => setFunMessage(null), 2000);
-    } else if (newClicks === 2) {
-      setClockMode('hex');
-      setFunMessage('💻 Hex time activated');
-      setTimeout(() => setFunMessage(null), 2000);
-    } else if (newClicks === 3) {
-      setClockMode('coffee');
-      setFunMessage('☕ It\'s always coffee time');
-      setTimeout(() => setFunMessage(null), 2000);
-    }
-  };
-
-  // Format time based on mode
-  const formatTime = () => {
-    const hours = time.getHours();
-    const minutes = time.getMinutes();
-
-    switch (clockMode) {
-      case 'binary':
-        return `${hours.toString(2).padStart(5, '0')}:${minutes.toString(2).padStart(6, '0')}`;
-      case 'hex':
-        return `0x${hours.toString(16).toUpperCase()}:${minutes.toString(16).toUpperCase().padStart(2, '0')}`;
-      case 'coffee':
-        return '☕:☕☕';
-      default:
-        return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-  };
+  // Clock state moved into <MenuBarClock> so the rest of the app does not re-render every second.
 
   // Spotlight keyboard shortcut (Cmd+Space or Ctrl+Space)
   useEffect(() => {
@@ -670,7 +622,8 @@ const App: React.FC = () => {
       // Get history
       const history = chatMessages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`);
       
-      // Call Service
+      // Call Service (lazy-loaded so the Gemini SDK ships in its own chunk)
+      const { generateChatResponse } = await import('./services/geminiService');
       const responseText = await generateChatResponse(history, text);
       
       setChatMessages(prev => [...prev, { role: 'model', text: responseText }]);
@@ -828,20 +781,19 @@ const App: React.FC = () => {
   // Window tiling - snap to edges
   const handleWindowSnapCheck = useCallback((id: string, x: number, y: number) => {
     const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight - 36 - 60; // Minus menu bar (36px) and dock (~60px)
-    const snapThreshold = 30;
+    const screenHeight = window.innerHeight - MENU_BAR_H - DOCK_H;
 
     // Left edge - snap to left half
-    if (x <= snapThreshold) {
-      return { x: 0, y: 36, width: screenWidth / 2, height: screenHeight };
+    if (x <= SNAP_THRESHOLD) {
+      return { x: 0, y: MENU_BAR_H, width: screenWidth / 2, height: screenHeight };
     }
     // Right edge - snap to right half
-    if (x >= screenWidth - snapThreshold) {
-      return { x: screenWidth / 2, y: 36, width: screenWidth / 2, height: screenHeight };
+    if (x >= screenWidth - SNAP_THRESHOLD) {
+      return { x: screenWidth / 2, y: MENU_BAR_H, width: screenWidth / 2, height: screenHeight };
     }
     // Top edge - maximize
-    if (y <= snapThreshold + 36) {
-      return { x: 0, y: 36, width: screenWidth, height: screenHeight };
+    if (y <= SNAP_THRESHOLD + MENU_BAR_H) {
+      return { x: 0, y: MENU_BAR_H, width: screenWidth, height: screenHeight };
     }
 
     return null;
@@ -946,40 +898,25 @@ const App: React.FC = () => {
 
     switch (item.type) {
       case FileType.PRESENTATION:
-        return (
-          <DelayedLoader>
-            <PresentationViewer slides={item.content || []} />
-          </DelayedLoader>
-        );
-      case FileType.PROTECTED:
+        return <PresentationViewer slides={item.content || []} />;
+      case FileType.PROTECTED: {
         const isUnlocked = unlockedItemIds.includes(item.id);
         if (isUnlocked && item.lockedContent) {
-          return (
-            <DelayedLoader>
-              <PresentationViewer slides={item.lockedContent} />
-            </DelayedLoader>
-          );
+          return <PresentationViewer slides={item.lockedContent} />;
         }
         return (
           <PasswordLock
             correctPassword={item.password || ''}
-            onUnlock={() => setUnlockedItemIds(prev => [...prev, item.id])}
+            onUnlock={() => setUnlockedItemIds((prev) => [...prev, item.id])}
           />
         );
+      }
       case FileType.LINK:
         return <BrowserApp initialUrl={item.url || ''} />;
       case FileType.BLOG:
-        return (
-          <DelayedLoader>
-            <BlogApp posts={blogPosts} />
-          </DelayedLoader>
-        );
+        return <BlogApp posts={blogPosts} />;
       case FileType.BOOKS:
-        return (
-          <DelayedLoader>
-            <BooksApp books={books} />
-          </DelayedLoader>
-        );
+        return <BooksApp books={books} />;
       case FileType.TERMINAL:
         return <TerminalApp />;
       case FileType.MAIL:
@@ -987,9 +924,10 @@ const App: React.FC = () => {
       case FileType.SITEMAP:
         return (
           <SitemapViewer
-            desktopItems={DESKTOP_ITEMS}
-            dockItems={DOCK_ITEMS}
-            onItemClick={handleOpenItem}
+            onNavigate={(id) => {
+              const target = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find((i) => i.id === id);
+              if (target) handleOpenItem(target);
+            }}
           />
         );
       case FileType.FINDER:
@@ -1048,13 +986,7 @@ const App: React.FC = () => {
       case FileType.MAIL:
         return <MailCompose recipientEmail="luka.taylor@gmail.com" recipientName="Luka Dadiani" />;
       case FileType.SITEMAP:
-        return (
-          <SitemapViewer
-            desktopItems={DESKTOP_ITEMS}
-            dockItems={DOCK_ITEMS}
-            onItemClick={() => {}}
-          />
-        );
+        return <SitemapViewer onNavigate={() => {}} />;
       case FileType.FINDER:
         return (
           <FinderApp
@@ -1112,12 +1044,12 @@ const App: React.FC = () => {
                 onClick={() => setActiveMenu(activeMenu === 'about' ? null : 'about')}
               >
                 <div className={`w-3 h-3 bg-red-600 rounded-full transition-transform ${activeMenu === 'about' ? 'scale-125' : ''}`} />
-                <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${activeMenu === 'about' ? 'text-red-600' : 'text-black dark:text-white'}`}>
+                <span className={`font-mono text-[11px] font-bold uppercase tracking-[0.18em] transition-colors ${activeMenu === 'about' ? 'text-red-600' : 'text-black dark:text-white'}`}>
                   LukaOS
                 </span>
               </div>
               {activeMenu === 'about' && (
-                <div className="absolute top-8 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl p-0 w-[320px] z-50 animate-in fade-in slide-in-from-top-2 duration-150 overflow-hidden">
+                <div className="absolute top-8 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl p-0 w-[320px] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-3rem)] overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   {/* Header */}
                   <div className="p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
                     <div className="flex items-center gap-3">
@@ -1191,7 +1123,7 @@ const App: React.FC = () => {
               <div className="relative">
                 <span
                   onClick={() => setActiveMenu(activeMenu === 'file' ? null : 'file')}
-                  className={`text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors ${activeMenu === 'file' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
+                  className={`font-mono text-[11px] font-medium uppercase tracking-[0.18em] cursor-pointer transition-colors ${activeMenu === 'file' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
                 >
                   File
                 </span>
@@ -1210,7 +1142,7 @@ const App: React.FC = () => {
               <div className="relative">
                 <span
                   onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')}
-                  className={`text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors ${activeMenu === 'edit' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
+                  className={`font-mono text-[11px] font-medium uppercase tracking-[0.18em] cursor-pointer transition-colors ${activeMenu === 'edit' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
                 >
                   Edit
                 </span>
@@ -1230,7 +1162,7 @@ const App: React.FC = () => {
               <div className="relative">
                 <span
                   onClick={() => setActiveMenu(activeMenu === 'view' ? null : 'view')}
-                  className={`text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors ${activeMenu === 'view' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
+                  className={`font-mono text-[11px] font-medium uppercase tracking-[0.18em] cursor-pointer transition-colors ${activeMenu === 'view' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
                 >
                   View
                 </span>
@@ -1295,13 +1227,12 @@ const App: React.FC = () => {
                 <Sun size={14} className="text-zinc-600 dark:text-zinc-400" />
               )}
             </button>
-            <span
-              onClick={handleClockClick}
-              className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono cursor-pointer hover:text-black dark:hover:text-white transition-colors ml-1"
-              title="Click to change time format"
-            >
-              {formatTime()}
-            </span>
+            <MenuBarClock
+              onCycleMode={(label) => {
+                setFunMessage(label);
+                setTimeout(() => setFunMessage(null), 2000);
+              }}
+            />
           </div>
         </header>
 
@@ -1419,7 +1350,9 @@ const App: React.FC = () => {
             onMove={moveWindow}
             onResize={resizeWindow}
           >
-            {renderWindowContent(win)}
+            <Suspense fallback={<SkeletonLoader />}>
+              {renderWindowContent(win)}
+            </Suspense>
           </WindowFrame>
         ))}
 
@@ -1447,7 +1380,7 @@ const App: React.FC = () => {
         )}
 
         {/* Cookie Notice */}
-        <CookieNotice />
+        <PrivacyNotice />
 
         {/* Welcome Back Modal */}
         <WelcomeBackModal

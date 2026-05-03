@@ -17,7 +17,7 @@ export const PresentationViewer: React.FC<PresentationViewerProps> = ({ slides }
           
           {slide.image && (
             <div className="w-full h-48 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900">
-                <img src={slide.image} alt={slide.title} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                <img src={slide.image} alt={slide.title} loading="lazy" decoding="async" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
             </div>
           )}
           

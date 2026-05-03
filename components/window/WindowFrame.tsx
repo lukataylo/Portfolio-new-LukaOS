@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { WindowState } from '../../types';
 import { X, Minus, Maximize2, RotateCcw, Copy } from 'lucide-react';
+import { MENU_BAR_H, DOCK_H, SNAP_THRESHOLD, WINDOW_MIN_W, WINDOW_MIN_H } from '../../src/constants/layout';
 
 interface WindowFrameProps {
   windowState: WindowState;
@@ -42,6 +43,13 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
   const windowStartRect = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const resizeDir = useRef<ResizeDirection | null>(null);
+  // Mirror snapPreview into a ref so the drag-end handler reads the current value,
+  // not the stale closure captured when the effect first ran.
+  const snapPreviewRef = useRef(snapPreview);
+  snapPreviewRef.current = snapPreview;
+  // Tracks whether this drag began from a maximized/snapped state; used to
+  // skip the redundant snap-restore on mouseup that would cause a small jump.
+  const unsnappedAtDragStart = useRef(false);
 
   // Animation Lifecycle
   useEffect(() => {
@@ -65,29 +73,58 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   }, []);
 
   const handleCloseRequest = () => {
+    // Closing animation works against the *normal* render path, so any maximized
+    // / snapped state must be cleared first or the window stays glued to the chrome.
+    if (windowState.isMaximized || windowState.isSnapped) {
+      onResize(
+        windowState.id,
+        windowState.preSnapRect?.width ?? windowState.size.width,
+        windowState.preSnapRect?.height ?? windowState.size.height,
+      );
+      onMove(windowState.id, windowState.preSnapRect?.x ?? windowState.position.x, windowState.preSnapRect?.y ?? windowState.position.y);
+      // Force the maximized flag off via the standard toggle
+      if (windowState.isMaximized) onMaximize(windowState.id);
+    }
     setAnimState('closing');
-    // Wait for animation to finish before actually unmounting
-    setTimeout(() => {
-        onClose(windowState.id);
-    }, 350); // Match closing duration
+    setTimeout(() => onClose(windowState.id), 350);
+  };
+
+  // Restore a maximized / snapped window to its previous size and place it
+  // under the cursor so the user can keep dragging from where they grabbed it.
+  const restoreFromChrome = (cursorX: number, cursorY: number) => {
+    const prev = windowState.preSnapRect;
+    const restoredW = prev?.width ?? windowState.size.width;
+    const restoredH = prev?.height ?? windowState.size.height;
+    const newX = cursorX - restoredW / 2;
+    const newY = cursorY - 18; // half a title bar
+    onResize(windowState.id, restoredW, restoredH);
+    onMove(windowState.id, newX, newY);
+    if (windowState.isMaximized) onMaximize(windowState.id);
+    return { x: newX, y: newY, width: restoredW, height: restoredH };
   };
 
   // Dragging Title Bar
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Allow dragging from maximized/snapped windows (will trigger unsnap)
-    if (windowState.isMaximized && !windowState.isSnapped) return;
-
     e.stopPropagation();
     onFocus(windowState.id);
 
+    let startRect = {
+      x: windowState.position.x,
+      y: windowState.position.y,
+      width: windowState.size.width,
+      height: windowState.size.height,
+    };
+
+    if (windowState.isMaximized || windowState.isSnapped) {
+      startRect = restoreFromChrome(e.clientX, e.clientY);
+      unsnappedAtDragStart.current = true;
+    } else {
+      unsnappedAtDragStart.current = false;
+    }
+
     setIsDragging(true);
     dragStartPos.current = { x: e.clientX, y: e.clientY };
-    windowStartRect.current = {
-        x: windowState.position.x,
-        y: windowState.position.y,
-        width: windowState.size.width,
-        height: windowState.size.height
-    };
+    windowStartRect.current = startRect;
   };
 
   // Resizing Handles
@@ -110,20 +147,27 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   
   // Touch Handling for Drag
   const handleTouchStart = (e: React.TouchEvent) => {
-      // Allow dragging from maximized/snapped windows (will trigger unsnap)
-      if (windowState.isMaximized && !windowState.isSnapped) return;
       e.stopPropagation();
       onFocus(windowState.id);
 
       const touch = e.touches[0];
+      let startRect = {
+        x: windowState.position.x,
+        y: windowState.position.y,
+        width: windowState.size.width,
+        height: windowState.size.height,
+      };
+
+      if (windowState.isMaximized || windowState.isSnapped) {
+        startRect = restoreFromChrome(touch.clientX, touch.clientY);
+        unsnappedAtDragStart.current = true;
+      } else {
+        unsnappedAtDragStart.current = false;
+      }
+
       setIsDragging(true);
       dragStartPos.current = { x: touch.clientX, y: touch.clientY };
-      windowStartRect.current = {
-          x: windowState.position.x,
-          y: windowState.position.y,
-          width: windowState.size.width,
-          height: windowState.size.height
-      };
+      windowStartRect.current = startRect;
   };
 
   // Touch Handling for Resize
@@ -145,11 +189,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   };
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
-      if (!dragStartPos.current || !windowStartRect.current) return;
-      
+    let rafId: number | null = null;
+    let pendingEvent: MouseEvent | TouchEvent | null = null;
+
+    const processMove = () => {
+      rafId = null;
+      const e = pendingEvent;
+      if (!e || !dragStartPos.current || !windowStartRect.current) return;
+
       let clientX, clientY;
       if ('touches' in e) {
+          if (e.touches.length === 0) return;
           clientX = e.touches[0].clientX;
           clientY = e.touches[0].clientY;
       } else {
@@ -166,13 +216,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
         // Check for snap zones and show preview
         const screenWidth = window.innerWidth;
-        const snapThreshold = 30;
 
-        if (clientX <= snapThreshold) {
+        if (clientX <= SNAP_THRESHOLD) {
           setSnapPreview('left');
-        } else if (clientX >= screenWidth - snapThreshold) {
+        } else if (clientX >= screenWidth - SNAP_THRESHOLD) {
           setSnapPreview('right');
-        } else if (clientY <= snapThreshold + 36) {
+        } else if (clientY <= SNAP_THRESHOLD + MENU_BAR_H) {
           setSnapPreview('full');
         } else {
           setSnapPreview(null);
@@ -190,8 +239,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         let newX = start.x;
         let newY = start.y;
 
-        const minWidth = 320;
-        const minHeight = 200;
+        const minWidth = WINDOW_MIN_W;
+        const minHeight = WINDOW_MIN_H;
 
         // Calculate Height & Y
         if (dir.includes('n')) {
@@ -225,6 +274,13 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       }
     };
 
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      // Stop the page from scrolling while dragging/resizing on touch.
+      if ('touches' in e && e.cancelable) e.preventDefault();
+      pendingEvent = e;
+      if (rafId === null) rafId = requestAnimationFrame(processMove);
+    };
+
     const handleMouseUp = (e: MouseEvent | TouchEvent) => {
       let clientX = 0;
       let clientY = 0;
@@ -236,8 +292,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         clientY = (e as MouseEvent).clientY;
       }
 
-      // Check for window snap on drag end
-      if (isDragging && snapPreview) {
+      // Check for window snap on drag end (read current value via ref)
+      if (isDragging && snapPreviewRef.current) {
         // Trigger snap via onMove with snap flag
         onMove(windowState.id, clientX, clientY, true);
         setSnapPreview(null);
@@ -246,8 +302,15 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         return;
       }
 
-      // If dragging away from a snapped window without hitting a snap zone, restore size
-      if (isDragging && windowState.isSnapped && !snapPreview) {
+      // If dragging away from a snapped window without hitting a snap zone, restore size.
+      // Skipped when we already restored at drag-start: the position has been following
+      // the cursor naturally and re-applying the snap-restore formula would cause a hop.
+      if (
+        isDragging &&
+        windowState.isSnapped &&
+        !snapPreviewRef.current &&
+        !unsnappedAtDragStart.current
+      ) {
         onMove(windowState.id, clientX, clientY, true);
         setIsDragging(false);
         setIsResizing(false);
@@ -276,7 +339,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           needsBounce = true;
         }
         // Check top boundary (window went above viewport)
-        if (windowState.position.y < 36) { // Menu bar height
+        if (windowState.position.y < MENU_BAR_H) {
           newY = 50;
           needsBounce = true;
         }
@@ -311,7 +374,9 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleMouseMove);
       document.removeEventListener('touchend', handleMouseUp);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging, isResizing, windowState.id, onMove, onResize]);
 
   if (windowState.isMinimized) return null;
@@ -352,9 +417,9 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       style = {
           ...style,
           left: 0,
-          top: 36, // Below menu bar (36px height)
-          width: '100vw',
-          height: 'calc(100vh - 36px)', // Full height minus menu bar
+          top: MENU_BAR_H,
+          width: '100%',
+          height: `calc(100dvh - ${MENU_BAR_H}px)`,
           borderRadius: 0,
           transform: 'scale(1)',
       };
@@ -416,15 +481,15 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const getSnapPreviewStyle = (): React.CSSProperties | null => {
     if (!snapPreview) return null;
     const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight - 36 - 60; // Minus menu bar and dock
+    const screenHeight = window.innerHeight - MENU_BAR_H - DOCK_H;
 
     switch (snapPreview) {
       case 'left':
-        return { left: 0, top: 36, width: screenWidth / 2, height: screenHeight };
+        return { left: 0, top: MENU_BAR_H, width: screenWidth / 2, height: screenHeight };
       case 'right':
-        return { left: screenWidth / 2, top: 36, width: screenWidth / 2, height: screenHeight };
+        return { left: screenWidth / 2, top: MENU_BAR_H, width: screenWidth / 2, height: screenHeight };
       case 'full':
-        return { left: 0, top: 36, width: screenWidth, height: screenHeight };
+        return { left: 0, top: MENU_BAR_H, width: screenWidth, height: screenHeight };
       default:
         return null;
     }
@@ -456,21 +521,24 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         role="dialog"
         aria-label={windowState.title}
         aria-modal="false"
+        inert={isAnimating}
       >
-      {/* Resize Handles - Only when not maximized and not animating */}
+      {/* Resize Handles - Only when not maximized and not animating.
+          Larger hit areas on coarse pointers (touch) so they're reliably tappable;
+          desktop sees the same DOM but cursor still snaps to the edge. */}
       {!windowState.isMaximized && !isAnimating && (
         <>
-            {/* Sides - fixed pixel sizes to prevent scaling issues */}
-            <div className="absolute top-0 left-0 w-full cursor-n-resize z-50" style={{ height: '8px' }} onMouseDown={(e) => handleResizeStart(e, 'n')} onTouchStart={(e) => handleResizeTouchStart(e, 'n')} />
-            <div className="absolute bottom-0 left-0 w-full cursor-s-resize z-50" style={{ height: '8px' }} onMouseDown={(e) => handleResizeStart(e, 's')} onTouchStart={(e) => handleResizeTouchStart(e, 's')} />
-            <div className="absolute top-0 left-0 h-full cursor-w-resize z-50" style={{ width: '8px' }} onMouseDown={(e) => handleResizeStart(e, 'w')} onTouchStart={(e) => handleResizeTouchStart(e, 'w')} />
-            <div className="absolute top-0 right-0 h-full cursor-e-resize z-50" style={{ width: '8px' }} onMouseDown={(e) => handleResizeStart(e, 'e')} onTouchStart={(e) => handleResizeTouchStart(e, 'e')} />
+            {/* Sides */}
+            <div className="absolute -top-1 left-3 right-3 cursor-n-resize z-50" style={{ height: '14px' }} onMouseDown={(e) => handleResizeStart(e, 'n')} onTouchStart={(e) => handleResizeTouchStart(e, 'n')} />
+            <div className="absolute -bottom-1 left-3 right-3 cursor-s-resize z-50" style={{ height: '14px' }} onMouseDown={(e) => handleResizeStart(e, 's')} onTouchStart={(e) => handleResizeTouchStart(e, 's')} />
+            <div className="absolute top-3 bottom-3 -left-1 cursor-w-resize z-50" style={{ width: '14px' }} onMouseDown={(e) => handleResizeStart(e, 'w')} onTouchStart={(e) => handleResizeTouchStart(e, 'w')} />
+            <div className="absolute top-3 bottom-3 -right-1 cursor-e-resize z-50" style={{ width: '14px' }} onMouseDown={(e) => handleResizeStart(e, 'e')} onTouchStart={(e) => handleResizeTouchStart(e, 'e')} />
 
-            {/* Corners - fixed pixel sizes */}
-            <div className="absolute top-0 left-0 cursor-nw-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'nw')} onTouchStart={(e) => handleResizeTouchStart(e, 'nw')} />
-            <div className="absolute top-0 right-0 cursor-ne-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'ne')} onTouchStart={(e) => handleResizeTouchStart(e, 'ne')} />
-            <div className="absolute bottom-0 left-0 cursor-sw-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'sw')} onTouchStart={(e) => handleResizeTouchStart(e, 'sw')} />
-            <div className="absolute bottom-0 right-0 cursor-se-resize z-50" style={{ width: '16px', height: '16px' }} onMouseDown={(e) => handleResizeStart(e, 'se')} onTouchStart={(e) => handleResizeTouchStart(e, 'se')} />
+            {/* Corners */}
+            <div className="absolute -top-1 -left-1 cursor-nw-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'nw')} onTouchStart={(e) => handleResizeTouchStart(e, 'nw')} />
+            <div className="absolute -top-1 -right-1 cursor-ne-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'ne')} onTouchStart={(e) => handleResizeTouchStart(e, 'ne')} />
+            <div className="absolute -bottom-1 -left-1 cursor-sw-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'sw')} onTouchStart={(e) => handleResizeTouchStart(e, 'sw')} />
+            <div className="absolute -bottom-1 -right-1 cursor-se-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'se')} onTouchStart={(e) => handleResizeTouchStart(e, 'se')} />
         </>
       )}
 
