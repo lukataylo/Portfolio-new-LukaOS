@@ -1,28 +1,43 @@
 import type { ComponentType } from 'react';
 
-/** Frontmatter shared by every MDX document. */
-export interface ContentFrontmatter {
-  id: string;
+/**
+ * Frontmatter contract for blog posts. Authors set these in the YAML block at
+ * the top of each `.mdx` file.
+ *
+ * ```mdx
+ * ---
+ * title: Notes on something
+ * date: 2025-04-12
+ * excerpt: One-line teaser used in the sidebar list and search.
+ * tags: [design, ai]
+ * readTime: 4 min read
+ * image: /covers/foo.jpg
+ * ---
+ * ```
+ */
+export interface NoteFrontmatter {
   title: string;
-  excerpt: string;
+  /** ISO date string (e.g. `2025-04-12`). */
   date: string;
-  readTime?: string;
-  author?: string;
+  excerpt: string;
   tags?: string[];
+  readTime?: string;
+  /** Optional hero image rendered above the post. Relative or absolute URL. */
   image?: string;
-  /** When set, the document is gated behind a SHA-256 password hash. */
-  passwordHash?: string;
-  protected?: boolean;
+  author?: string;
 }
 
-/** Module shape of each MDX file at runtime. */
+/**
+ * What a `.mdx` module looks like once compiled. The default export is the
+ * post body; the named `frontmatter` export comes from remark-mdx-frontmatter.
+ */
 export interface MdxModule {
-  default: ComponentType;
-  frontmatter: ContentFrontmatter;
+  default: ComponentType<Record<string, unknown>>;
+  frontmatter: NoteFrontmatter;
 }
 
-export interface LoadedDoc {
+/** Loaded post: the slug (filename stem), the frontmatter, and the renderer. */
+export interface LoadedNote extends NoteFrontmatter {
   slug: string;
-  Component: ComponentType;
-  frontmatter: ContentFrontmatter;
+  Component: ComponentType<Record<string, unknown>>;
 }

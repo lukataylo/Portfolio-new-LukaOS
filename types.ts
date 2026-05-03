@@ -84,30 +84,6 @@ export interface ContentSlide {
   body: string;
 }
 
-/**
- * Blog/Note post data for the Notes app.
- */
-export interface BlogPost {
-  /** Unique identifier */
-  id: string;
-  /** Post title */
-  title: string;
-  /** Short description shown in list view */
-  excerpt: string;
-  /** Full content (HTML or Markdown string) */
-  content: string;
-  /** Publication date (ISO string or formatted) */
-  date: string;
-  /** Estimated read time (e.g., "5 min read") */
-  readTime: string;
-  /** Author name */
-  author: string;
-  /** Categorization tags */
-  tags: string[];
-  /** Optional header image URL */
-  image?: string;
-}
-
 // ============================================================================
 // DESKTOP ITEM TYPES
 // ============================================================================
@@ -135,8 +111,6 @@ export interface DesktopItem {
   appId?: string;
   /** Content revealed after password unlock */
   lockedContent?: ContentSlide[];
-  /** Posts for BLOG type */
-  blogPosts?: BlogPost[];
   /** Books for BOOKS type */
   books?: Book[];
   /** SEO meta description */

@@ -1,6 +1,7 @@
 import React from 'react';
-import { DesktopItem, FileType } from '../../types';
+import { FileType } from '../../types';
 import { DESKTOP_ITEMS } from '../../constants';
+import { NOTES } from '../../src/content/loader';
 
 interface SitemapViewerProps {
   onNavigate: (id: string) => void;
@@ -51,14 +52,13 @@ export const SitemapViewer: React.FC<SitemapViewerProps> = ({ onNavigate }) => {
                 Blog Archives
             </h2>
             <ul className="space-y-4 font-mono text-sm">
-                {DESKTOP_ITEMS.find(i => i.id === 'blog')?.blogPosts?.map(post => (
-                     <li key={post.id}>
-                        <a 
-                            href={`#/blog/${post.id}`}
+                {NOTES.map(post => (
+                     <li key={post.slug}>
+                        <a
+                            href={`#/blog/${post.slug}`}
                              onClick={(e) => {
                                 e.preventDefault();
                                 onNavigate('blog');
-                                // In a real app this would deep link, handled via hash router in App.tsx
                             }}
                             className="block p-3 rounded border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white transition-all"
                         >
@@ -67,8 +67,12 @@ export const SitemapViewer: React.FC<SitemapViewerProps> = ({ onNavigate }) => {
                             </span>
                             <div className="flex gap-2 text-xs text-zinc-500 mt-1">
                                 <span>{post.date}</span>
-                                <span>•</span>
-                                <span>{post.tags.join(', ')}</span>
+                                {post.tags && post.tags.length > 0 && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{post.tags.join(', ')}</span>
+                                  </>
+                                )}
                             </div>
                         </a>
                      </li>

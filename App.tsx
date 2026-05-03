@@ -25,11 +25,14 @@ import { Spotlight } from './components/Spotlight';
 import { MobileAppDrawer } from './components/MobileAppDrawer';
 import { ClockWidget, WeatherWidget, GitHubWidget, MenuBarClock } from './components/widgets';
 import { WelcomeBackModal } from './components/WelcomeBackModal';
-import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings, Folder } from 'lucide-react';
+import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings } from 'lucide-react';
 // Gemini SDK is dynamically imported on first use to keep the initial bundle small.
 import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
+import { playSound as playSoundFx, type SoundType } from './utils/sound';
 import { useAdmin } from './contexts/AdminContext';
 import { useContent } from './hooks/useContent';
+import { useFunMessage } from './hooks/useFunMessage';
+import { useHashRouter } from './hooks/useHashRouter';
 import { MENU_BAR_H, DOCK_H, SNAP_THRESHOLD } from './src/constants/layout';
 
 const App: React.FC = () => {
@@ -40,16 +43,13 @@ const App: React.FC = () => {
   // Admin mode
   const { isAdminMode, isAuthenticated } = useAdmin();
 
-  // Content management (CMS)
+  // Content management (CMS) — books + presentations only. Notes/blog posts
+  // are sourced from MDX files in `src/content/notes/`.
   const {
-    blogPosts,
     books,
     desktopItems: managedDesktopItems,
     isLoaded: contentLoaded,
     saveContent,
-    addBlogPost,
-    updateBlogPost,
-    deleteBlogPost,
     addBook,
     updateBook,
     deleteBook,
@@ -92,7 +92,15 @@ const App: React.FC = () => {
 
   // Menu Bar Dropdown State
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [funMessage, setFunMessage] = useState<string | null>(null);
+  const { message: funMessage, flash: flashFunMessage } = useFunMessage();
+  // Closing the dropdown is part of every fun-message trigger from the menu bar.
+  const flashAndCloseMenu = useCallback(
+    (text: string, ms?: number) => {
+      flashFunMessage(text, ms ?? 3000);
+      setActiveMenu(null);
+    },
+    [flashFunMessage],
+  );
 
   // Spotlight State
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
@@ -299,8 +307,7 @@ const App: React.FC = () => {
         konamiIndex++;
         if (konamiIndex === konamiCode.length) {
           setKonamiActivated(true);
-          setFunMessage('🎮 KONAMI CODE ACTIVATED! Retro mode enabled!');
-          setTimeout(() => setFunMessage(null), 3000);
+          flashFunMessage('🎮 KONAMI CODE ACTIVATED! Retro mode enabled!');
           // Reset after 10 seconds
           setTimeout(() => setKonamiActivated(false), 10000);
           konamiIndex = 0;
@@ -358,8 +365,7 @@ const App: React.FC = () => {
       // Cmd+Q - Quit (fun message)
       if ((e.metaKey || e.ctrlKey) && e.key === 'q') {
         e.preventDefault();
-        setFunMessage("🚫 Quit? But we were just getting started!");
-        setTimeout(() => setFunMessage(null), 3000);
+        flashFunMessage("🚫 Quit? But we were just getting started!");
       }
 
       // Cmd+Tab - App Switcher
@@ -405,65 +411,7 @@ const App: React.FC = () => {
     };
   }, [activeWindowId, windows, isAppSwitcherOpen, appSwitcherIndex]);
 
-  // Sound effect helper
-  const playSound = (type: 'pop' | 'close' | 'minimize' | 'notification' | 'click') => {
-    if (!soundEnabled) return;
-
-    // Create audio context for sounds
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      switch (type) {
-        case 'pop':
-          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.05);
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.1);
-          break;
-        case 'close':
-          oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.15);
-          gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.15);
-          break;
-        case 'minimize':
-          oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.1);
-          break;
-        case 'notification':
-          oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-          oscillator.frequency.setValueAtTime(1100, audioContext.currentTime + 0.1);
-          oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.3);
-          break;
-        case 'click':
-          oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
-          gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.05);
-          break;
-      }
-    } catch (e) {
-      // Audio not supported
-    }
-  };
+  const playSound = useCallback((type: SoundType) => playSoundFx(type, soundEnabled), [soundEnabled]);
 
   // Add welcome notification on mount
   useEffect(() => {
@@ -521,65 +469,7 @@ const App: React.FC = () => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  // --- ROUTER & SEO LOGIC ---
-  useEffect(() => {
-      // 1. Handle Initial Hash Route
-      const handleHashRoute = () => {
-          const hash = window.location.hash; // e.g., #/about or #/blog/post-1
-          if (!hash) {
-              // Default to Sitemap/About if no hash on first load? Or just Desktop.
-              // Let's default to About Me if specifically asked in reqs, else Sitemap is good.
-              // Requirement: "Langpage should open on one presentation" -> About Me
-              const aboutMe = DESKTOP_ITEMS.find(i => i.id === 'about-me');
-              if (aboutMe) handleOpenItem(aboutMe);
-              return;
-          }
-
-          const route = hash.replace('#/', '');
-          // Basic Route Matching
-          const targetItem = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find(i => 
-              i.slug === route || i.id === route || (route.startsWith('blog/') && i.id === 'blog')
-          );
-
-          if (targetItem) {
-              handleOpenItem(targetItem);
-          }
-      };
-      
-      // Delay slightly to allow App to mount fully
-      setTimeout(handleHashRoute, 100);
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Update Page Title / Meta based on Active Window
-  useEffect(() => {
-      const activeWindow = windows.find(w => w.id === activeWindowId);
-      const baseTitle = "Luka Dadiani | Product Manager & Engineer";
-      
-      if (activeWindow) {
-          const item = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find(i => i.id === activeWindow.itemId);
-          if (item) {
-              // Update Title
-              document.title = `${item.title} | Luka Dadiani`;
-              
-              // Update Meta Description
-              const metaDesc = document.querySelector('meta[name="description"]');
-              if (metaDesc && item.seoDescription) {
-                  metaDesc.setAttribute('content', item.seoDescription);
-              }
-
-              // Update URL Hash if not already set (for deep linking persistence)
-              const newHash = `#/${item.slug || item.id}`;
-              if (window.location.hash !== newHash && !window.location.hash.includes(item.id + '/')) {
-                  window.history.replaceState(null, '', newHash);
-              }
-          }
-      } else {
-          document.title = baseTitle;
-          window.history.replaceState(null, '', ' '); // Clear hash when desktop focused
-      }
-  }, [activeWindowId, windows]);
+  useHashRouter({ activeWindowId, windows, onOpenItem: (item) => handleOpenItem(item) });
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -875,12 +765,8 @@ const App: React.FC = () => {
     if (win.itemId === 'content-editor') {
       return (
         <ContentEditorApp
-          blogPosts={blogPosts}
           books={books}
           desktopItems={desktopItems}
-          onUpdateBlogPost={updateBlogPost}
-          onAddBlogPost={addBlogPost}
-          onDeleteBlogPost={deleteBlogPost}
           onUpdateBook={updateBook}
           onAddBook={addBook}
           onDeleteBook={deleteBook}
@@ -914,7 +800,7 @@ const App: React.FC = () => {
       case FileType.LINK:
         return <BrowserApp initialUrl={item.url || ''} />;
       case FileType.BLOG:
-        return <BlogApp posts={blogPosts} />;
+        return <BlogApp />;
       case FileType.BOOKS:
         return <BooksApp books={books} />;
       case FileType.TERMINAL:
@@ -978,7 +864,7 @@ const App: React.FC = () => {
       case FileType.LINK:
         return <BrowserApp initialUrl={item.url || ''} />;
       case FileType.BLOG:
-        return <BlogApp posts={blogPosts} />;
+        return <BlogApp />;
       case FileType.BOOKS:
         return <BooksApp books={books} />;
       case FileType.TERMINAL:
@@ -1129,11 +1015,11 @@ const App: React.FC = () => {
                 </span>
                 {activeMenu === 'file' && (
                   <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => { setFunMessage("Creating new file... just kidding, I'm a portfolio!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">New File (Pretend)</button>
-                    <button onClick={() => { setFunMessage("Opening... my heart to new opportunities!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Open Happiness</button>
-                    <button onClick={() => { setFunMessage("Saved to your memory! (Hopefully)"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Save to Memory</button>
+                    <button onClick={() => flashAndCloseMenu("Creating new file... just kidding, I'm a portfolio!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">New File (Pretend)</button>
+                    <button onClick={() => flashAndCloseMenu("Opening... my heart to new opportunities!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Open Happiness</button>
+                    <button onClick={() => flashAndCloseMenu("Saved to your memory! (Hopefully)")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Save to Memory</button>
                     <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => { setFunMessage("You can't quit me that easily!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-red-500">Quit (Nice Try)</button>
+                    <button onClick={() => flashAndCloseMenu("You can't quit me that easily!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-red-500">Quit (Nice Try)</button>
                   </div>
                 )}
               </div>
@@ -1148,12 +1034,12 @@ const App: React.FC = () => {
                 </span>
                 {activeMenu === 'edit' && (
                   <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => { setFunMessage("Undo what? Your life choices? Same."); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Undo Regrets</button>
-                    <button onClick={() => { setFunMessage("Redoing... *types furiously*"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Redo That Thing</button>
+                    <button onClick={() => flashAndCloseMenu("Undo what? Your life choices? Same.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Undo Regrets</button>
+                    <button onClick={() => flashAndCloseMenu("Redoing... *types furiously*")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Redo That Thing</button>
                     <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => { navigator.clipboard.writeText("Luka Dadiani - Product Manager & Designer"); setFunMessage("Copied my essence to clipboard!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Copy My Vibe</button>
-                    <button onClick={() => { setFunMessage("Pasting enthusiasm... done!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Paste Enthusiasm</button>
-                    <button onClick={() => { setFunMessage("Selected everything. You're welcome."); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Select All The Things</button>
+                    <button onClick={() => { navigator.clipboard.writeText("Luka Dadiani - Product Manager & Designer"); flashAndCloseMenu("Copied my essence to clipboard!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Copy My Vibe</button>
+                    <button onClick={() => flashAndCloseMenu("Pasting enthusiasm... done!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Paste Enthusiasm</button>
+                    <button onClick={() => flashAndCloseMenu("Selected everything. You're welcome.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Select All The Things</button>
                   </div>
                 )}
               </div>
@@ -1168,12 +1054,12 @@ const App: React.FC = () => {
                 </span>
                 {activeMenu === 'view' && (
                   <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => { document.body.style.transform = 'scale(1.5)'; setTimeout(() => document.body.style.transform = '', 500); setFunMessage("ZOOMING IN!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom In (Dramatically)</button>
-                    <button onClick={() => { document.body.style.transform = 'scale(0.8)'; setTimeout(() => document.body.style.transform = '', 500); setFunMessage("zooming out..."); setActiveMenu(null); setTimeout(() => setFunMessage(null), 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom Out (Quietly)</button>
+                    <button onClick={() => { document.body.style.transform = 'scale(1.5)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("ZOOMING IN!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom In (Dramatically)</button>
+                    <button onClick={() => { document.body.style.transform = 'scale(0.8)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("zooming out...", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom Out (Quietly)</button>
                     <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => { document.body.style.transition = 'transform 1s'; document.body.style.transform = 'rotate(360deg)'; setTimeout(() => { document.body.style.transform = ''; document.body.style.transition = ''; }, 1000); setFunMessage("Wheeeee!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Do a Barrel Roll</button>
-                    <button onClick={() => { toggleTheme(); setFunMessage(theme === 'light' ? "Welcome to the dark side!" : "Let there be light!"); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Toggle Dimension</button>
-                    <button onClick={() => { setFunMessage("You're already in full screen... in my heart."); setActiveMenu(null); setTimeout(() => setFunMessage(null), 3000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Enter Full Heart Mode</button>
+                    <button onClick={() => { document.body.style.transition = 'transform 1s'; document.body.style.transform = 'rotate(360deg)'; setTimeout(() => { document.body.style.transform = ''; document.body.style.transition = ''; }, 1000); flashAndCloseMenu("Wheeeee!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Do a Barrel Roll</button>
+                    <button onClick={() => { toggleTheme(); flashAndCloseMenu(theme === 'light' ? "Welcome to the dark side!" : "Let there be light!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Toggle Dimension</button>
+                    <button onClick={() => flashAndCloseMenu("You're already in full screen... in my heart.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Enter Full Heart Mode</button>
                   </div>
                 )}
               </div>
@@ -1227,12 +1113,7 @@ const App: React.FC = () => {
                 <Sun size={14} className="text-zinc-600 dark:text-zinc-400" />
               )}
             </button>
-            <MenuBarClock
-              onCycleMode={(label) => {
-                setFunMessage(label);
-                setTimeout(() => setFunMessage(null), 2000);
-              }}
-            />
+            <MenuBarClock onCycleMode={(label) => flashFunMessage(label, 2000)} />
           </div>
         </header>
 

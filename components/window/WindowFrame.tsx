@@ -18,6 +18,26 @@ interface WindowFrameProps {
 type ResizeDirection = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 type AnimationState = 'closed' | 'opening' | 'open' | 'closing';
 
+interface ResizeHandleSpec {
+  dir: ResizeDirection;
+  className: string;
+  style: React.CSSProperties;
+}
+
+const SIDE_THICKNESS = '14px';
+const CORNER_SIZE = { width: '24px', height: '24px' };
+
+const RESIZE_HANDLES: ResizeHandleSpec[] = [
+  { dir: 'n', className: 'absolute -top-1 left-3 right-3 cursor-n-resize z-50', style: { height: SIDE_THICKNESS } },
+  { dir: 's', className: 'absolute -bottom-1 left-3 right-3 cursor-s-resize z-50', style: { height: SIDE_THICKNESS } },
+  { dir: 'w', className: 'absolute top-3 bottom-3 -left-1 cursor-w-resize z-50', style: { width: SIDE_THICKNESS } },
+  { dir: 'e', className: 'absolute top-3 bottom-3 -right-1 cursor-e-resize z-50', style: { width: SIDE_THICKNESS } },
+  { dir: 'nw', className: 'absolute -top-1 -left-1 cursor-nw-resize z-50', style: CORNER_SIZE },
+  { dir: 'ne', className: 'absolute -top-1 -right-1 cursor-ne-resize z-50', style: CORNER_SIZE },
+  { dir: 'sw', className: 'absolute -bottom-1 -left-1 cursor-sw-resize z-50', style: CORNER_SIZE },
+  { dir: 'se', className: 'absolute -bottom-1 -right-1 cursor-se-resize z-50', style: CORNER_SIZE },
+];
+
 export const WindowFrame: React.FC<WindowFrameProps> = ({
   windowState,
   onClose,
@@ -34,9 +54,6 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const [snapPreview, setSnapPreview] = useState<'left' | 'right' | 'full' | null>(null);
   const [windowContextMenu, setWindowContextMenu] = useState<{ x: number; y: number } | null>(null);
 
-  // Store pre-snap size/position for restoration
-  const preSnapState = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
-
   // Start in 'closed' state to render the initial frame at the icon's position
   const [animState, setAnimState] = useState<AnimationState>('closed');
 
@@ -50,6 +67,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   // Tracks whether this drag began from a maximized/snapped state; used to
   // skip the redundant snap-restore on mouseup that would cause a small jump.
   const unsnappedAtDragStart = useRef(false);
+  // Tracked timers so we can cancel them if the component unmounts before they fire.
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear any pending timers on unmount so callbacks don't fire against a disposed window.
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      if (bounceTimer.current) clearTimeout(bounceTimer.current);
+    };
+  }, []);
 
   // Animation Lifecycle
   useEffect(() => {
@@ -86,7 +114,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       if (windowState.isMaximized) onMaximize(windowState.id);
     }
     setAnimState('closing');
-    setTimeout(() => onClose(windowState.id), 350);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => onClose(windowState.id), 350);
   };
 
   // Restore a maximized / snapped window to its previous size and place it
@@ -352,7 +381,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         if (needsBounce) {
           setIsBouncing(true);
           onMove(windowState.id, newX, newY);
-          setTimeout(() => setIsBouncing(false), 500);
+          if (bounceTimer.current) clearTimeout(bounceTimer.current);
+          bounceTimer.current = setTimeout(() => setIsBouncing(false), 500);
         }
       }
 
@@ -523,24 +553,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         aria-modal="false"
         inert={isAnimating}
       >
-      {/* Resize Handles - Only when not maximized and not animating.
-          Larger hit areas on coarse pointers (touch) so they're reliably tappable;
-          desktop sees the same DOM but cursor still snaps to the edge. */}
-      {!windowState.isMaximized && !isAnimating && (
-        <>
-            {/* Sides */}
-            <div className="absolute -top-1 left-3 right-3 cursor-n-resize z-50" style={{ height: '14px' }} onMouseDown={(e) => handleResizeStart(e, 'n')} onTouchStart={(e) => handleResizeTouchStart(e, 'n')} />
-            <div className="absolute -bottom-1 left-3 right-3 cursor-s-resize z-50" style={{ height: '14px' }} onMouseDown={(e) => handleResizeStart(e, 's')} onTouchStart={(e) => handleResizeTouchStart(e, 's')} />
-            <div className="absolute top-3 bottom-3 -left-1 cursor-w-resize z-50" style={{ width: '14px' }} onMouseDown={(e) => handleResizeStart(e, 'w')} onTouchStart={(e) => handleResizeTouchStart(e, 'w')} />
-            <div className="absolute top-3 bottom-3 -right-1 cursor-e-resize z-50" style={{ width: '14px' }} onMouseDown={(e) => handleResizeStart(e, 'e')} onTouchStart={(e) => handleResizeTouchStart(e, 'e')} />
-
-            {/* Corners */}
-            <div className="absolute -top-1 -left-1 cursor-nw-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'nw')} onTouchStart={(e) => handleResizeTouchStart(e, 'nw')} />
-            <div className="absolute -top-1 -right-1 cursor-ne-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'ne')} onTouchStart={(e) => handleResizeTouchStart(e, 'ne')} />
-            <div className="absolute -bottom-1 -left-1 cursor-sw-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'sw')} onTouchStart={(e) => handleResizeTouchStart(e, 'sw')} />
-            <div className="absolute -bottom-1 -right-1 cursor-se-resize z-50" style={{ width: '24px', height: '24px' }} onMouseDown={(e) => handleResizeStart(e, 'se')} onTouchStart={(e) => handleResizeTouchStart(e, 'se')} />
-        </>
-      )}
+      {/* Resize Handles — only when not maximized and not animating. Sides are
+          edge strips; corners are 24×24 hit areas for reliable touch tapping. */}
+      {!windowState.isMaximized && !isAnimating && RESIZE_HANDLES.map(({ dir, className, style }) => (
+        <div
+          key={dir}
+          className={className}
+          style={style}
+          onMouseDown={(e) => handleResizeStart(e, dir)}
+          onTouchStart={(e) => handleResizeTouchStart(e, dir)}
+        />
+      ))}
 
       {/* Title Bar */}
       <div 

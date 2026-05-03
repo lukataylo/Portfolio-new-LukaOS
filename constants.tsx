@@ -17,142 +17,10 @@ import {
   Folder,
   Settings
 } from 'lucide-react';
-import { DesktopItem, FileType, BlogPost, Book } from './types';
+import { DesktopItem, FileType, Book } from './types';
 
-export const INITIAL_WINDOW_WIDTH = 600;
-export const INITIAL_WINDOW_HEIGHT = 500;
-
-const BLOG_POSTS: BlogPost[] = [
-  {
-    id: 'post-1',
-    title: 'When Adults Were Wrong',
-    excerpt: 'A reflection on projection, fear, and why inherited narratives often say more about the speaker than reality.',
-    date: 'Feb 08, 2026',
-    readTime: '7 min read',
-    author: 'Luka Dadiani',
-    tags: ['Reflection', 'Mindset', 'Life'],
-    image: 'https://picsum.photos/800/400?random=10',
-    content: `
-      <p>I grew up hearing a lot of confident advice from adults. A lot of it sounded wise. Some of it was useful. Some of it was just fear dressed up as certainty.</p>
-
-      <p>As I have got older, one pattern keeps coming back: many warnings I received were less about reality and more about other people’s unresolved anxiety.</p>
-
-      <h3>“You won’t like the big city. People are cold. You’ll struggle to make friends.”</h3>
-      <p>I heard this one a lot. The city was framed as anonymous and distant — a place where connection is impossible unless you are lucky. My actual experience has been the opposite.</p>
-
-      <p>Yes, people are busy. Yes, nobody is waiting at your door with friendship. But if you invest effort — book clubs, events, saying yes to invitations, following up — people are open.</p>
-
-      <p>The city did not fail me. Passive expectations did.</p>
-
-      <h3>“It is hard to make it.”</h3>
-      <p>This one is technically true in the way all vague statements are true. Life is expensive. Trade-offs are real. But the sentence is often used as a full stop, not a description.</p>
-
-      <p>I was able to buy a home in the centre and walk to the office every day. Not because I found a secret shortcut — because I made explicit sacrifices, especially on space, and optimised around what actually improved my life.</p>
-
-      <p>I chose proximity over square footage. Time over ego. Daily quality of life over abstract status.</p>
-
-      <h3>“You’ll miss your country. You’ll regret not studying Georgian grammar.”</h3>
-      <p>I heard this with total confidence. It turned out to be false. I do not miss the country, and I do not regret not memorising grammar rules that had no meaningful use in my life.</p>
-
-      <p>This is where identity pressure gets disguised as prediction. People project a moral story onto your choices — loyalty, roots, tradition, what a “good person” should value.</p>
-
-      <h3>“You’ll miss being a kid.”</h3>
-      <p>This is usually presented as universal truth. I do not buy it.</p>
-
-      <p>I think many adults who say this are describing their own unresolved trade-offs: anxiety, responsibility overload, and emotional fatigue. That is real. But it is not the same as childhood being objectively better.</p>
-
-      <p>For me, adulthood is better. More complexity, yes — but also more agency, more choice, and more self-respect.</p>
-
-      <h3>What I think is really going on</h3>
-      <p>Most of these “truths” came from the same causes: projection, defensive pessimism, identity preservation, and unprocessed regret.</p>
-
-      <p>Advice is often autobiography in disguise.</p>
-
-      <h3>What I have learned</h3>
-      <p>I still listen to older people, but now I filter. Is this observation or projection? Is this caution or fear? Is this my path, or their story?</p>
-
-      <p>Most advice is useful as data, not as law. The biggest shift in my life came when I stopped treating inherited narratives as truth and started treating them as hypotheses.</p>
-
-      <p>Some were right. Many were not. The only way to know was to run the experiment myself.</p>
-    `
-  },
-  {
-    id: 'post-2',
-    title: 'A Note on Agency and Anxiety',
-    excerpt: 'Why anxiety is often misdirected energy — and how turning it into action creates better outcomes.',
-    date: 'Feb 08, 2026',
-    readTime: '5 min read',
-    author: 'Luka Dadiani',
-    tags: ['Mindset', 'Agency', 'AI'],
-    content: `
-      <p>As I have grown older, I have found anxiety to be a fairly pointless emotion.</p>
-
-      <p>We inherited it from our ancestors scanning the bushes for danger. That system had a purpose. But in modern life, most anxiety is not helping us survive — it is just looping without producing action.</p>
-
-      <p>If you do clear planning and resolve identity questions ahead of time, there is usually much less to worry about than it first appears.</p>
-
-      <h3>From anxiety to action</h3>
-      <p>I have found it easier to transform anxiety into action. A useful reframe is this: anxiety is often excitement with no direction. Give it direction.</p>
-
-      <p>Ask: what is one concrete thing I can do today?</p>
-
-      <h3>The AI example</h3>
-      <p>A recent example is the anxiety around AI jobs and the future. Many people worry about what AI will do to designers and developers.</p>
-
-      <p>I see this differently. Instead of worrying, I treat it as an opportunity — to build, to start something, to create real value, and potentially to become far more economically independent than before.</p>
-
-      <p>More importantly, moments of change are exactly when you can shape the world for the better. Disruption is not only a threat; it is also a window.</p>
-
-      <h3>Control what you can</h3>
-      <p>I try not to worry about things I cannot control. I focus on what I can influence: my skills, my decisions, my output, my standards, and the people I choose to work with.</p>
-
-      <p>Optimism, to me, is not blind positivity. It is a strategic choice to act where action is possible.</p>
-
-      <p>When change arrives, I would rather move than freeze.</p>
-    `
-  },
-  {
-    id: 'post-3',
-    title: 'The Future of Product Management',
-    excerpt: 'In the AI transition, role boundaries are collapsing — and product work is becoming radically more fluid.',
-    date: 'Feb 08, 2026',
-    readTime: '6 min read',
-    author: 'Luka Dadiani',
-    tags: ['Product', 'AI', 'Future of Work'],
-    image: 'https://picsum.photos/800/400?random=12',
-    content: `
-      <p>One of the clearest shifts I can see right now is that traditional product roles are collapsing into one another.</p>
-
-      <p>What used to be clean hand-offs are becoming overlapping capabilities.</p>
-
-      <h3>Role boundaries are blurring</h3>
-      <p>Product managers can now vibe-code prototypes and run UX research directly, without waiting for multiple teams to line up.</p>
-
-      <p>Product designers can now code, fix bugs, and ship pull requests.</p>
-
-      <p>Developers can now write their own PRDs, frame user problems, and make product decisions with much more context than before.</p>
-
-      <p>This is not just tooling progress. It is a structural shift in how products are imagined, validated, and built.</p>
-
-      <h3>From hand-offs to loops</h3>
-      <p>The old model was linear: strategy, then design, then build, then feedback. The new model is tighter and more iterative. One person can move through multiple layers of the stack in a single day.</p>
-
-      <p>That changes team dynamics, hiring profiles, and what we consider “senior” in any discipline.</p>
-
-      <h3>What this means in practice</h3>
-      <p>I think we are moving towards hybrid operators: people who can think commercially, design clearly, and execute technically.</p>
-
-      <p>Specialisation will still matter, but rigid role identity will matter less than the ability to ship outcomes.</p>
-
-      <h3>The uncertain part</h3>
-      <p>In this AI transition, we do not yet know exactly what the end state looks like, or what each of us will ultimately spend most of our time doing.</p>
-
-      <p>But one thing already feels obvious: knowledge work will look radically different from what we considered normal even a few years ago.</p>
-
-      <p>The people who adapt fastest will not be those defending old job descriptions. They will be those willing to learn across boundaries and keep moving.</p>
-    `
-  }
-];
+export const INITIAL_WINDOW_WIDTH = 880;
+export const INITIAL_WINDOW_HEIGHT = 620;
 
 const BOOKS: Book[] = [
   {
@@ -297,7 +165,6 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
     title: 'Notes',
     icon: StickyNote,
     type: FileType.BLOG,
-    blogPosts: BLOG_POSTS,
     seoDescription: 'Technical writings on React, Design Systems, and Product Strategy.',
     slug: 'notes'
   },

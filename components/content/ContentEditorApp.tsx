@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  BookOpen,
   FileText,
   Plus,
   Trash2,
@@ -12,24 +11,16 @@ import {
   Lock,
   LogOut,
   Image,
-  Tag,
-  Calendar,
-  Clock,
-  User,
   Layers,
   Library,
   Star
 } from 'lucide-react';
-import { BlogPost, DesktopItem, ContentSlide, FileType, Book } from '../../types';
+import { DesktopItem, ContentSlide, FileType, Book } from '../../types';
 import { useAdmin } from '../../contexts/AdminContext';
 
 interface ContentEditorAppProps {
-  blogPosts: BlogPost[];
   books: Book[];
   desktopItems: DesktopItem[];
-  onUpdateBlogPost: (id: string, updates: Partial<BlogPost>) => void;
-  onAddBlogPost: (post: Omit<BlogPost, 'id'>) => BlogPost;
-  onDeleteBlogPost: (id: string) => void;
   onUpdateBook: (id: string, updates: Partial<Book>) => void;
   onAddBook: (book: Omit<Book, 'id'>) => Book;
   onDeleteBook: (id: string) => void;
@@ -41,7 +32,7 @@ interface ContentEditorAppProps {
   onReset: () => void;
 }
 
-type EditorSection = 'notes' | 'books' | 'pages' | 'settings';
+type EditorSection = 'books' | 'pages' | 'settings';
 
 // Login screen component
 const AdminLogin: React.FC = () => {
@@ -112,12 +103,8 @@ const AdminLogin: React.FC = () => {
 };
 
 export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
-  blogPosts,
   books,
   desktopItems,
-  onUpdateBlogPost,
-  onAddBlogPost,
-  onDeleteBlogPost,
   onUpdateBook,
   onAddBook,
   onDeleteBook,
@@ -129,7 +116,7 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
   onReset
 }) => {
   const { isAuthenticated, logout } = useAdmin();
-  const [activeSection, setActiveSection] = useState<EditorSection>('notes');
+  const [activeSection, setActiveSection] = useState<EditorSection>('books');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -162,94 +149,8 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
     item.type === FileType.PRESENTATION || item.type === FileType.PROTECTED
   );
 
-  const selectedBlogPost = blogPosts.find(p => p.id === selectedItemId);
   const selectedBook = books.find(b => b.id === selectedItemId);
   const selectedDesktopItem = editableItems.find(i => i.id === selectedItemId);
-
-  const renderNotesEditor = () => {
-    if (!selectedBlogPost) {
-      return (
-        <div className="flex-1 flex items-center justify-center text-zinc-400 font-mono text-sm">
-          Select a note to edit or create a new one
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Title</label>
-            <input
-              type="text"
-              value={selectedBlogPost.title}
-              onChange={(e) => onUpdateBlogPost(selectedBlogPost.id, { title: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Excerpt</label>
-            <textarea
-              value={selectedBlogPost.excerpt}
-              onChange={(e) => onUpdateBlogPost(selectedBlogPost.id, { excerpt: e.target.value })}
-              rows={2}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">
-                <Calendar size={10} className="inline mr-1" /> Date
-              </label>
-              <input
-                type="text"
-                value={selectedBlogPost.date}
-                onChange={(e) => onUpdateBlogPost(selectedBlogPost.id, { date: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">
-                <Clock size={10} className="inline mr-1" /> Read Time
-              </label>
-              <input
-                type="text"
-                value={selectedBlogPost.readTime}
-                onChange={(e) => onUpdateBlogPost(selectedBlogPost.id, { readTime: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">
-              <Tag size={10} className="inline mr-1" /> Tags (comma separated)
-            </label>
-            <input
-              type="text"
-              value={selectedBlogPost.tags.join(', ')}
-              onChange={(e) => onUpdateBlogPost(selectedBlogPost.id, {
-                tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)
-              })}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Content (HTML)</label>
-            <textarea
-              value={selectedBlogPost.content}
-              onChange={(e) => onUpdateBlogPost(selectedBlogPost.id, { content: e.target.value })}
-              rows={12}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-xs focus:outline-none focus:border-black dark:focus:border-white resize-none"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const renderBooksEditor = () => {
     if (!selectedBook) {
@@ -483,7 +384,6 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
       <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <div className="flex items-center gap-1">
           {[
-            { id: 'notes' as EditorSection, icon: BookOpen, label: 'Notes' },
             { id: 'books' as EditorSection, icon: Library, label: 'Books' },
             { id: 'pages' as EditorSection, icon: FileText, label: 'Pages' },
             { id: 'settings' as EditorSection, icon: RotateCcw, label: 'Settings' },
@@ -517,23 +417,8 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
           <div className="w-64 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-y-auto">
             <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
               <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-                {activeSection === 'notes' ? 'Notes' : activeSection === 'books' ? 'Books' : 'Pages'}
+                {activeSection === 'books' ? 'Books' : 'Pages'}
               </span>
-              {activeSection === 'notes' && (
-                <button
-                  onClick={() => {
-                    const newPost = onAddBlogPost({
-                      title: 'New Note', excerpt: 'Note excerpt...', content: '<p>Start writing...</p>',
-                      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                      readTime: '1 min read', author: 'Luka Dadiani', tags: ['New']
-                    });
-                    setSelectedItemId(newPost.id);
-                  }}
-                  className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
-                >
-                  <Plus size={14} />
-                </button>
-              )}
               {activeSection === 'books' && (
                 <button
                   onClick={() => {
@@ -549,28 +434,6 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
                 </button>
               )}
             </div>
-
-            {activeSection === 'notes' && blogPosts.map(post => (
-              <button
-                key={post.id}
-                onClick={() => setSelectedItemId(post.id)}
-                className={`w-full p-4 text-left border-b border-zinc-100 dark:border-zinc-900 group
-                  ${selectedItemId === post.id ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50'} transition-colors`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-black dark:text-white truncate">{post.title}</div>
-                    <div className="text-[10px] text-zinc-400 font-mono mt-1">{post.date}</div>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDeleteBlogPost(post.id); if (selectedItemId === post.id) setSelectedItemId(null); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              </button>
-            ))}
 
             {activeSection === 'books' && books.map(book => (
               <button
@@ -614,7 +477,6 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
           </div>
         )}
 
-        {activeSection === 'notes' && renderNotesEditor()}
         {activeSection === 'books' && renderBooksEditor()}
         {activeSection === 'pages' && renderPagesEditor()}
         {activeSection === 'settings' && renderSettings()}

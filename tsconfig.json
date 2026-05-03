@@ -20,5 +20,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.mdx", "src/content/mdx.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "src/content/mdx.d.ts"]
 }

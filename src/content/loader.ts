@@ -1,27 +1,28 @@
-import type { LoadedDoc, MdxModule } from './types';
+import type { LoadedNote, MdxModule } from './types';
 
 /**
- * Build-time content index using Vite's `import.meta.glob`.
- * Each MDX file is split into its own chunk and loaded on demand.
+ * Build-time content index. `import.meta.glob` is statically analysed by Vite,
+ * so each `.mdx` file is split into its own chunk and loaded on demand.
+ *
+ * `eager: true` resolves all modules synchronously at module init — fine here
+ * because the note set is small and we want the sidebar list available without
+ * a flash. Switch to lazy (`eager: false`) if the post list grows large.
  */
-function load(modules: Record<string, () => Promise<unknown>>): Promise<LoadedDoc[]> {
-  const entries = Object.entries(modules);
-  return Promise.all(
-    entries.map(async ([path, importer]) => {
-      const mod = (await importer()) as MdxModule;
-      const slugMatch = path.match(/\/([^/]+)\.mdx$/);
-      const slug = slugMatch?.[1] ?? path;
-      return {
-        slug,
-        Component: mod.default,
-        frontmatter: mod.frontmatter,
-      };
-    }),
-  );
-}
+const noteModules = import.meta.glob<MdxModule>('./notes/*.mdx', { eager: true });
 
-const noteModules = import.meta.glob('./notes/*.mdx');
-const caseStudyModules = import.meta.glob('./case-studies/*.mdx');
+const slugFromPath = (path: string): string => {
+  const match = path.match(/\/([^/]+)\.mdx$/);
+  return match?.[1] ?? path;
+};
 
-export const loadNotes = (): Promise<LoadedDoc[]> => load(noteModules);
-export const loadCaseStudies = (): Promise<LoadedDoc[]> => load(caseStudyModules);
+/** All notes, sorted newest-first by frontmatter date. */
+export const NOTES: LoadedNote[] = Object.entries(noteModules)
+  .map(([path, mod]) => ({
+    slug: slugFromPath(path),
+    Component: mod.default,
+    ...mod.frontmatter,
+  }))
+  .sort((a, b) => (a.date < b.date ? 1 : -1));
+
+export const findNote = (slug: string): LoadedNote | undefined =>
+  NOTES.find((n) => n.slug === slug);
