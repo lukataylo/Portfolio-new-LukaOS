@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { LayoutGrid } from 'lucide-react';
-import { DOCK_ITEMS } from '../constants';
+import { DESKTOP_ITEMS, DOCK_ITEMS } from '../constants';
 import { DesktopItem } from '../types';
 
 interface MobileTabBarProps {
@@ -25,11 +25,14 @@ interface MobileTabBarProps {
 
 // Tabs surfaced directly in the bar; accent marks the contact actions.
 const TAB_IDS: Array<{ id: string; label: string; accent: boolean }> = [
-  { id: 'blog-dock', label: 'Notes', accent: false },
+  { id: 'about-me', label: 'About', accent: false },
   { id: 'terminal', label: 'Terminal', accent: false },
   { id: 'linkedin', label: 'LinkedIn', accent: true },
   { id: 'email', label: 'Email', accent: true },
 ];
+
+// About Me lives on the desktop, not in the dock — look both up.
+const ALL_ITEMS = [...DOCK_ITEMS, ...DESKTOP_ITEMS];
 
 export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   onAppsClick,
@@ -38,7 +41,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
 }) => {
   const tabs = TAB_IDS.map(tab => ({
     ...tab,
-    item: DOCK_ITEMS.find(i => i.id === tab.id),
+    item: ALL_ITEMS.find(i => i.id === tab.id),
   })).filter((tab): tab is typeof tab & { item: DesktopItem } => Boolean(tab.item));
 
   return (
