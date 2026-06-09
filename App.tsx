@@ -23,6 +23,7 @@ import { ContextMenu } from './components/ContextMenu';
 import { PrivacyNotice } from './components/PrivacyNotice';
 import { Spotlight } from './components/Spotlight';
 import { MobileAppDrawer } from './components/MobileAppDrawer';
+import { MobileTabBar } from './components/MobileTabBar';
 import { AppSwitcher } from './components/layout/AppSwitcher';
 import { NotificationCenter } from './components/layout/NotificationCenter';
 import { ClockWidget, WeatherWidget, GitHubWidget, MenuBarClock } from './components/widgets';
@@ -580,8 +581,8 @@ const App: React.FC = () => {
 
     if (isMobile) {
         initialWidth = window.innerWidth - 32;
-        // Account for menu bar at top and dock/padding at bottom
-        initialHeight = window.innerHeight - MENU_BAR_HEIGHT - 12 - 60;
+        // Account for menu bar at top and the tab bar (56px + safe area) at bottom
+        initialHeight = window.innerHeight - MENU_BAR_HEIGHT - 12 - 72;
     } else if (realItem.id === 'about-me') {
         // About Me presentation gets a larger window for better readability
         initialWidth = 800;
@@ -1304,13 +1305,19 @@ const App: React.FC = () => {
         />
 
 
-        {/* Mobile App Drawer */}
+        {/* Mobile Tab Bar (replaces the dock on small screens) */}
+        <MobileTabBar
+          onAppsClick={() => setIsMobileDrawerOpen(true)}
+          onItemClick={handleOpenItem}
+          openItemIds={getOpenItemIds()}
+        />
+
+        {/* Mobile App Drawer (opened via the Apps tab) */}
         <MobileAppDrawer
           items={[...DESKTOP_ITEMS, ...DOCK_ITEMS]}
           onAppClick={handleOpenItem}
           isOpen={isMobileDrawerOpen}
           onClose={() => setIsMobileDrawerOpen(false)}
-          onOpen={() => setIsMobileDrawerOpen(true)}
         />
 
       </div>

@@ -82,7 +82,7 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
 
   return (
     <nav
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[120]"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[120] hidden md:block"
       role="toolbar"
       aria-label="Application dock"
     >
