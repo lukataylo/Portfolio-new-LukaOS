@@ -88,9 +88,9 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
     >
       <div className="
         flex items-center gap-2 px-4 py-2
-        bg-white/70 dark:bg-zinc-900/80 backdrop-blur-xl
-        border border-zinc-200 dark:border-zinc-800
-        rounded-2xl shadow-2xl transition-colors
+        bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl
+        border border-zinc-200/70 dark:border-white/10
+        rounded-panel shadow-dock transition-colors
       ">
         {displayItems.map((item) => {
           const Icon = item.icon;
@@ -133,13 +133,13 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
               {/* Window Preview Bubble */}
               {isHovered && targetWindow && (
                 <div className="absolute -top-52 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-200 z-50 pointer-events-none">
-                    <div className="relative p-2 bg-zinc-100 dark:bg-zinc-900 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-zinc-300 dark:border-zinc-700">
-                        
+                    <div className="relative p-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-panel shadow-panel border border-zinc-200/70 dark:border-white/10">
+
                         {/* Preview Header */}
                         <div className="flex items-center justify-between w-full mb-2 pl-1 pr-1 gap-4">
                              <div className="flex items-center gap-1.5">
-                                 <div className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div>
-                                 <div className="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-700"></div>
+                                 <div className="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-600"></div>
+                                 <div className="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-600"></div>
                              </div>
                              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono font-bold truncate max-w-[120px]">
                                 {targetWindow.title}
@@ -175,7 +175,7 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
                         </div>
                         
                         {/* Arrow */}
-                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-zinc-100 dark:bg-zinc-900 rotate-45 border-r border-b border-zinc-300 dark:border-zinc-700"></div>
+                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white/90 dark:bg-zinc-900/90 rotate-45 border-r border-b border-zinc-200/70 dark:border-white/10"></div>
                     </div>
                 </div>
               )}
@@ -197,14 +197,13 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
               >
                 <div className={`
                   w-10 h-10 flex items-center justify-center
-                  rounded-xl border transition-all duration-300
+                  rounded-xl transition-all duration-300
                   ${targetWindow?.isMinimized
-                    ? 'bg-zinc-100 dark:bg-zinc-800/50 border-zinc-300 dark:border-zinc-700 opacity-70 grayscale'
-                    : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-100 group-hover:border-zinc-400 dark:group-hover:border-white'
+                    ? 'bg-zinc-100 dark:bg-white/[0.04] opacity-60 grayscale'
+                    : 'bg-zinc-100 dark:bg-white/[0.08] group-hover:bg-zinc-200 dark:group-hover:bg-white/[0.16]'
                   }
-                  shadow-sm
                 `}>
-                  <Icon className="w-5 h-5 text-black dark:text-white group-hover:text-black transition-colors" />
+                  <Icon className="w-5 h-5 text-zinc-700 dark:text-white transition-colors" />
                 </div>
                 
                 {/* Tooltip (Only show if NOT showing preview to avoid clutter) */}

@@ -118,9 +118,9 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
 
       {/* Spotlight Container */}
       <div className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-[640px] z-[101] px-4 animate-in fade-in slide-in-from-top-4 duration-200">
-        <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-zinc-200/50 dark:border-zinc-700/50 overflow-hidden">
+        <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-window shadow-window border border-zinc-200/70 dark:border-white/10 overflow-hidden">
           {/* Search Input */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-100 dark:border-white/[0.06]">
             <Search size={20} className="text-zinc-400 flex-shrink-0" />
             <input
               ref={inputRef}
@@ -165,31 +165,25 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
                     className={`
                       flex items-center gap-4 px-5 py-3 cursor-pointer transition-colors
                       ${isSelected
-                        ? 'bg-blue-500 text-white'
-                        : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                        ? 'bg-zinc-200/70 dark:bg-white/10'
+                        : 'hover:bg-zinc-100 dark:hover:bg-white/5'
                       }
                     `}
                   >
-                    <div className={`
-                      w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
-                      ${isSelected
-                        ? 'bg-white/20'
-                        : 'bg-zinc-100 dark:bg-zinc-800'
-                      }
-                    `}>
-                      <Icon size={20} className={isSelected ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'} />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-zinc-100 dark:bg-white/[0.08]">
+                      <Icon size={20} className="text-zinc-500 dark:text-zinc-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className={`font-medium text-sm truncate ${isSelected ? 'text-white' : 'text-black dark:text-white'}`}>
+                      <h4 className="font-medium text-sm truncate text-black dark:text-white">
                         {item.title}
                       </h4>
                       {item.seoDescription && (
-                        <p className={`text-xs truncate mt-0.5 ${isSelected ? 'text-white/70' : 'text-zinc-500'}`}>
+                        <p className="text-xs truncate mt-0.5 text-zinc-500">
                           {item.seoDescription}
                         </p>
                       )}
                     </div>
-                    <span className={`text-[10px] font-mono uppercase ${isSelected ? 'text-white/60' : 'text-zinc-400'}`}>
+                    <span className="text-[10px] font-mono uppercase text-zinc-400">
                       {item.type.replace('_', ' ')}
                     </span>
                   </div>
@@ -199,7 +193,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+          <div className="px-5 py-3 border-t border-zinc-100 dark:border-white/[0.06] bg-zinc-50/60 dark:bg-white/[0.03]">
             <div className="flex items-center justify-between text-[10px] text-zinc-400">
               <span>{filteredItems.length} result{filteredItems.length !== 1 ? 's' : ''}</span>
               <div className="flex items-center gap-3">

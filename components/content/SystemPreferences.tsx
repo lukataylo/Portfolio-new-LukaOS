@@ -35,10 +35,10 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
   const renderMainMenu = () => (
     <div className="grid grid-cols-3 gap-4 p-6">
       {[
-        { id: 'appearance', icon: Palette, label: 'Appearance', color: 'bg-purple-500' },
-        { id: 'sound', icon: Volume2, label: 'Sound', color: 'bg-pink-500' },
+        { id: 'appearance', icon: Palette, label: 'Appearance', color: 'bg-zinc-400 dark:bg-zinc-700' },
+        { id: 'sound', icon: Volume2, label: 'Sound', color: 'bg-zinc-400 dark:bg-zinc-700' },
         { id: 'notifications', icon: Bell, label: 'Notifications', color: 'bg-red-500' },
-        { id: 'shortcuts', icon: Keyboard, label: 'Shortcuts', color: 'bg-blue-500' },
+        { id: 'shortcuts', icon: Keyboard, label: 'Shortcuts', color: 'bg-zinc-400 dark:bg-zinc-700' },
         { id: 'about', icon: Info, label: 'About', color: 'bg-zinc-500' },
       ].map(item => (
         <button
@@ -46,7 +46,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           onClick={() => setActiveSection(item.id as PreferenceSection)}
           className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
         >
-          <div className={`w-14 h-14 ${item.color} rounded-xl flex items-center justify-center shadow-lg`}>
+          <div className={`w-14 h-14 ${item.color} rounded-xl flex items-center justify-center shadow-soft`}>
             <item.icon size={28} className="text-white" />
           </div>
           <span className="text-xs text-zinc-700 dark:text-zinc-300">{item.label}</span>
@@ -64,15 +64,15 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
             onClick={() => onThemeChange('light')}
             className={`flex-1 p-4 rounded-xl border-2 transition-all ${
               theme === 'light'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
                 : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
             }`}
           >
             <div className="w-full aspect-video bg-white border border-zinc-200 rounded-lg mb-3 flex items-center justify-center">
-              <Sun size={24} className="text-yellow-500" />
+              <Sun size={24} className="text-zinc-400" />
             </div>
             <div className="flex items-center justify-center gap-2">
-              {theme === 'light' && <Check size={14} className="text-blue-500" />}
+              {theme === 'light' && <Check size={14} className="text-red-500" />}
               <span className="text-sm text-zinc-700 dark:text-zinc-300">Light</span>
             </div>
           </button>
@@ -80,15 +80,15 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
             onClick={() => onThemeChange('dark')}
             className={`flex-1 p-4 rounded-xl border-2 transition-all ${
               theme === 'dark'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
                 : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
             }`}
           >
             <div className="w-full aspect-video bg-zinc-900 border border-zinc-700 rounded-lg mb-3 flex items-center justify-center">
-              <Moon size={24} className="text-blue-400" />
+              <Moon size={24} className="text-zinc-400" />
             </div>
             <div className="flex items-center justify-center gap-2">
-              {theme === 'dark' && <Check size={14} className="text-blue-500" />}
+              {theme === 'dark' && <Check size={14} className="text-red-500" />}
               <span className="text-sm text-zinc-700 dark:text-zinc-300">Dark</span>
             </div>
           </button>
@@ -104,7 +104,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           <button
             onClick={() => setReduceMotion(!reduceMotion)}
             className={`w-12 h-7 rounded-full transition-colors ${
-              reduceMotion ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600'
+              reduceMotion ? 'bg-red-600' : 'bg-zinc-300 dark:bg-zinc-600'
             }`}
           >
             <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
@@ -133,7 +133,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
         <button
           onClick={() => onSoundChange(!soundEnabled)}
           className={`w-12 h-7 rounded-full transition-colors ${
-            soundEnabled ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600'
+            soundEnabled ? 'bg-red-600' : 'bg-zinc-300 dark:bg-zinc-600'
           }`}
         >
           <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
@@ -151,7 +151,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
               className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
               <span className="text-sm text-zinc-700 dark:text-zinc-300">{sound}</span>
-              <span className="text-xs text-blue-500">Play</span>
+              <span className="text-xs text-red-500">Play</span>
             </button>
           ))}
         </div>
@@ -166,7 +166,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           <h4 className="text-sm font-medium text-black dark:text-white">Show Notifications</h4>
           <p className="text-xs text-zinc-500">Display system notifications</p>
         </div>
-        <button className="w-12 h-7 rounded-full bg-blue-500 transition-colors">
+        <button className="w-12 h-7 rounded-full bg-red-600 transition-colors">
           <div className="w-5 h-5 bg-white rounded-full shadow-md translate-x-6" />
         </button>
       </div>
@@ -178,7 +178,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
         </div>
         <button
           className={`w-12 h-7 rounded-full transition-colors ${
-            soundEnabled ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600'
+            soundEnabled ? 'bg-red-600' : 'bg-zinc-300 dark:bg-zinc-600'
           }`}
         >
           <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
@@ -216,7 +216,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
 
   const renderAbout = () => (
     <div className="p-6 text-center">
-      <div className="w-20 h-20 mx-auto bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+      <div className="w-20 h-20 mx-auto bg-red-600 rounded-2xl flex items-center justify-center mb-4 shadow-soft">
         <div className="w-8 h-8 bg-white rounded-full" />
       </div>
       <h2 className="text-xl font-bold text-black dark:text-white">LukaOS</h2>
@@ -240,7 +240,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           href="https://github.com/lukataylo"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-red-500 hover:underline"
         >
           GitHub
         </a>
@@ -248,7 +248,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           href="https://x.com/lukadadiani"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-red-500 hover:underline"
         >
           Twitter
         </a>
@@ -256,7 +256,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           href="https://linkedin.com/in/luka-dadiani-3293a915"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-red-500 hover:underline"
         >
           LinkedIn
         </a>

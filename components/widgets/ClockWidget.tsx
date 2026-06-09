@@ -26,7 +26,7 @@ export const ClockWidget: React.FC = () => {
   const monthDay = time.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
-    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-lg w-48">
+    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-panel border border-zinc-200/70 dark:border-white/10 p-4 shadow-soft w-48">
       {/* Time */}
       <div className="text-center">
         <div className="text-4xl font-bold text-black dark:text-white font-mono tracking-tight">
@@ -38,7 +38,7 @@ export const ClockWidget: React.FC = () => {
       </div>
 
       {/* Date */}
-      <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-white/[0.06]">
         <div className="text-center">
           <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">
             {dayName}

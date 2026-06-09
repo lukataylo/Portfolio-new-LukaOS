@@ -532,17 +532,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       {/* Snap Preview Indicator */}
       {snapPreview && snapPreviewStyle && (
         <div
-          className="fixed snap-preview bg-blue-500/20 border-2 border-blue-500 rounded-lg pointer-events-none z-[999]"
+          className="fixed snap-preview bg-red-500/10 border border-red-500/40 rounded-window pointer-events-none z-[999]"
           style={snapPreviewStyle}
         />
       )}
 
       <div
         className={`
-          absolute flex flex-col shadow-2xl
-          border border-zinc-200 dark:border-zinc-800
+          absolute flex flex-col shadow-window
+          border border-zinc-200/80 dark:border-white/10
           bg-white dark:bg-[#0f0f0f]
-          ${!windowState.isMaximized ? 'rounded-lg' : ''}
+          ${!windowState.isMaximized ? 'rounded-window' : ''}
           ${isAnimating ? 'pointer-events-none overflow-hidden' : ''}
           ${animState === 'opening' ? 'window-spring-enter' : ''}
         `}
@@ -566,17 +566,18 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       ))}
 
       {/* Title Bar */}
-      <div 
-        className="h-9 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-3 select-none cursor-move shrink-0"
+      <div
+        className="h-9 bg-white dark:bg-[#0f0f0f] border-b border-zinc-100 dark:border-white/[0.06] flex items-center justify-between px-3 select-none cursor-move shrink-0"
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onDoubleClick={() => onMaximize(windowState.id)}
       >
-        <div className="flex gap-1.5 group relative z-[60]">
+        {/* Monochrome window controls — a single accent (red) reserved for close. */}
+        <div className="flex gap-2 group relative z-[60]">
           {/* Close */}
           <button
             onClick={(e) => { e.stopPropagation(); handleCloseRequest(); }}
-            className="rounded-full bg-red-500 hover:bg-red-600 border border-red-600 transition-colors flex items-center justify-center flex-shrink-0"
+            className="rounded-full bg-zinc-300 dark:bg-zinc-600 hover:bg-red-500 transition-colors flex items-center justify-center flex-shrink-0"
             style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
             onTouchEnd={(e) => { e.stopPropagation(); handleCloseRequest(); }}
             aria-label="Close window"
@@ -587,7 +588,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Minimize */}
           <button
             onClick={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
-            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-yellow-400 border border-zinc-400 dark:border-zinc-600 transition-colors flex-shrink-0"
+            className="rounded-full bg-zinc-300 dark:bg-zinc-600 hover:bg-zinc-400 dark:hover:bg-zinc-400 transition-colors flex-shrink-0"
             style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
             onTouchEnd={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
             aria-label="Minimize window"
@@ -597,7 +598,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Maximize */}
           <button
             onClick={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
-            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-green-500 border border-zinc-400 dark:border-zinc-600 transition-colors flex-shrink-0"
+            className="rounded-full bg-zinc-300 dark:bg-zinc-600 hover:bg-zinc-400 dark:hover:bg-zinc-400 transition-colors flex-shrink-0"
             style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
             onTouchEnd={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
             aria-label={windowState.isMaximized ? "Restore window" : "Maximize window"}
@@ -612,7 +613,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
       {/* Content Area */}
         <div
-          className="flex-1 overflow-hidden relative bg-white dark:bg-zinc-950"
+          className={`flex-1 overflow-hidden relative bg-white dark:bg-[#0f0f0f] ${!windowState.isMaximized ? 'rounded-b-window' : ''}`}
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -634,7 +635,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
             {/* Context Menu */}
             <div
-              className="fixed z-[201] min-w-[160px] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-100 rounded-lg backdrop-blur-3xl"
+              className="fixed z-[201] min-w-[160px] bg-white/90 dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 shadow-panel p-1 animate-in fade-in zoom-in-95 duration-100 rounded-panel backdrop-blur-xl"
               style={{
                 top: Math.min(windowContextMenu.y, window.innerHeight - 180),
                 left: Math.min(windowContextMenu.x, window.innerWidth - 180)
@@ -647,21 +648,21 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
                 <button
                   onClick={() => { onMinimize(windowState.id); setWindowContextMenu(null); }}
-                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
                 >
-                  <Minus size={14} className="group-hover:text-yellow-500 transition-colors" />
+                  <Minus size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
                   <span className="font-mono text-xs">Minimize</span>
                 </button>
 
                 <button
                   onClick={() => { onMaximize(windowState.id); setWindowContextMenu(null); }}
-                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
                 >
-                  <Maximize2 size={14} className="group-hover:text-green-500 transition-colors" />
+                  <Maximize2 size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
                   <span className="font-mono text-xs">{windowState.isMaximized ? 'Restore' : 'Maximize'}</span>
                 </button>
 
-                <div className="h-px bg-zinc-100 dark:bg-zinc-900 my-1 mx-2" />
+                <div className="h-px bg-zinc-100 dark:bg-white/[0.06] my-1 mx-2" />
 
                 <button
                   onClick={() => {
@@ -669,30 +670,30 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
                     onFocus(windowState.id);
                     setWindowContextMenu(null);
                   }}
-                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
                 >
-                  <RotateCcw size={14} className="group-hover:text-blue-500 transition-colors" />
+                  <RotateCcw size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
                   <span className="font-mono text-xs">Refresh</span>
                 </button>
 
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(windowState.title);
+                    navigator.clipboard?.writeText(windowState.title).catch(() => {});
                     setWindowContextMenu(null);
                   }}
-                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
                 >
-                  <Copy size={14} className="group-hover:text-purple-500 transition-colors" />
+                  <Copy size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
                   <span className="font-mono text-xs">Copy Title</span>
                 </button>
 
-                <div className="h-px bg-zinc-100 dark:bg-zinc-900 my-1 mx-2" />
+                <div className="h-px bg-zinc-100 dark:bg-white/[0.06] my-1 mx-2" />
 
                 <button
                   onClick={() => { handleCloseRequest(); setWindowContextMenu(null); }}
-                  className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors group text-left"
+                  className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group text-left"
                 >
-                  <X size={14} className="group-hover:text-red-600 transition-colors" />
+                  <X size={14} className="transition-colors" />
                   <span className="font-mono text-xs">Close Window</span>
                 </button>
               </div>

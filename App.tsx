@@ -27,7 +27,7 @@ import { ClockWidget, WeatherWidget, GitHubWidget, MenuBarClock } from './compon
 import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings } from 'lucide-react';
 // Gemini SDK is dynamically imported on first use to keep the initial bundle small.
-import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
+import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, removeStorageItem, STORAGE_KEYS, IconPosition } from './utils/storage';
 import { playSound as playSoundFx, type SoundType } from './utils/sound';
 import { useAdmin } from './contexts/AdminContext';
 import { useContent } from './hooks/useContent';
@@ -500,8 +500,8 @@ const App: React.FC = () => {
   const cleanUpIcons = () => {
     setIconPositions([]); // Clear all saved positions
     setContextMenu(null);
-    // Also clear from localStorage
-    localStorage.removeItem('lukaos-icon-positions');
+    // Also clear from localStorage (positions persist under DESKTOP_ICON_POSITIONS)
+    removeStorageItem(STORAGE_KEYS.DESKTOP_ICON_POSITIONS);
   };
 
   const handleChatSend = async (text: string) => {
@@ -899,13 +899,13 @@ const App: React.FC = () => {
       {/* Skip Navigation Link for Accessibility */}
       <a
         href="#main-desktop"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[1000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:outline-none"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[1000] focus:px-4 focus:py-2 focus:bg-red-600 focus:text-white focus:rounded-lg focus:outline-none"
       >
         Skip to main content
       </a>
 
       <div
-        className={`min-h-screen relative overflow-hidden bg-[#f0f0f0] dark:bg-[#0f0f0f] transition-colors duration-500 ${konamiActivated ? 'konami-retro' : ''}`}
+        className={`min-h-dvh relative overflow-hidden bg-[#f0f0f0] dark:bg-[#0f0f0f] transition-colors duration-500 ${konamiActivated ? 'konami-retro' : ''}`}
         onContextMenu={handleContextMenu}
         onClick={() => setContextMenu(null)}
       >
@@ -921,7 +921,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Menu Bar */}
-        <header className="fixed top-0 left-0 right-0 h-9 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4 z-50 transition-colors">
+        <header className="fixed top-0 left-0 right-0 h-9 bg-white/70 dark:bg-black/70 backdrop-blur-xl border-b border-zinc-200/70 dark:border-white/[0.06] flex items-center justify-between px-4 z-50 transition-colors">
           <div className="flex items-center gap-4">
             {/* LukaOS Menu (Apple-style) */}
             <div className="relative">
@@ -935,9 +935,9 @@ const App: React.FC = () => {
                 </span>
               </div>
               {activeMenu === 'about' && (
-                <div className="absolute top-8 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl p-0 w-[320px] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-3rem)] overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute top-8 left-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/70 dark:border-white/10 rounded-panel shadow-panel p-0 w-[320px] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-3rem)] overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   {/* Header */}
-                  <div className="p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+                  <div className="p-4 bg-zinc-50/80 dark:bg-white/[0.04] border-b border-zinc-100 dark:border-white/[0.06]">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-white dark:bg-black rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shadow-sm">
                         <div className="w-4 h-4 bg-red-600 rounded-full" />
@@ -950,7 +950,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* About Me */}
-                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="p-4 border-b border-zinc-100 dark:border-white/[0.06]">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">About</h4>
                     <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
                       Hi, I'm <span className="font-bold text-black dark:text-white">Luka Dadiani</span> — a Product Manager & Senior Designer based in London with 9+ years of experience building user-centred digital products.
@@ -958,7 +958,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Why This Site */}
-                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="p-4 border-b border-zinc-100 dark:border-white/[0.06]">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Why This Design?</h4>
                     <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed mb-2">
                       Every portfolio looks the same. But doing something <em>different</em> often means worse UX.
@@ -969,7 +969,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Inspiration */}
-                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="p-4 border-b border-zinc-100 dark:border-white/[0.06]">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Inspired By</h4>
                     <div className="flex flex-wrap gap-2">
                       <span className="text-[10px] px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">macOS</span>
@@ -996,7 +996,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Footer */}
-                  <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800">
+                  <div className="px-4 py-3 bg-zinc-50/80 dark:bg-white/[0.03] border-t border-zinc-100 dark:border-white/[0.06]">
                     <p className="text-[9px] text-zinc-400 text-center">
                       Built with React + TypeScript + Tailwind
                     </p>
@@ -1014,11 +1014,11 @@ const App: React.FC = () => {
                   File
                 </span>
                 {activeMenu === 'file' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => flashAndCloseMenu("Creating new file... just kidding, I'm a portfolio!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">New File (Pretend)</button>
-                    <button onClick={() => flashAndCloseMenu("Opening... my heart to new opportunities!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Open Happiness</button>
-                    <button onClick={() => flashAndCloseMenu("Saved to your memory! (Hopefully)")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Save to Memory</button>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
+                  <div className="absolute top-6 left-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/70 dark:border-white/10 rounded-panel shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <button onClick={() => flashAndCloseMenu("Creating new file... just kidding, I'm a portfolio!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">New File (Pretend)</button>
+                    <button onClick={() => flashAndCloseMenu("Opening... my heart to new opportunities!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Open Happiness</button>
+                    <button onClick={() => flashAndCloseMenu("Saved to your memory! (Hopefully)")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Save to Memory</button>
+                    <div className="h-px bg-zinc-100 dark:bg-white/[0.06] my-1" />
                     <button onClick={() => flashAndCloseMenu("You can't quit me that easily!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-red-500">Quit (Nice Try)</button>
                   </div>
                 )}
@@ -1033,13 +1033,13 @@ const App: React.FC = () => {
                   Edit
                 </span>
                 {activeMenu === 'edit' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => flashAndCloseMenu("Undo what? Your life choices? Same.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Undo Regrets</button>
-                    <button onClick={() => flashAndCloseMenu("Redoing... *types furiously*")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Redo That Thing</button>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => { navigator.clipboard.writeText("Luka Dadiani - Product Manager & Designer"); flashAndCloseMenu("Copied my essence to clipboard!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Copy My Vibe</button>
-                    <button onClick={() => flashAndCloseMenu("Pasting enthusiasm... done!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Paste Enthusiasm</button>
-                    <button onClick={() => flashAndCloseMenu("Selected everything. You're welcome.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Select All The Things</button>
+                  <div className="absolute top-6 left-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/70 dark:border-white/10 rounded-panel shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <button onClick={() => flashAndCloseMenu("Undo what? Your life choices? Same.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Undo Regrets</button>
+                    <button onClick={() => flashAndCloseMenu("Redoing... *types furiously*")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Redo That Thing</button>
+                    <div className="h-px bg-zinc-100 dark:bg-white/[0.06] my-1" />
+                    <button onClick={() => { navigator.clipboard?.writeText("Luka Dadiani - Product Manager & Designer").catch(() => {}); flashAndCloseMenu("Copied my essence to clipboard!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Copy My Vibe</button>
+                    <button onClick={() => flashAndCloseMenu("Pasting enthusiasm... done!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Paste Enthusiasm</button>
+                    <button onClick={() => flashAndCloseMenu("Selected everything. You're welcome.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Select All The Things</button>
                   </div>
                 )}
               </div>
@@ -1053,13 +1053,13 @@ const App: React.FC = () => {
                   View
                 </span>
                 {activeMenu === 'view' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => { document.body.style.transform = 'scale(1.5)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("ZOOMING IN!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom In (Dramatically)</button>
-                    <button onClick={() => { document.body.style.transform = 'scale(0.8)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("zooming out...", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom Out (Quietly)</button>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => { document.body.style.transition = 'transform 1s'; document.body.style.transform = 'rotate(360deg)'; setTimeout(() => { document.body.style.transform = ''; document.body.style.transition = ''; }, 1000); flashAndCloseMenu("Wheeeee!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Do a Barrel Roll</button>
-                    <button onClick={() => { toggleTheme(); flashAndCloseMenu(theme === 'light' ? "Welcome to the dark side!" : "Let there be light!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Toggle Dimension</button>
-                    <button onClick={() => flashAndCloseMenu("You're already in full screen... in my heart.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Enter Full Heart Mode</button>
+                  <div className="absolute top-6 left-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/70 dark:border-white/10 rounded-panel shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <button onClick={() => { document.body.style.transform = 'scale(1.5)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("ZOOMING IN!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Zoom In (Dramatically)</button>
+                    <button onClick={() => { document.body.style.transform = 'scale(0.8)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("zooming out...", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Zoom Out (Quietly)</button>
+                    <div className="h-px bg-zinc-100 dark:bg-white/[0.06] my-1" />
+                    <button onClick={() => { document.body.style.transition = 'transform 1s'; document.body.style.transform = 'rotate(360deg)'; setTimeout(() => { document.body.style.transform = ''; document.body.style.transition = ''; }, 1000); flashAndCloseMenu("Wheeeee!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Do a Barrel Roll</button>
+                    <button onClick={() => { toggleTheme(); flashAndCloseMenu(theme === 'light' ? "Welcome to the dark side!" : "Let there be light!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Toggle Dimension</button>
+                    <button onClick={() => flashAndCloseMenu("You're already in full screen... in my heart.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Enter Full Heart Mode</button>
                   </div>
                 )}
               </div>
@@ -1126,7 +1126,7 @@ const App: React.FC = () => {
         <main
           id="main-desktop"
           ref={desktopRef}
-          className={`relative pt-14 pb-28 px-6 min-h-screen transition-opacity duration-300 ${isRefreshing ? 'opacity-50' : 'opacity-100'}`}
+          className={`relative pt-14 pb-28 px-6 min-h-dvh transition-opacity duration-300 ${isRefreshing ? 'opacity-50' : 'opacity-100'}`}
           role="main"
           aria-label="Desktop workspace"
         >
@@ -1204,9 +1204,9 @@ const App: React.FC = () => {
                   top: dragCurrentPos.y - dragOffset.y,
                 }}
               >
-                <div className="flex flex-col items-center justify-center p-2 w-28 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm shadow-2xl ring-2 ring-blue-500 scale-105">
+                <div className="flex flex-col items-center justify-center p-2 w-28 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm shadow-panel ring-2 ring-zinc-400 dark:ring-white/40 scale-105">
                   <div className="relative mb-2">
-                    <div className="w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-white/10 flex items-center justify-center shadow-soft">
                       <Icon className="w-7 h-7 text-black dark:text-white" strokeWidth={1.5} />
                     </div>
                   </div>
@@ -1283,7 +1283,7 @@ const App: React.FC = () => {
           <>
             <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200]" />
             <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] animate-in fade-in zoom-in-95 duration-150">
-              <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl p-4">
+              <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-panel border border-zinc-200/70 dark:border-white/10 shadow-panel p-4">
                 <div className="flex items-center gap-4">
                   {windows.filter(w => !w.isMinimized).map((win, index) => {
                     const item = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find(i => i.id === win.itemId);
@@ -1294,16 +1294,16 @@ const App: React.FC = () => {
                       <div
                         key={win.id}
                         className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
-                          isSelected ? 'bg-blue-500 scale-110' : 'bg-zinc-100 dark:bg-zinc-800'
+                          isSelected ? 'bg-zinc-900 dark:bg-white scale-110' : 'bg-zinc-100 dark:bg-zinc-800'
                         }`}
                       >
                         <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                          isSelected ? 'bg-white/20' : 'bg-white dark:bg-zinc-700'
+                          isSelected ? 'bg-white/15 dark:bg-black/10' : 'bg-white dark:bg-zinc-700'
                         }`}>
-                          {Icon && <Icon size={28} className={isSelected ? 'text-white' : 'text-black dark:text-white'} />}
+                          {Icon && <Icon size={28} className={isSelected ? 'text-white dark:text-black' : 'text-black dark:text-white'} />}
                         </div>
                         <span className={`text-[10px] font-medium truncate max-w-[80px] ${
-                          isSelected ? 'text-white' : 'text-zinc-600 dark:text-zinc-300'
+                          isSelected ? 'text-white dark:text-black' : 'text-zinc-600 dark:text-zinc-300'
                         }`}>
                           {win.title}
                         </span>
@@ -1327,13 +1327,13 @@ const App: React.FC = () => {
               onClick={() => setIsNotificationCenterOpen(false)}
             />
             <div className="fixed top-10 right-2 w-80 max-h-[500px] overflow-hidden z-[151] animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-panel border border-zinc-200/70 dark:border-white/10 shadow-panel overflow-hidden">
+                <div className="px-4 py-3 border-b border-zinc-100 dark:border-white/[0.06] flex items-center justify-between">
                   <h3 className="font-bold text-sm text-black dark:text-white">Notifications</h3>
                   {notifications.length > 0 && (
                     <button
                       onClick={() => setNotifications([])}
-                      className="text-[10px] text-blue-500 hover:text-blue-600"
+                      className="text-[10px] text-red-500 hover:text-red-600"
                     >
                       Clear All
                     </button>

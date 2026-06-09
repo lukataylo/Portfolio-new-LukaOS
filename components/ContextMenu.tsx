@@ -27,46 +27,46 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         onContextMenu={(e) => { e.preventDefault(); onClose(); }} 
       />
       
-      <div 
-        className="fixed z-[101] min-w-[180px] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-100 rounded-lg backdrop-blur-3xl"
+      <div
+        className="fixed z-[101] min-w-[180px] bg-white/90 dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 shadow-panel p-1 animate-in fade-in zoom-in-95 duration-100 rounded-panel backdrop-blur-xl"
         style={{ top: adjustedY, left: adjustedX }}
       >
         <div className="flex flex-col gap-1">
-          <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-400 font-bold border-b border-zinc-100 dark:border-zinc-900 mb-1">
+          <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-400 font-bold border-b border-zinc-100 dark:border-white/[0.06] mb-1">
             Desktop Actions
           </div>
-          
-          <button 
+
+          <button
             onClick={() => { onSortByName(); onClose(); }}
-            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
           >
-            <ArrowDownAZ size={14} className="group-hover:text-red-600 transition-colors" />
+            <ArrowDownAZ size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
             <span className="font-mono text-xs">Sort by Name</span>
           </button>
-          
+
           <button
             onClick={() => { onSortByType(); onClose(); }}
-            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
           >
-            <LayoutGrid size={14} className="group-hover:text-red-600 transition-colors" />
+            <LayoutGrid size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
             <span className="font-mono text-xs">Sort by Type</span>
           </button>
 
           <button
             onClick={() => { onCleanUp(); onClose(); }}
-            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
           >
-            <Sparkles size={14} className="group-hover:text-red-600 transition-colors" />
+            <Sparkles size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
             <span className="font-mono text-xs">Clean Up</span>
           </button>
 
-          <div className="h-px bg-zinc-100 dark:bg-zinc-900 my-1 mx-2" />
+          <div className="h-px bg-zinc-100 dark:bg-white/[0.06] my-1 mx-2" />
 
           <button
             onClick={() => { onRefresh(); onClose(); }}
-            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
+            className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors group text-left"
           >
-            <RotateCcw size={14} className="group-hover:text-red-600 transition-colors" />
+            <RotateCcw size={14} className="text-zinc-400 group-hover:text-current transition-colors" />
             <span className="font-mono text-xs">Refresh</span>
           </button>
         </div>

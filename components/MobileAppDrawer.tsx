@@ -27,12 +27,13 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
 
   // Handle swipe gestures
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!e.touches[0]) return;
     startY.current = e.touches[0].clientY;
     setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !e.touches[0]) return;
     const currentY = e.touches[0].clientY;
     const diff = startY.current - currentY;
 
@@ -112,7 +113,7 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
       >
         {/* Handle Area */}
         <div
-          className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-t-3xl border-t border-x border-zinc-200 dark:border-zinc-800 shadow-2xl"
+          className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-t-3xl border-t border-x border-zinc-200/70 dark:border-white/10 shadow-dock"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -161,7 +162,7 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
                     className="flex flex-col items-center gap-2 p-2 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all"
                     aria-label={`Open ${item.title}`}
                   >
-                    <div className="w-14 h-14 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 rounded-2xl flex items-center justify-center shadow-sm border border-zinc-200 dark:border-zinc-700">
+                    <div className="w-14 h-14 bg-zinc-100 dark:bg-white/[0.06] rounded-2xl flex items-center justify-center">
                       <Icon size={28} className="text-zinc-600 dark:text-zinc-300" aria-hidden="true" />
                     </div>
                     <span className="text-[10px] text-zinc-600 dark:text-zinc-400 text-center line-clamp-2 leading-tight">

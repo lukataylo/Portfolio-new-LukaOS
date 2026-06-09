@@ -45,13 +45,13 @@ const WeatherIcon: React.FC<{ condition: WeatherData['condition']; size?: number
 
   switch (condition) {
     case 'sunny':
-      return <Sun {...iconProps} className="text-yellow-500" />;
+      return <Sun {...iconProps} />;
     case 'cloudy':
       return <Cloud {...iconProps} />;
     case 'rainy':
-      return <CloudRain {...iconProps} className="text-blue-500" />;
+      return <CloudRain {...iconProps} />;
     case 'snowy':
-      return <CloudSnow {...iconProps} className="text-blue-300" />;
+      return <CloudSnow {...iconProps} />;
     default:
       return <Cloud {...iconProps} />;
   }
@@ -77,7 +77,7 @@ export const WeatherWidget: React.FC = () => {
   };
 
   return (
-    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-lg w-48">
+    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-panel border border-zinc-200/70 dark:border-white/10 p-4 shadow-soft w-48">
       {/* Location */}
       <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
         {weather.location}
@@ -97,9 +97,9 @@ export const WeatherWidget: React.FC = () => {
       </div>
 
       {/* Details */}
-      <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-between">
+      <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-white/[0.06] flex justify-between">
         <div className="flex items-center gap-1">
-          <Droplets size={12} className="text-blue-400" />
+          <Droplets size={12} className="text-zinc-400" />
           <span className="text-[10px] text-zinc-500">{weather.humidity}%</span>
         </div>
         <div className="flex items-center gap-1">

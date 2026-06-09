@@ -166,7 +166,7 @@ export const MailCompose: React.FC<MailComposeProps> = ({
         <button
           onClick={handleSend}
           disabled={isSending}
-          className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white text-sm font-medium rounded-md transition-colors"
+          className="flex items-center gap-2 px-4 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-md transition-colors"
         >
           {isSending ? (
             <span className="animate-pulse">Sending...</span>
@@ -185,9 +185,9 @@ export const MailCompose: React.FC<MailComposeProps> = ({
         <div className="flex items-center px-4 py-2 border-b border-zinc-100 dark:border-zinc-800/50">
           <label className="w-16 text-sm text-zinc-400 flex-shrink-0">To:</label>
           <div className="flex-1 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm rounded">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-200/70 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 text-sm rounded">
               {recipientName}
-              <span className="text-blue-400 dark:text-blue-500">&lt;{recipientEmail}&gt;</span>
+              <span className="text-zinc-400 dark:text-zinc-500">&lt;{recipientEmail}&gt;</span>
             </span>
           </div>
         </div>

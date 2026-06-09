@@ -119,7 +119,7 @@ export const BooksApp: React.FC<BooksAppProps> = ({ books }) => {
           <div className="max-w-xl mx-auto px-6 py-10">
             {/* Cover */}
             <div className="flex justify-center mb-8">
-              <div className="w-40 h-60 rounded-md overflow-hidden shadow-2xl bg-zinc-100 dark:bg-zinc-800">
+              <div className="w-40 h-60 rounded-md overflow-hidden shadow-panel bg-zinc-100 dark:bg-zinc-800">
                 <BookCover book={selectedBook} />
               </div>
             </div>
@@ -191,7 +191,7 @@ export const BooksApp: React.FC<BooksAppProps> = ({ books }) => {
                     className="group text-left focus:outline-none"
                   >
                     {/* Cover */}
-                    <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-sm group-hover:shadow-lg transition-all duration-200 group-hover:scale-[1.02]">
+                    <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-sm group-hover:shadow-soft transition-all duration-200 group-hover:scale-[1.02]">
                       <BookCover book={book} />
                       {/* Rating */}
                       <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[10px] font-mono text-white">

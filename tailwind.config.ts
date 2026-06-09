@@ -46,7 +46,17 @@ const config: Config = {
         },
       },
       borderRadius: {
-        window: '14px',
+        // Softer, rounder OS chrome. `window` is the canonical window/panel radius.
+        window: '18px',
+        panel: '16px',
+        control: '10px',
+      },
+      boxShadow: {
+        // Calmer, softer elevation scale — low opacity, wide blur, minimal spread.
+        soft: '0 1px 2px rgba(0,0,0,0.04), 0 4px 12px -4px rgba(0,0,0,0.08)',
+        panel: '0 2px 8px -4px rgba(0,0,0,0.08), 0 12px 32px -12px rgba(0,0,0,0.16)',
+        window: '0 4px 12px -6px rgba(0,0,0,0.12), 0 24px 56px -20px rgba(0,0,0,0.28)',
+        dock: '0 2px 8px -4px rgba(0,0,0,0.10), 0 16px 40px -16px rgba(0,0,0,0.22)',
       },
       transitionTimingFunction: {
         'nothing-out': 'cubic-bezier(.2,.8,.2,1)',

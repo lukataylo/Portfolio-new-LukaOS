@@ -40,11 +40,11 @@ const generateContributions = (): number[][] => {
 };
 
 const getContributionColor = (count: number, isDark: boolean): string => {
-  if (count === 0) return isDark ? 'bg-zinc-800' : 'bg-zinc-200';
-  if (count === 1) return 'bg-green-300 dark:bg-green-900';
-  if (count === 2) return 'bg-green-400 dark:bg-green-700';
-  if (count === 3) return 'bg-green-500 dark:bg-green-500';
-  return 'bg-green-600 dark:bg-green-400';
+  if (count === 0) return isDark ? 'bg-zinc-800' : 'bg-zinc-100';
+  if (count === 1) return 'bg-red-200 dark:bg-red-200';
+  if (count === 2) return 'bg-red-400 dark:bg-red-400';
+  if (count === 3) return 'bg-red-500 dark:bg-red-500';
+  return 'bg-red-600 dark:bg-red-600';
 };
 
 export const GitHubWidget: React.FC = () => {
@@ -57,7 +57,7 @@ export const GitHubWidget: React.FC = () => {
   }, [contributions]);
 
   return (
-    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-lg w-64">
+    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 shadow-soft w-64">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -70,7 +70,7 @@ export const GitHubWidget: React.FC = () => {
           href="https://github.com/lukataylo"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] text-blue-500 hover:text-blue-600"
+          className="text-[10px] text-red-500 hover:text-red-600"
         >
           View Profile
         </a>
@@ -99,19 +99,19 @@ export const GitHubWidget: React.FC = () => {
       {/* Activity Items */}
       <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2 text-xs">
-          <GitCommit size={12} className="text-green-500" />
+          <GitCommit size={12} className="text-zinc-400" />
           <span className="text-zinc-600 dark:text-zinc-400 truncate">
             Pushed to Portfolio-new
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <Star size={12} className="text-yellow-500" />
+          <Star size={12} className="text-zinc-400" />
           <span className="text-zinc-600 dark:text-zinc-400 truncate">
             Starred react-spring
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <GitFork size={12} className="text-blue-500" />
+          <GitFork size={12} className="text-zinc-400" />
           <span className="text-zinc-600 dark:text-zinc-400 truncate">
             Forked tailwindcss
           </span>

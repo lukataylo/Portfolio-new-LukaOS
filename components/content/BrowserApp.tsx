@@ -71,13 +71,13 @@ export const BrowserApp: React.FC<BrowserAppProps> = ({ initialUrl }) => {
                     {['nothing-os-portfolio', 'design-system', 'react-components', 'product-toolkit'].map((repo, i) => (
                         <div key={i} className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-pointer group">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="font-bold text-blue-600 text-sm group-hover:underline">{repo}</span>
+                                <span className="font-bold text-red-600 text-sm group-hover:underline">{repo}</span>
                                 <span className="text-xs border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 rounded-full text-zinc-500">Public</span>
                             </div>
                             <p className="text-xs text-zinc-500 mb-4">A project showcasing modern web development practices.</p>
                             <div className="flex items-center gap-3 text-xs text-zinc-400">
                                 <div className="flex items-center gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-yellow-400"></div> TypeScript
+                                    <div className="w-2 h-2 rounded-full bg-zinc-400"></div> TypeScript
                                 </div>
                                 <span>★ {(i + 1) * 8}</span>
                             </div>
@@ -161,9 +161,9 @@ export const BrowserApp: React.FC<BrowserAppProps> = ({ initialUrl }) => {
         return (
             <div className="bg-[#f3f2ef] dark:bg-black min-h-full p-4 flex flex-col items-center">
                 <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl overflow-hidden mb-4">
-                    <div className="h-24 bg-blue-600 relative">
+                    <div className="h-24 bg-red-600 relative">
                         <div className="absolute -bottom-10 left-6 w-24 h-24 rounded-full border-4 border-white dark:border-zinc-900 bg-zinc-200 flex items-center justify-center">
-                             <Linkedin className="w-10 h-10 text-blue-700"/>
+                             <Linkedin className="w-10 h-10 text-red-700"/>
                         </div>
                     </div>
                     <div className="pt-12 px-6 pb-6">
@@ -175,7 +175,7 @@ export const BrowserApp: React.FC<BrowserAppProps> = ({ initialUrl }) => {
                                 href={url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold hover:bg-blue-700 transition-colors"
+                                className="bg-red-600 text-white px-4 py-1 rounded-full text-sm font-bold hover:bg-red-700 transition-colors"
                             >
                                 Connect
                             </a>
@@ -183,7 +183,7 @@ export const BrowserApp: React.FC<BrowserAppProps> = ({ initialUrl }) => {
                                 href={url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="border border-blue-600 text-blue-600 dark:text-blue-400 px-4 py-1 rounded-full text-sm font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                className="border border-red-600 text-red-600 dark:text-red-400 px-4 py-1 rounded-full text-sm font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                             >
                                 Message
                             </a>
@@ -215,7 +215,7 @@ export const BrowserApp: React.FC<BrowserAppProps> = ({ initialUrl }) => {
                         href={url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700 transition-colors"
                     >
                         <ExternalLink size={14} />
                         View Full Profile on LinkedIn

@@ -44,10 +44,14 @@ export const TerminalApp: React.FC = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [questionsRemaining, setQuestionsRemaining] = useState(() => {
-    const stored = localStorage.getItem('terminal-questions');
-    if (stored) {
-      const parsed = parseInt(stored, 10);
-      return isNaN(parsed) ? 2 : parsed;
+    try {
+      const stored = localStorage.getItem('terminal-questions');
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        return isNaN(parsed) ? 2 : parsed;
+      }
+    } catch {
+      /* storage unavailable — fall back to default */
     }
     return 2;
   });
@@ -70,7 +74,11 @@ export const TerminalApp: React.FC = () => {
 
   // Save questions remaining
   useEffect(() => {
-    localStorage.setItem('terminal-questions', questionsRemaining.toString());
+    try {
+      localStorage.setItem('terminal-questions', questionsRemaining.toString());
+    } catch {
+      /* storage unavailable (private mode/quota) — skip persistence */
+    }
   }, [questionsRemaining]);
 
   const handleContainerClick = () => {
@@ -519,7 +527,7 @@ export const TerminalApp: React.FC = () => {
 
   const getLineColor = (type: TerminalLine['type']) => {
     switch (type) {
-      case 'input': return 'text-green-400';
+      case 'input': return 'text-zinc-300';
       case 'output': return 'text-zinc-300';
       case 'system': return 'text-zinc-500';
       case 'error': return 'text-red-400';
@@ -550,8 +558,8 @@ export const TerminalApp: React.FC = () => {
 
         {/* Input Line */}
         <form onSubmit={handleSubmit} className="flex items-center">
-          <span className="text-blue-400 mr-1">{currentDir}</span>
-          <span className="text-green-400 mr-2">$</span>
+          <span className="text-zinc-400 mr-1">{currentDir}</span>
+          <span className="text-zinc-400 mr-2">$</span>
           <input
             ref={inputRef}
             type="text"
@@ -559,7 +567,7 @@ export const TerminalApp: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isProcessing}
-            className="flex-1 bg-transparent text-zinc-100 outline-none caret-green-400"
+            className="flex-1 bg-transparent text-zinc-100 outline-none caret-zinc-400"
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}

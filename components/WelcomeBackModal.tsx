@@ -46,11 +46,11 @@ export const WelcomeBackModal: React.FC<WelcomeBackModalProps> = ({
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-[301] p-4">
         <div
-          className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 max-w-sm w-full overflow-hidden animate-in zoom-in-95 fade-in duration-200"
+          className="bg-white dark:bg-zinc-900 rounded-window shadow-window border border-zinc-200/70 dark:border-white/10 max-w-sm w-full overflow-hidden animate-in zoom-in-95 fade-in duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with icon */}
-          <div className="bg-gradient-to-br from-red-500 to-red-600 p-6 text-white text-center">
+          <div className="bg-red-600 p-6 text-white text-center">
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Coffee className="w-8 h-8" />
             </div>

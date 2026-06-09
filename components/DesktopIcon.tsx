@@ -113,9 +113,9 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
         <div
           ref={iconRef}
           className={`
-            w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700
-            flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform
-            ${isDragging ? 'ring-2 ring-blue-500 shadow-2xl' : ''}
+            w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-white/10
+            flex items-center justify-center shadow-soft group-hover:scale-105 transition-transform
+            ${isDragging ? 'ring-2 ring-zinc-400 dark:ring-white/40 shadow-panel' : ''}
           `}
         >
           <Icon className="w-7 h-7 text-black dark:text-white" strokeWidth={1.5} />

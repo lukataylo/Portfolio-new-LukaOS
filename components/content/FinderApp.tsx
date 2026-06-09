@@ -134,7 +134,7 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
           <div className="mb-4">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2 px-2">Favorites</h4>
             <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-700 dark:text-zinc-300">
-              <Folder size={16} className="text-blue-500" />
+              <Folder size={16} className="text-zinc-400" />
               Desktop
             </button>
           </div>
@@ -147,11 +147,11 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
                 Work
               </button>
               <button className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-xs text-zinc-600 dark:text-zinc-400">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <div className="w-2 h-2 rounded-full bg-zinc-400" />
                 Personal
               </button>
               <button className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-xs text-zinc-600 dark:text-zinc-400">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <div className="w-2 h-2 rounded-full bg-zinc-400" />
                 Projects
               </button>
             </div>
@@ -173,17 +173,17 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
                     onDoubleClick={() => handleItemDoubleClick(item)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
                       isSelected
-                        ? 'bg-blue-500/10 ring-2 ring-blue-500'
+                        ? 'bg-red-500/10 ring-2 ring-red-500'
                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                   >
                     <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                      isSelected ? 'bg-blue-500' : 'bg-zinc-100 dark:bg-zinc-800'
+                      isSelected ? 'bg-red-600' : 'bg-zinc-100 dark:bg-zinc-800'
                     }`}>
                       <Icon size={32} className={isSelected ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'} />
                     </div>
                     <span className={`text-xs text-center line-clamp-2 ${
-                      isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-700 dark:text-zinc-300'
+                      isSelected ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-300'
                     }`}>
                       {item.title}
                     </span>
@@ -212,7 +212,7 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
                     onDoubleClick={() => handleItemDoubleClick(item)}
                     className={`w-full flex items-center px-3 py-2 rounded-lg transition-colors ${
                       isSelected
-                        ? 'bg-blue-500 text-white'
+                        ? 'bg-red-600 text-white'
                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
@@ -244,17 +244,17 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
                     onClick={() => handleItemClick(item)}
                     onDoubleClick={() => handleItemDoubleClick(item)}
                     className={`rounded-xl overflow-hidden transition-all ${
-                      isSelected ? 'ring-2 ring-blue-500' : ''
+                      isSelected ? 'ring-2 ring-red-500' : ''
                     }`}
                   >
                     <div className={`aspect-video flex items-center justify-center ${
-                      isSelected ? 'bg-blue-500/20' : 'bg-zinc-100 dark:bg-zinc-800'
+                      isSelected ? 'bg-red-500/20' : 'bg-zinc-100 dark:bg-zinc-800'
                     }`}>
-                      <Icon size={48} className={isSelected ? 'text-blue-500' : 'text-zinc-400'} />
+                      <Icon size={48} className={isSelected ? 'text-red-500' : 'text-zinc-400'} />
                     </div>
-                    <div className={`p-3 ${isSelected ? 'bg-blue-500/10' : 'bg-white dark:bg-zinc-900'}`}>
+                    <div className={`p-3 ${isSelected ? 'bg-red-500/10' : 'bg-white dark:bg-zinc-900'}`}>
                       <p className={`text-sm font-medium truncate ${
-                        isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-700 dark:text-zinc-300'
+                        isSelected ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-300'
                       }`}>
                         {item.title}
                       </p>
