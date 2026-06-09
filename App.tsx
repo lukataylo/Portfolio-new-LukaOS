@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
-import { DESKTOP_ITEMS, DOCK_ITEMS, INITIAL_WINDOW_HEIGHT, INITIAL_WINDOW_WIDTH } from './constants';
+import { ALL_ITEMS, DESKTOP_ITEMS, DOCK_ITEMS, FINDER_ITEMS, SEARCHABLE_ITEMS, INITIAL_WINDOW_HEIGHT, INITIAL_WINDOW_WIDTH } from './constants';
 import { DesktopItem, WindowState, FileType, ChatMessage, WindowRect } from './types';
 import { DesktopIcon } from './components/DesktopIcon';
 import { Dock } from './components/Dock';
@@ -134,7 +134,7 @@ const App: React.FC = () => {
   // Lifted States
   const [unlockedItemIds, setUnlockedItemIds] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'System Online. I am the portfolio assistant. Ask me about the projects or the engineer.' }
+    { role: 'model', text: 'System online. Ask me about the case studies or about Luka.' }
   ]);
 
   // Persist theme changes
@@ -365,7 +365,7 @@ const App: React.FC = () => {
       // Cmd+Q - Quit (fun message)
       if ((e.metaKey || e.ctrlKey) && e.key === 'q') {
         e.preventDefault();
-        flashFunMessage("🚫 Quit? But we were just getting started!");
+        flashFunMessage('Quit blocked: portfolio still running.');
       }
 
       // Cmd+Tab - App Switcher
@@ -418,7 +418,7 @@ const App: React.FC = () => {
   // Add welcome notification on mount
   useEffect(() => {
     const timer = setTimeout(() => {
-      addNotification('Welcome!', 'Welcome to LukaOS. Try Cmd+Space for search!');
+      addNotification('Welcome to LukaOS', 'Press ⌘ Space to search, or double-click any icon.');
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -757,16 +757,21 @@ const App: React.FC = () => {
     return windows.map(w => w.itemId);
   };
 
-  const renderWindowContent = (win: WindowState) => {
-    const item = [...desktopItems, ...DOCK_ITEMS].find(i => i.id === win.itemId);
+  /**
+   * Renders an app's content for a window (interactive) or a dock preview
+   * (inert: callbacks are no-ops so hover previews can't mutate state).
+   */
+  const renderAppContent = (itemId: string, interactive: boolean) => {
+    const item = [...desktopItems, ...DOCK_ITEMS].find(i => i.id === itemId);
+    const noop = () => {};
 
     // Handle AI Chat App
-    if (win.itemId === 'ai-chat') {
-      return <ChatApp messages={chatMessages} onSendMessage={handleChatSend} />;
+    if (itemId === 'ai-chat') {
+      return <ChatApp messages={chatMessages} onSendMessage={interactive ? handleChatSend : async () => {}} />;
     }
 
     // Handle Content Editor (admin mode)
-    if (win.itemId === 'content-editor') {
+    if (itemId === 'content-editor') {
       return (
         <ContentEditorApp
           books={books}
@@ -797,7 +802,7 @@ const App: React.FC = () => {
         return (
           <PasswordLock
             correctPassword={item.password || ''}
-            onUnlock={() => setUnlockedItemIds((prev) => [...prev, item.id])}
+            onUnlock={interactive ? () => setUnlockedItemIds((prev) => [...prev, item.id]) : noop}
           />
         );
       }
@@ -814,29 +819,29 @@ const App: React.FC = () => {
       case FileType.SITEMAP:
         return (
           <SitemapViewer
-            onNavigate={(id) => {
-              const target = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find((i) => i.id === id);
+            onNavigate={interactive ? (id) => {
+              const target = ALL_ITEMS.find((i) => i.id === id);
               if (target) handleOpenItem(target);
-            }}
+            } : noop}
           />
         );
       case FileType.FINDER:
         return (
           <FinderApp
-            items={[...DESKTOP_ITEMS, ...DOCK_ITEMS.filter(i => i.type !== FileType.EXTERNAL_LINK && i.type !== FileType.FINDER)]}
-            onItemClick={handleOpenItem}
+            items={FINDER_ITEMS}
+            onItemClick={interactive ? handleOpenItem : noop}
           />
         );
       case FileType.PREFERENCES:
         return (
           <SystemPreferences
             theme={theme}
-            onThemeChange={setTheme}
+            onThemeChange={interactive ? setTheme : noop}
             soundEnabled={soundEnabled}
-            onSoundChange={setSoundEnabled}
+            onSoundChange={interactive ? setSoundEnabled : noop}
             reduceMotion={reduceMotion}
-            onReduceMotionChange={setReduceMotion}
-            onPlaySound={playSound}
+            onReduceMotionChange={interactive ? setReduceMotion : noop}
+            onPlaySound={interactive ? playSound : undefined}
           />
         );
       default:
@@ -844,64 +849,52 @@ const App: React.FC = () => {
     }
   };
 
-  // Render content for Dock previews (same as window content but without loader delay for snappier previews)
-  const renderPreviewContent = (itemId: string) => {
-    const item = [...desktopItems, ...DOCK_ITEMS].find(i => i.id === itemId);
 
-    if (itemId === 'ai-chat') {
-      return <ChatApp messages={chatMessages} onSendMessage={async () => {}} />;
-    }
-
-    if (!item) return <div className="p-4">Content not found</div>;
-
-    switch (item.type) {
-      case FileType.PRESENTATION:
-        return <PresentationViewer slides={item.content || []} />;
-      case FileType.PROTECTED:
-        const isUnlocked = unlockedItemIds.includes(item.id);
-        if (isUnlocked && item.lockedContent) {
-          return <PresentationViewer slides={item.lockedContent} />;
-        }
-        return (
-          <PasswordLock
-            correctPassword={item.password || ''}
-            onUnlock={() => {}}
-          />
-        );
-      case FileType.LINK:
-        return <BrowserApp initialUrl={item.url || ''} />;
-      case FileType.BLOG:
-        return <BlogApp />;
-      case FileType.BOOKS:
-        return <BooksApp books={books} />;
-      case FileType.TERMINAL:
-        return <TerminalApp />;
-      case FileType.MAIL:
-        return <MailCompose recipientEmail="luka.taylor@gmail.com" recipientName="Luka Dadiani" />;
-      case FileType.SITEMAP:
-        return <SitemapViewer onNavigate={() => {}} />;
-      case FileType.FINDER:
-        return (
-          <FinderApp
-            items={[...DESKTOP_ITEMS, ...DOCK_ITEMS.filter(i => i.type !== FileType.EXTERNAL_LINK && i.type !== FileType.FINDER)]}
-            onItemClick={() => {}}
-          />
-        );
-      case FileType.PREFERENCES:
-        return (
-          <SystemPreferences
-            theme={theme}
-            onThemeChange={() => {}}
-            soundEnabled={soundEnabled}
-            onSoundChange={() => {}}
-            reduceMotion={reduceMotion}
-            onReduceMotionChange={() => {}}
-          />
-        );
-      default:
-        return <div className="p-4">Unknown content type</div>;
-    }
-  };
+  // Menu bar dropdowns — easter-egg menus that keep the OS conceit honest.
+  type MenuEntry = { label: string; onClick: () => void; danger?: boolean } | 'divider';
+  const menuBarMenus: Array<{ id: string; label: string; items: MenuEntry[] }> = [
+    {
+      id: 'file',
+      label: 'File',
+      items: [
+        { label: 'New File', onClick: () => flashAndCloseMenu('touch: read-only file system.') },
+        {
+          label: 'Open About_Me.pdf',
+          onClick: () => {
+            const aboutMe = DESKTOP_ITEMS.find(item => item.id === 'about-me');
+            if (aboutMe) handleOpenItem(aboutMe);
+            setActiveMenu(null);
+          },
+        },
+        { label: 'Save', onClick: () => flashAndCloseMenu('Already saved. State persists in localStorage.') },
+        'divider',
+        { label: 'Quit (Nice Try)', onClick: () => flashAndCloseMenu("Process 'portfolio' is not responding. Keep anyway?"), danger: true },
+      ],
+    },
+    {
+      id: 'edit',
+      label: 'Edit',
+      items: [
+        { label: 'Undo', onClick: () => flashAndCloseMenu('Nothing to undo. Every decision here was deliberate.') },
+        { label: 'Redo', onClick: () => flashAndCloseMenu('Redo stack empty.') },
+        'divider',
+        { label: 'Copy Contact', onClick: () => { navigator.clipboard.writeText('Luka Dadiani — Product Manager & Senior Designer'); flashAndCloseMenu('Copied to clipboard.'); } },
+        { label: 'Select All', onClick: () => flashAndCloseMenu("Selected everything. You're welcome.") },
+      ],
+    },
+    {
+      id: 'view',
+      label: 'View',
+      items: [
+        { label: 'Zoom In (Dramatically)', onClick: () => { document.body.style.transform = 'scale(1.5)'; setTimeout(() => { document.body.style.transform = ''; }, 500); flashAndCloseMenu('ZOOMING IN!', 2000); } },
+        { label: 'Zoom Out (Quietly)', onClick: () => { document.body.style.transform = 'scale(0.8)'; setTimeout(() => { document.body.style.transform = ''; }, 500); flashAndCloseMenu('zooming out...', 2000); } },
+        'divider',
+        { label: 'Do a Barrel Roll', onClick: () => { document.body.style.transition = 'transform 1s'; document.body.style.transform = 'rotate(360deg)'; setTimeout(() => { document.body.style.transform = ''; document.body.style.transition = ''; }, 1000); flashAndCloseMenu('Wheeeee!', 2000); } },
+        { label: 'Toggle Dimension', onClick: () => { toggleTheme(); flashAndCloseMenu(theme === 'light' ? 'Welcome to the dark side!' : 'Let there be light!'); } },
+        { label: 'Enter Full Screen', onClick: () => flashAndCloseMenu('Your browser reserves that one. Try F11.') },
+      ],
+    },
+  ];
 
   return (
     <div className={`${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'motion-reduce' : ''}`}>
@@ -1014,64 +1007,33 @@ const App: React.FC = () => {
               )}
             </div>
             <nav className="hidden md:flex gap-4 ml-8 relative">
-              {/* File Menu */}
-              <div className="relative">
-                <span
-                  onClick={() => setActiveMenu(activeMenu === 'file' ? null : 'file')}
-                  className={`font-mono text-[11px] font-medium uppercase tracking-[0.18em] cursor-pointer transition-colors ${activeMenu === 'file' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
-                >
-                  File
-                </span>
-                {activeMenu === 'file' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-xl shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => flashAndCloseMenu("Creating new file... just kidding, I'm a portfolio!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">New File (Pretend)</button>
-                    <button onClick={() => flashAndCloseMenu("Opening... my heart to new opportunities!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Open Happiness</button>
-                    <button onClick={() => flashAndCloseMenu("Saved to your memory! (Hopefully)")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Save to Memory</button>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => flashAndCloseMenu("You can't quit me that easily!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-red-500">Quit (Nice Try)</button>
-                  </div>
-                )}
-              </div>
-
-              {/* Edit Menu */}
-              <div className="relative">
-                <span
-                  onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')}
-                  className={`font-mono text-[11px] font-medium uppercase tracking-[0.18em] cursor-pointer transition-colors ${activeMenu === 'edit' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
-                >
-                  Edit
-                </span>
-                {activeMenu === 'edit' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-xl shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => flashAndCloseMenu("Undo what? Your life choices? Same.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Undo Regrets</button>
-                    <button onClick={() => flashAndCloseMenu("Redoing... *types furiously*")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Redo That Thing</button>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => { navigator.clipboard.writeText("Luka Dadiani - Product Manager & Designer"); flashAndCloseMenu("Copied my essence to clipboard!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Copy My Vibe</button>
-                    <button onClick={() => flashAndCloseMenu("Pasting enthusiasm... done!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Paste Enthusiasm</button>
-                    <button onClick={() => flashAndCloseMenu("Selected everything. You're welcome.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Select All The Things</button>
-                  </div>
-                )}
-              </div>
-
-              {/* View Menu */}
-              <div className="relative">
-                <span
-                  onClick={() => setActiveMenu(activeMenu === 'view' ? null : 'view')}
-                  className={`font-mono text-[11px] font-medium uppercase tracking-[0.18em] cursor-pointer transition-colors ${activeMenu === 'view' ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
-                >
-                  View
-                </span>
-                {activeMenu === 'view' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-xl shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <button onClick={() => { document.body.style.transform = 'scale(1.5)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("ZOOMING IN!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom In (Dramatically)</button>
-                    <button onClick={() => { document.body.style.transform = 'scale(0.8)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("zooming out...", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom Out (Quietly)</button>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
-                    <button onClick={() => { document.body.style.transition = 'transform 1s'; document.body.style.transform = 'rotate(360deg)'; setTimeout(() => { document.body.style.transform = ''; document.body.style.transition = ''; }, 1000); flashAndCloseMenu("Wheeeee!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Do a Barrel Roll</button>
-                    <button onClick={() => { toggleTheme(); flashAndCloseMenu(theme === 'light' ? "Welcome to the dark side!" : "Let there be light!"); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Toggle Dimension</button>
-                    <button onClick={() => flashAndCloseMenu("You're already in full screen... in my heart.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Enter Full Heart Mode</button>
-                  </div>
-                )}
-              </div>
+              {menuBarMenus.map((menu) => (
+                <div key={menu.id} className="relative">
+                  <span
+                    onClick={() => setActiveMenu(activeMenu === menu.id ? null : menu.id)}
+                    className={`font-mono text-[11px] font-medium uppercase tracking-[0.18em] cursor-pointer transition-colors ${activeMenu === menu.id ? 'text-red-600' : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'}`}
+                  >
+                    {menu.label}
+                  </span>
+                  {activeMenu === menu.id && (
+                    <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-xl shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                      {menu.items.map((entry, i) =>
+                        entry === 'divider' ? (
+                          <div key={`divider-${i}`} className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
+                        ) : (
+                          <button
+                            key={entry.label}
+                            onClick={entry.onClick}
+                            className={`w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors ${entry.danger ? 'text-red-500' : ''}`}
+                          >
+                            {entry.label}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
             </nav>
           </div>
           <div className="flex items-center gap-2">
@@ -1241,7 +1203,7 @@ const App: React.FC = () => {
             onResize={resizeWindow}
           >
             <Suspense fallback={<SkeletonLoader />}>
-              {renderWindowContent(win)}
+              {renderAppContent(win.itemId, true)}
             </Suspense>
           </WindowFrame>
         ))}
@@ -1252,8 +1214,8 @@ const App: React.FC = () => {
           onAppClick={handleOpenItem}
           openItemIds={getOpenItemIds()}
           windows={windows}
-          renderPreview={renderPreviewContent}
-          allItems={[...DESKTOP_ITEMS, ...DOCK_ITEMS]}
+          renderPreview={(id) => renderAppContent(id, false)}
+          allItems={ALL_ITEMS}
         />
 
         {/* Context Menu */}
@@ -1283,7 +1245,7 @@ const App: React.FC = () => {
         <Spotlight
           isOpen={isSpotlightOpen}
           onClose={() => setIsSpotlightOpen(false)}
-          items={[...DESKTOP_ITEMS, ...DOCK_ITEMS.filter(item => item.type !== FileType.EXTERNAL_LINK)]}
+          items={SEARCHABLE_ITEMS}
           onSelectItem={handleOpenItem}
         />
 
@@ -1292,7 +1254,7 @@ const App: React.FC = () => {
           isOpen={isAppSwitcherOpen}
           windows={windows}
           selectedIndex={appSwitcherIndex}
-          allItems={[...DESKTOP_ITEMS, ...DOCK_ITEMS]}
+          allItems={ALL_ITEMS}
         />
 
         {/* Notification Center */}
@@ -1314,7 +1276,7 @@ const App: React.FC = () => {
 
         {/* Mobile App Drawer (opened via the Apps tab) */}
         <MobileAppDrawer
-          items={[...DESKTOP_ITEMS, ...DOCK_ITEMS]}
+          items={ALL_ITEMS}
           onAppClick={handleOpenItem}
           isOpen={isMobileDrawerOpen}
           onClose={() => setIsMobileDrawerOpen(false)}

@@ -7,7 +7,6 @@ import {
   Linkedin,
   Cpu,
   Terminal,
-  Camera,
   Music,
   Briefcase,
   StickyNote,
@@ -165,7 +164,7 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
     title: 'Notes',
     icon: StickyNote,
     type: FileType.BLOG,
-    seoDescription: 'Technical writings on React, Design Systems, and Product Strategy.',
+    seoDescription: 'Essays on product, agency, and how AI is reshaping work.',
     slug: 'notes'
   },
   {
@@ -182,16 +181,16 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
     title: 'About_Me.pdf',
     icon: Briefcase,
     type: FileType.PRESENTATION,
-    seoDescription: 'CV and Resume of Luka Dadiani - Product and design leadership at the intersection of strategy, craft, and complex domains.',
+    seoDescription: 'CV of Luka Dadiani — product and design leadership across complex, regulated domains.',
     slug: 'about',
     content: [
       {
         title: 'Luka Dadiani',
-        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nI\'m a product and design leader who operates at the intersection of strategy, craft, and complex domains.\n\nOver seven years at Howden, I\'ve led product and design work across enterprise platforms, consumer products, mobile apps, and global internal tools—always in environments where the problem space is messy, regulated, or multi-stakeholder.'
+        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nI\'m a product and design leader who works best in complex domains — holding strategy and craft together rather than handing off between them.\n\nOver seven years at Howden, I\'ve led product and design work across enterprise platforms, consumer products, mobile apps, and global internal tools—always in environments where the problem space is messy, regulated, or multi-stakeholder.'
       },
       {
         title: 'I\'m Most Effective When...',
-        body: '• The domain is complex and requires deep understanding to get right\n\n• Product and design need to be held together, not handed off between silos\n\n• Outcomes matter more than artifacts\n\n• Teams need someone who can own the roadmap and stay close to the craft'
+        body: '• The domain is complex and requires deep understanding to get right\n\n• Product and design need to be held together, not handed off between silos\n\n• Outcomes matter more than artefacts\n\n• Teams need someone who can own the roadmap and stay close to the craft'
       },
       {
         title: 'What Runs Through My Work',
@@ -203,7 +202,7 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
       },
       {
         title: 'xTrade (Howden Group)',
-        body: 'Product Manager\nNov 2021 – Present\n\n• Managed a specialty risk placement platform, successfully delivering 5 key specialty lines including Renewables, Aviation, Fine Art, and Terrorism.\n• Led and managed a cross-functional development team of 15-20 engineers, running standups, sprint planning, and backlog refinement.\n• Authored detailed, research-backed technical tickets and requirements to ensure precision in delivery.\n• Created and executed the product roadmap, liaising directly with senior stakeholders to align on strategic business goals.\n• Conducted continuous UX research to validate features and improve product-market fit.'
+        body: 'Product Manager\nNov 2021 – Present\n\n• Managed a specialty risk placement platform, delivering five specialty lines including Renewables, Aviation, Fine Art and Terrorism.\n• Led and managed a cross-functional development team of 15-20 engineers, running standups, sprint planning, and backlog refinement.\n• Authored detailed, research-backed technical tickets and requirements to ensure precision in delivery.\n• Created and executed the product roadmap, liaising directly with senior stakeholders to align on strategic business goals.\n• Conducted continuous UX research to validate features and improve product-market fit.'
       },
       {
         title: 'Hyperion X',
@@ -223,7 +222,7 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
       },
       {
         title: 'Education',
-        body: 'BBA Management\nUniversity of Lancaster (2010 – 2014)\n\nA‑levels & GCSEs\nGateacre Community Comprehensive (2007 – 2010)\nICT (A*), General Studies (A*), Business Studies (A), Extended Project (A), History (B).'
+        body: 'BBA Management\nUniversity of Lancaster (2010 – 2014)'
       }
     ]
   },
@@ -354,7 +353,7 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
       },
       {
         title: 'Decision 3: Coaching, Not Scoring',
-        body: 'The original app gave users scores after each trip. The problem: scores without context feel like judgment. Users who received low scores felt criticized, not helped. Many disengaged entirely.\n\nI redesigned the feedback system around coaching rather than scoring:\n\n• Encouraging language that framed improvement as achievable\n\n• Specific, actionable suggestions ("Brake earlier before junctions") rather than vague ratings\n\n• Progress over time so users could see themselves improving, not just getting judged trip by trip\n\nThis shift changed the emotional dynamic of the app. Users weren\'t being watched and graded—they were being helped to become better drivers.'
+        body: 'The original app gave users scores after each trip. The problem: scores without context feel like judgment. Users who received low scores felt criticised, not helped. Many disengaged entirely.\n\nI redesigned the feedback system around coaching rather than scoring:\n\n• Encouraging language that framed improvement as achievable\n\n• Specific, actionable suggestions ("Brake earlier before junctions") rather than vague ratings\n\n• Progress over time so users could see themselves improving, not just getting judged trip by trip\n\nThis shift changed the emotional dynamic of the app. Users weren\'t being watched and graded—they were being helped to become better drivers.'
       },
       {
         title: 'Simplified Navigation & Dashboard',
@@ -388,11 +387,11 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
       },
       {
         title: 'My Role',
-        body: 'I led the design effort to unify dashboards across Finance, HR, and Broking, working closely with a project manager and product lead. My responsibilities:\n\n• Running discovery with Finance, HR, and Broking teams to understand how dashboards were actually used\n\n• Defining the unified visual language and pattern library across Power BI and Angular\n\n• Managing a small design team—two designers plus a contractor I hired\n\n• Navigating stakeholder skepticism from teams protective of their existing approaches\n\n• Translating technical constraints (Power BI limitations, data quality issues) into UX patterns'
+        body: 'I led the design effort to unify dashboards across Finance, HR, and Broking, working closely with a project manager and product lead. My responsibilities:\n\n• Running discovery with Finance, HR, and Broking teams to understand how dashboards were actually used\n\n• Defining the unified visual language and pattern library across Power BI and Angular\n\n• Managing a small design team—two designers plus a contractor I hired\n\n• Navigating stakeholder scepticism from teams protective of their existing approaches\n\n• Translating technical constraints (Power BI limitations, data quality issues) into UX patterns'
       },
       {
         title: 'Decision 1: Realistic Mockups',
-        body: 'Dashboard projects at Howden had a mixed track record. Stakeholders in Finance and HR were skeptical—they\'d seen design initiatives that looked good in Figma but fell apart in implementation.\n\nI earned their trust by showing I understood the constraints:\n\n• Platform-accurate mockups: No rounded corners in Power BI designs (the platform doesn\'t support them). System fonts like Arial, Georgia, and Courier—not custom typography that would never ship.\n\n• Real data scenarios: Mockups that reflected actual edge cases, not idealised examples\n\n• Fast iteration: I turned around updated mockups quickly, incorporating feedback between sessions\n\nThis wasn\'t about flashy design—it was about demonstrating that I knew how to deliver within real constraints.'
+        body: 'Dashboard projects at Howden had a mixed track record. Stakeholders in Finance and HR were sceptical—they\'d seen design initiatives that looked good in Figma but fell apart in implementation.\n\nI earned their trust by showing I understood the constraints:\n\n• Platform-accurate mockups: No rounded corners in Power BI designs (the platform doesn\'t support them). System fonts like Arial, Georgia, and Courier—not custom typography that would never ship.\n\n• Real data scenarios: Mockups that reflected actual edge cases, not idealised examples\n\n• Fast iteration: I turned around updated mockups quickly, incorporating feedback between sessions\n\nThis wasn\'t about flashy design—it was about demonstrating that I knew how to deliver within real constraints.'
       },
       {
         title: 'Decision 2: Unified Visual Language',
@@ -416,25 +415,21 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
       }
     ]
   },
-  {
-    id: 'photography',
-    title: 'Hobby: Photos',
-    icon: Camera,
-    type: FileType.PRESENTATION,
-    seoDescription: 'Street photography gallery shot on Fujifilm X100V.',
-    slug: 'photography',
-    content: [
-      {
-        title: 'Street Photography',
-        body: 'Capturing the urban decay and brutalist architecture of the city.',
-        image: 'https://picsum.photos/600/300?random=4'
-      },
-      {
-        title: 'Gear',
-        body: 'Shot on Fujifilm X100V.'
-      }
-    ]
-  }
+  // Photography is disabled until real photos replace the stock placeholder —
+  // a claimed street-photography gallery backed by picsum.photos undermines
+  // the rest of the portfolio. Re-enable once real X100V shots are added.
+  // {
+  //   id: 'photography',
+  //   title: 'Hobby: Photos',
+  //   icon: Camera,
+  //   type: FileType.PRESENTATION,
+  //   seoDescription: 'Street photography gallery shot on Fujifilm X100V.',
+  //   slug: 'photography',
+  //   content: [
+  //     { title: 'Street Photography', body: 'Street photography from London.', image: '' },
+  //     { title: 'Gear', body: 'Shot on Fujifilm X100V.' }
+  //   ]
+  // }
 ];
 
 export const DOCK_ITEMS: DesktopItem[] = [
@@ -506,4 +501,19 @@ export const DOCK_ITEMS: DesktopItem[] = [
     type: FileType.MAIL,
     seoDescription: 'Send an email to Luka Dadiani.'
   }
+];
+
+/** Every openable item — desktop files plus dock apps. */
+export const ALL_ITEMS: DesktopItem[] = [...DESKTOP_ITEMS, ...DOCK_ITEMS];
+
+/** Items browsable in Finder (external links and Finder itself excluded). */
+export const FINDER_ITEMS: DesktopItem[] = [
+  ...DESKTOP_ITEMS,
+  ...DOCK_ITEMS.filter(i => i.type !== FileType.EXTERNAL_LINK && i.type !== FileType.FINDER),
+];
+
+/** Items surfaced in Spotlight search (external links excluded). */
+export const SEARCHABLE_ITEMS: DesktopItem[] = [
+  ...DESKTOP_ITEMS,
+  ...DOCK_ITEMS.filter(i => i.type !== FileType.EXTERNAL_LINK),
 ];

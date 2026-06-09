@@ -130,9 +130,12 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
               className={`relative flex flex-col items-center ${isDynamic ? 'animate-in fade-in slide-in-from-bottom-4 duration-300' : ''}`}
             >
 
-              {/* Window Preview Bubble */}
+              {/* Window Preview Bubble — a live render of the app, purely
+                  visual. `inert` blocks focus stealing (apps focus their
+                  inputs on mount) and aria-hidden keeps the duplicate UI out
+                  of the accessibility tree. */}
               {isHovered && targetWindow && (
-                <div className="absolute -top-52 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-200 z-50 pointer-events-none">
+                <div inert aria-hidden="true" className="absolute -top-52 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-200 z-50 pointer-events-none">
                     <div className="relative p-2 bg-zinc-100 dark:bg-zinc-900 rounded-2xl shadow-panel border border-black/5 dark:border-white/10">
                         
                         {/* Preview Header */}

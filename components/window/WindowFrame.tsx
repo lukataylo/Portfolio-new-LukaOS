@@ -136,9 +136,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     return { x: newX, y: newY, width: restoredW, height: restoredH };
   };
 
-  // Dragging Title Bar
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Shared pointer-down logic for the title bar (mouse and touch).
+  const beginDrag = (clientX: number, clientY: number) => {
     onFocus(windowState.id);
 
     let startRect = {
@@ -149,76 +148,52 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     };
 
     if (windowState.isMaximized || windowState.isSnapped) {
-      startRect = restoreFromChrome(e.clientX, e.clientY);
+      startRect = restoreFromChrome(clientX, clientY);
       unsnappedAtDragStart.current = true;
     } else {
       unsnappedAtDragStart.current = false;
     }
 
     setIsDragging(true);
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    dragStartPos.current = { x: clientX, y: clientY };
     windowStartRect.current = startRect;
   };
 
-  // Resizing Handles
-  const handleResizeStart = (e: React.MouseEvent, dir: ResizeDirection) => {
-    e.stopPropagation();
-    e.preventDefault(); // Prevent text selection
+  // Shared pointer-down logic for the resize handles (mouse and touch).
+  const beginResize = (clientX: number, clientY: number, dir: ResizeDirection) => {
     if (windowState.isMaximized) return;
 
     onFocus(windowState.id);
     setIsResizing(true);
     resizeDir.current = dir;
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
-    windowStartRect.current = { 
-        x: windowState.position.x, 
-        y: windowState.position.y,
-        width: windowState.size.width,
-        height: windowState.size.height
+    dragStartPos.current = { x: clientX, y: clientY };
+    windowStartRect.current = {
+      x: windowState.position.x,
+      y: windowState.position.y,
+      width: windowState.size.width,
+      height: windowState.size.height,
     };
   };
-  
-  // Touch Handling for Drag
-  const handleTouchStart = (e: React.TouchEvent) => {
-      e.stopPropagation();
-      onFocus(windowState.id);
 
-      const touch = e.touches[0];
-      let startRect = {
-        x: windowState.position.x,
-        y: windowState.position.y,
-        width: windowState.size.width,
-        height: windowState.size.height,
-      };
-
-      if (windowState.isMaximized || windowState.isSnapped) {
-        startRect = restoreFromChrome(touch.clientX, touch.clientY);
-        unsnappedAtDragStart.current = true;
-      } else {
-        unsnappedAtDragStart.current = false;
-      }
-
-      setIsDragging(true);
-      dragStartPos.current = { x: touch.clientX, y: touch.clientY };
-      windowStartRect.current = startRect;
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    beginDrag(e.clientX, e.clientY);
   };
 
-  // Touch Handling for Resize
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    beginDrag(e.touches[0].clientX, e.touches[0].clientY);
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, dir: ResizeDirection) => {
+    e.stopPropagation();
+    e.preventDefault(); // Prevent text selection
+    beginResize(e.clientX, e.clientY, dir);
+  };
+
   const handleResizeTouchStart = (e: React.TouchEvent, dir: ResizeDirection) => {
-      e.stopPropagation();
-      if (windowState.isMaximized) return;
-      
-      onFocus(windowState.id);
-      setIsResizing(true);
-      resizeDir.current = dir;
-      const touch = e.touches[0];
-      dragStartPos.current = { x: touch.clientX, y: touch.clientY };
-      windowStartRect.current = {
-          x: windowState.position.x,
-          y: windowState.position.y,
-          width: windowState.size.width,
-          height: windowState.size.height
-      };
+    e.stopPropagation();
+    beginResize(e.touches[0].clientX, e.touches[0].clientY, dir);
   };
 
   useEffect(() => {

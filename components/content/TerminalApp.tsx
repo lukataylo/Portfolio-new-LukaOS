@@ -16,12 +16,11 @@ interface TerminalLine {
 
 // Virtual file system for navigation commands
 const FILE_SYSTEM: Record<string, string[]> = {
-  '~': ['about-me', 'case-studies', 'notes', 'library', 'photography', 'sitemap', '.secrets'],
+  '~': ['about-me', 'case-studies', 'notes', 'library', 'sitemap', '.secrets'],
   '~/about-me': ['cv.pdf', 'skills.txt', 'experience.md'],
-  '~/case-studies': ['ecommerce-redesign.md', 'project-x.locked'],
-  '~/notes': ['react-patterns.md', 'design-systems.md', 'product-strategy.md'],
+  '~/case-studies': ['insyt.md', 'driving-data.md', 'dashboards.md', 'xtrade.locked'],
+  '~/notes': ['agency-and-anxiety.md', 'future-of-product-management.md', 'when-adults-were-wrong.md'],
   '~/library': ['zero-to-one.txt', 'stubborn-attachments.txt', 'boom.txt'],
-  '~/photography': ['street-001.jpg', 'street-002.jpg', 'urban-decay.jpg'],
   '~/.secrets': ['coffee-addiction.log', 'vim-exit-attempts.log'],
 };
 
@@ -324,7 +323,7 @@ export const TerminalApp: React.FC = () => {
           '',
           '        .---.        luka@lukaos',
           '       /     \\       -----------',
-          '       \\.@-@./       OS: LukaOS v2.0.0',
+          '       \\.@-@./       OS: LukaOS v1.0.0',
           '       /`\\_/`\\       Host: Portfolio',
           '      //  _  \\\\      Kernel: React 19',
           '     | \\     )|_     Uptime: ' + formatUptime(),
@@ -381,7 +380,7 @@ export const TerminalApp: React.FC = () => {
             'Skills verified: ✓ Product Management',
             '                ✓ UX Design',
             '                ✓ Frontend Development',
-            '                ✓ Being Awesome',
+            '                ✓ Design Systems',
             '',
             'Recommendation: HIRE IMMEDIATELY 🚀',
             '',
@@ -398,9 +397,9 @@ export const TerminalApp: React.FC = () => {
             'Permission denied: Nice try! 😈',
             '',
             'This portfolio is protected by:',
-            '  • Good vibes only™',
+            '  • a read-only file system',
             '  • React\'s reconciliation algorithm',
-            '  • The power of friendship',
+            '  • daily off-site backups',
             '',
           ], 'error');
         } else {
@@ -412,10 +411,7 @@ export const TerminalApp: React.FC = () => {
       case 'exit':
       case 'quit':
         addOutput([
-          'Logout? In this economy?',
-          '',
-          'Just kidding, you can\'t escape.',
-          'This terminal is your home now. 🏠',
+          'exit: there are stopped jobs.',
           '',
         ]);
         return;
