@@ -119,7 +119,7 @@ export const BooksApp: React.FC<BooksAppProps> = ({ books }) => {
           <div className="max-w-xl mx-auto px-6 py-10">
             {/* Cover */}
             <div className="flex justify-center mb-8">
-              <div className="w-40 h-60 rounded-md overflow-hidden shadow-2xl bg-zinc-100 dark:bg-zinc-800">
+              <div className="w-40 h-60 rounded-lg overflow-hidden shadow-panel bg-zinc-100 dark:bg-zinc-800">
                 <BookCover book={selectedBook} />
               </div>
             </div>

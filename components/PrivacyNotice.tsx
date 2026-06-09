@@ -8,7 +8,7 @@ export const PrivacyNotice: React.FC = () => {
 
   return (
     <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-[100] max-w-xs animate-in slide-in-from-bottom-8 fade-in duration-700">
-      <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-lg p-4 relative overflow-hidden">
+      <div className="bg-white dark:bg-black border border-black/5 dark:border-white/10 shadow-panel rounded-xl p-4 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute -right-4 -top-4 text-zinc-100 dark:text-zinc-900 opacity-50 rotate-12 pointer-events-none">
             <Cookie size={100} strokeWidth={1} />

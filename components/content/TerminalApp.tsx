@@ -44,10 +44,16 @@ export const TerminalApp: React.FC = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [questionsRemaining, setQuestionsRemaining] = useState(() => {
-    const stored = localStorage.getItem('terminal-questions');
-    if (stored) {
-      const parsed = parseInt(stored, 10);
-      return isNaN(parsed) ? 2 : parsed;
+    // Daily allowance: the count is stored with the date it was set, and
+    // resets each calendar day (the exhausted message promises as much).
+    try {
+      const stored = JSON.parse(localStorage.getItem('terminal-questions') || '');
+      if (stored && stored.date === new Date().toDateString()) {
+        const parsed = parseInt(stored.count, 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+    } catch {
+      // Corrupt/legacy value — fall through to the default.
     }
     return 2;
   });
@@ -68,10 +74,19 @@ export const TerminalApp: React.FC = () => {
     }
   }, [lines]);
 
-  // Save questions remaining
+  // Save questions remaining (with today's date so the allowance resets daily)
   useEffect(() => {
-    localStorage.setItem('terminal-questions', questionsRemaining.toString());
+    localStorage.setItem(
+      'terminal-questions',
+      JSON.stringify({ count: questionsRemaining, date: new Date().toDateString() })
+    );
   }, [questionsRemaining]);
+
+  // Re-focus the input once processing finishes (it is disabled while busy,
+  // which drops keyboard focus).
+  useEffect(() => {
+    if (!isProcessing) inputRef.current?.focus();
+  }, [isProcessing]);
 
   const handleContainerClick = () => {
     inputRef.current?.focus();
@@ -132,6 +147,10 @@ export const TerminalApp: React.FC = () => {
         setInput('');
       }
     } else if (e.key === 'c' && e.ctrlKey) {
+      // Only treat Ctrl+C as SIGINT when nothing is selected, so users can
+      // still copy terminal text with the keyboard.
+      const selection = window.getSelection();
+      if (selection && !selection.isCollapsed) return;
       e.preventDefault();
       setInput('');
       setLines(prev => [...prev, { type: 'input', content: `${currentDir} $ ^C` }]);
@@ -213,12 +232,9 @@ export const TerminalApp: React.FC = () => {
         const lsPath = args[0] ? resolvePath(args[0]) : currentDir;
         const files = FILE_SYSTEM[lsPath];
         if (files) {
-          const formatted = files.map(f => {
-            if (f.startsWith('.')) return `\x1b[90m${f}\x1b[0m`; // Hidden files dimmed
-            if (f.endsWith('.locked')) return `\x1b[31m${f}\x1b[0m`; // Locked files red
-            if (!f.includes('.')) return `\x1b[34m${f}/\x1b[0m`; // Directories blue
-            return f;
-          });
+          // Lines render as plain text (no ANSI interpretation), so mark
+          // directories the POSIX way instead of with escape codes.
+          const formatted = files.map(f => (!f.includes('.') ? `${f}/` : f));
           addOutput(formatted.join('  '));
         } else {
           addOutput(`ls: cannot access '${lsPath}': No such directory`, 'error');
@@ -469,8 +485,8 @@ export const TerminalApp: React.FC = () => {
 
   const handleAIQuery = async (query: string) => {
     if (questionsRemaining <= 0) {
-      addOutput('Error: You have used all your AI questions.', 'error');
-      addOutput('Refresh the page or come back later to ask more.');
+      addOutput('Error: You have used all your AI questions for today.', 'error');
+      addOutput('Come back tomorrow to ask more.');
       addOutput('');
       return;
     }

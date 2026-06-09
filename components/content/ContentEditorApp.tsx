@@ -298,7 +298,9 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
                   <button
                     onClick={() => {
                       onDeleteSlide(selectedDesktopItem.id, selectedSlideIndex, isProtected);
-                      setSelectedSlideIndex(Math.max(0, selectedSlideIndex - 1));
+                      // The next slide shifts into the deleted index; only clamp
+                      // when the last slide was removed.
+                      setSelectedSlideIndex(Math.min(selectedSlideIndex, (slides?.length || 1) - 2));
                     }}
                     className="text-red-500 hover:text-red-600 p-1"
                   >
@@ -436,10 +438,20 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
             </div>
 
             {activeSection === 'books' && books.map(book => (
-              <button
+              // div+role, not <button>: the row contains a nested delete button
+              // and button-in-button is invalid HTML that browsers may reparent.
+              <div
                 key={book.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedItemId(book.id)}
-                className={`w-full p-4 text-left border-b border-zinc-100 dark:border-zinc-900 group
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedItemId(book.id);
+                  }
+                }}
+                className={`w-full p-4 text-left border-b border-zinc-100 dark:border-zinc-900 group cursor-pointer
                   ${selectedItemId === book.id ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50'} transition-colors`}
               >
                 <div className="flex items-start justify-between">
@@ -450,11 +462,12 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
                   <button
                     onClick={(e) => { e.stopPropagation(); onDeleteBook(book.id); if (selectedItemId === book.id) setSelectedItemId(null); }}
                     className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
+                    aria-label={`Delete ${book.title}`}
                   >
                     <Trash2 size={12} />
                   </button>
                 </div>
-              </button>
+              </div>
             ))}
 
             {activeSection === 'pages' && editableItems.map(item => (

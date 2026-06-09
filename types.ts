@@ -140,7 +140,7 @@ export interface WindowRect {
 
 /**
  * Complete state for a window instance.
- * Managed by useWindowManager hook and WindowFrame component.
+ * Managed by App-level window state and the WindowFrame component.
  */
 export interface WindowState {
   /** Unique window identifier (format: "window-{itemId}") */

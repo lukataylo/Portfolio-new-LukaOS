@@ -234,15 +234,16 @@ export const BrowserApp: React.FC<BrowserAppProps> = ({ initialUrl }) => {
   return (
     <div className="flex flex-col h-full bg-zinc-50 dark:bg-zinc-900">
       {/* Toolbar */}
-      <div className="flex items-center gap-3 p-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950">
+      <div className="flex items-center gap-3 p-3 border-b border-black/5 dark:border-white/10 bg-zinc-100 dark:bg-zinc-950">
         <div className="flex gap-2 text-zinc-400">
-           <ArrowLeft size={14} className="hover:text-black dark:hover:text-white transition-colors cursor-pointer" />
-           <ArrowRight size={14} className="hover:text-black dark:hover:text-white transition-colors cursor-pointer" />
+           {/* No history in this single-page browser — render back/forward inert */}
+           <ArrowLeft size={14} className="opacity-40" aria-disabled="true" />
+           <ArrowRight size={14} className="opacity-40" aria-disabled="true" />
            <RotateCcw size={14} className="hover:text-black dark:hover:text-white transition-colors cursor-pointer" onClick={handleRefresh}/>
         </div>
         
         <div className="flex-1 flex items-center gap-2 bg-white dark:bg-black border border-zinc-300 dark:border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono shadow-sm group focus-within:border-red-600 transition-colors">
-            <Lock size={10} className="text-emerald-500" />
+            <Lock size={10} className="text-zinc-400" />
             <input 
                 type="text" 
                 value={url} 

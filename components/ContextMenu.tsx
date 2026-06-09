@@ -28,7 +28,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       />
       
       <div 
-        className="fixed z-[101] min-w-[180px] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-100 rounded-lg backdrop-blur-3xl"
+        className="fixed z-[101] min-w-[180px] bg-white dark:bg-black border border-black/5 dark:border-white/10 shadow-panel p-1 animate-in fade-in zoom-in-95 duration-100 rounded-xl backdrop-blur-3xl"
         style={{ top: adjustedY, left: adjustedX }}
       >
         <div className="flex flex-col gap-1">

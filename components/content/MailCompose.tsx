@@ -35,7 +35,9 @@ export const MailCompose: React.FC<MailComposeProps> = ({
   };
 
   const handleSend = async () => {
-    if (!fromEmail.trim() || !subject.trim() || !contentRef.current?.innerHTML.trim()) {
+    // innerText, not innerHTML: an "empty" contentEditable still contains <br>.
+    const bodyText = contentRef.current?.innerText.trim() ?? '';
+    if (!fromEmail.trim() || !subject.trim() || !bodyText) {
       alert('Please fill in all fields');
       return;
     }
@@ -76,8 +78,8 @@ export const MailCompose: React.FC<MailComposeProps> = ({
   if (sendStatus === 'success') {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-white dark:bg-[#1c1c1e] p-8">
-        <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
-          <Check size={32} className="text-green-600 dark:text-green-400" />
+        <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+          <Check size={32} className="text-red-600 dark:text-red-400" />
         </div>
         <h2 className="text-xl font-semibold text-black dark:text-white mb-2">Opening Mail Client</h2>
         <p className="text-sm text-zinc-500 text-center">
@@ -90,7 +92,7 @@ export const MailCompose: React.FC<MailComposeProps> = ({
   return (
     <div className="h-full flex flex-col bg-white dark:bg-[#1c1c1e]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-black/5 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900">
         <div className="flex items-center gap-1">
           {/* Formatting buttons */}
           <button
@@ -166,7 +168,7 @@ export const MailCompose: React.FC<MailComposeProps> = ({
         <button
           onClick={handleSend}
           disabled={isSending}
-          className="flex items-center gap-2 px-4 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white text-sm font-medium rounded-md transition-colors"
+          className="flex items-center gap-2 px-4 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-md transition-colors"
         >
           {isSending ? (
             <span className="animate-pulse">Sending...</span>
@@ -185,9 +187,9 @@ export const MailCompose: React.FC<MailComposeProps> = ({
         <div className="flex items-center px-4 py-2 border-b border-zinc-100 dark:border-zinc-800/50">
           <label className="w-16 text-sm text-zinc-400 flex-shrink-0">To:</label>
           <div className="flex-1 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm rounded">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-sm rounded">
               {recipientName}
-              <span className="text-blue-400 dark:text-blue-500">&lt;{recipientEmail}&gt;</span>
+              <span className="text-zinc-400 dark:text-zinc-500">&lt;{recipientEmail}&gt;</span>
             </span>
           </div>
         </div>
@@ -242,7 +244,7 @@ export const MailCompose: React.FC<MailComposeProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-2 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+      <div className="px-4 py-2 border-t border-black/5 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900">
         <p className="text-[10px] text-zinc-400 text-center">
           This will open your default email client to send the message
         </p>

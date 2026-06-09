@@ -45,7 +45,12 @@ export const useHashRouter = ({ activeWindowId, windows, onOpenItem }: HashRoute
 
     // Delay one tick so the rest of mount completes before we trigger window-open animations.
     const id = setTimeout(openFromHash, 100);
-    return () => clearTimeout(id);
+    // Keep responding to back/forward navigation and manual hash edits.
+    window.addEventListener('hashchange', openFromHash);
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener('hashchange', openFromHash);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
