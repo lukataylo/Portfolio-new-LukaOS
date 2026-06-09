@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { DESKTOP_ITEMS, DOCK_ITEMS } from '../constants';
 import type { DesktopItem, WindowState } from '../types';
 
-const BASE_TITLE = 'Luka Dadiani | Product Manager & Engineer';
+const BASE_TITLE = 'Luka Dadiani | Product Manager & Senior Designer';
 
 interface HashRouterArgs {
   /** Currently focused window id (null when desktop is focused). */
@@ -26,10 +26,17 @@ interface HashRouterArgs {
  * the root component.
  */
 export const useHashRouter = ({ activeWindowId, windows, onOpenItem }: HashRouterArgs) => {
+  // Captured synchronously: the meta-sync effect below rewrites the URL on
+  // mount (no active window yet), which would wipe the deep link before the
+  // open timer reads it.
+  const initialHash = useRef(typeof window !== 'undefined' ? window.location.hash : '');
+  // The hash is only cleared when the user closes their last window — never
+  // on mount, where it would destroy the incoming deep link.
+  const hadActiveWindow = useRef(false);
+
   // Initial hash → open
   useEffect(() => {
-    const openFromHash = () => {
-      const hash = window.location.hash;
+    const openHash = (hash: string) => {
       if (!hash) {
         const aboutMe = DESKTOP_ITEMS.find((i) => i.id === 'about-me');
         if (aboutMe) onOpenItem(aboutMe);
@@ -44,12 +51,13 @@ export const useHashRouter = ({ activeWindowId, windows, onOpenItem }: HashRoute
     };
 
     // Delay one tick so the rest of mount completes before we trigger window-open animations.
-    const id = setTimeout(openFromHash, 100);
+    const id = setTimeout(() => openHash(initialHash.current), 100);
     // Keep responding to back/forward navigation and manual hash edits.
-    window.addEventListener('hashchange', openFromHash);
+    const onHashChange = () => openHash(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
     return () => {
       clearTimeout(id);
-      window.removeEventListener('hashchange', openFromHash);
+      window.removeEventListener('hashchange', onHashChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -59,9 +67,12 @@ export const useHashRouter = ({ activeWindowId, windows, onOpenItem }: HashRoute
     const activeWindow = windows.find((w) => w.id === activeWindowId);
     if (!activeWindow) {
       document.title = BASE_TITLE;
-      window.history.replaceState(null, '', ' ');
+      if (hadActiveWindow.current) {
+        window.history.replaceState(null, '', ' ');
+      }
       return;
     }
+    hadActiveWindow.current = true;
 
     const item = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find((i) => i.id === activeWindow.itemId);
     if (!item) return;

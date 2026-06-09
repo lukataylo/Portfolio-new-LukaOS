@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, FileText, BookOpen, Lock, Camera, Map, Briefcase, Library, Terminal, Mail } from 'lucide-react';
-import { DesktopItem, FileType } from '../types';
+import { Search } from 'lucide-react';
+import { DesktopItem } from '../types';
+import { getIconForType } from '../utils/fileTypeMeta';
 
 interface SpotlightProps {
   isOpen: boolean;
@@ -8,27 +9,6 @@ interface SpotlightProps {
   items: DesktopItem[];
   onSelectItem: (item: DesktopItem) => void;
 }
-
-const getIconForType = (type: FileType) => {
-  switch (type) {
-    case FileType.PRESENTATION:
-      return FileText;
-    case FileType.PROTECTED:
-      return Lock;
-    case FileType.BLOG:
-      return BookOpen;
-    case FileType.BOOKS:
-      return Library;
-    case FileType.TERMINAL:
-      return Terminal;
-    case FileType.MAIL:
-      return Mail;
-    case FileType.SITEMAP:
-      return Map;
-    default:
-      return FileText;
-  }
-};
 
 export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, onSelectItem }) => {
   const [query, setQuery] = useState('');

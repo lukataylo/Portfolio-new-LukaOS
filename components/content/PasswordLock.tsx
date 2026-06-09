@@ -35,7 +35,7 @@ export const PasswordLock: React.FC<PasswordLockProps> = ({ correctPassword, isU
       
       <h3 className="text-black dark:text-white uppercase tracking-widest text-lg font-bold mb-2">Restricted Access</h3>
       <p className="text-zinc-500 text-xs mb-8 text-center max-w-xs font-mono">
-        This case study is protected by NDA. Please enter your access code.
+        This case study is covered by an NDA. Enter the access code, or email me to request it.
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-xs">

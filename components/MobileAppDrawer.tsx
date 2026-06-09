@@ -80,6 +80,9 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
       {/* Drawer */}
       <div
         ref={drawerRef}
+        role="dialog"
+        aria-label="App drawer"
+        aria-modal="true"
         className="fixed bottom-0 left-0 right-0 z-[131] transition-transform duration-300 ease-out md:hidden"
         style={getDrawerStyle()}
         aria-hidden={!isOpen}

@@ -117,7 +117,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-sm font-medium text-black dark:text-white">Reduce Motion</h4>
-            <p className="text-xs text-zinc-500 mt-0.5">Minimize animations throughout the system</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Minimise animations across the system</p>
           </div>
           <Toggle
             on={reduceMotion}
@@ -253,7 +253,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
       case 'appearance': return 'Appearance';
       case 'sound': return 'Sound';
       case 'shortcuts': return 'Keyboard Shortcuts';
-      case 'about': return 'About This Mac';
+      case 'about': return 'About LukaOS';
       default: return 'System Preferences';
     }
   };

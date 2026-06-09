@@ -1,20 +1,7 @@
 import React, { useState } from 'react';
-import { DesktopItem, FileType } from '../../types';
-import {
-  Grid,
-  List,
-  LayoutGrid,
-  FileText,
-  Lock,
-  BookOpen,
-  Library,
-  Terminal,
-  Mail,
-  Map,
-  ExternalLink,
-  ChevronRight,
-  Folder
-} from 'lucide-react';
+import { DesktopItem } from '../../types';
+import { Grid, List, LayoutGrid, ChevronRight, Folder } from 'lucide-react';
+import { getIconForType, getTypeLabel } from '../../utils/fileTypeMeta';
 
 interface FinderAppProps {
   items: DesktopItem[];
@@ -22,55 +9,6 @@ interface FinderAppProps {
 }
 
 type ViewMode = 'icons' | 'list' | 'gallery';
-
-const getIconForType = (type: FileType) => {
-  switch (type) {
-    case FileType.PRESENTATION:
-      return FileText;
-    case FileType.PROTECTED:
-      return Lock;
-    case FileType.BLOG:
-      return BookOpen;
-    case FileType.BOOKS:
-      return Library;
-    case FileType.TERMINAL:
-      return Terminal;
-    case FileType.MAIL:
-      return Mail;
-    case FileType.SITEMAP:
-      return Map;
-    case FileType.EXTERNAL_LINK:
-    case FileType.LINK:
-      return ExternalLink;
-    default:
-      return FileText;
-  }
-};
-
-const getTypeLabel = (type: FileType) => {
-  switch (type) {
-    case FileType.PRESENTATION:
-      return 'Presentation';
-    case FileType.PROTECTED:
-      return 'Protected';
-    case FileType.BLOG:
-      return 'Notes';
-    case FileType.BOOKS:
-      return 'Library';
-    case FileType.TERMINAL:
-      return 'Terminal';
-    case FileType.MAIL:
-      return 'Mail';
-    case FileType.SITEMAP:
-      return 'Sitemap';
-    case FileType.EXTERNAL_LINK:
-      return 'External Link';
-    case FileType.LINK:
-      return 'Link';
-    default:
-      return 'File';
-  }
-};
 
 export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('icons');

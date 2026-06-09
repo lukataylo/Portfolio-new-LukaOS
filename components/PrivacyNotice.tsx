@@ -38,7 +38,7 @@ export const PrivacyNotice: React.FC = () => {
                 onClick={() => setIsVisible(false)}
                 className="w-full bg-black dark:bg-white text-white dark:text-black py-2 rounded text-xs font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
             >
-                Cronch (Dismiss)
+                Dismiss
             </button>
         </div>
       </div>
