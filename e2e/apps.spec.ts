@@ -58,6 +58,21 @@ test.describe('terminal', () => {
     await expect(terminal.getByText(/about-me\//)).toBeVisible();
     await expect(terminal.locator('text=/\\u001b\\[/')).toHaveCount(0);
   });
+
+  test('free-form questions get an in-character local answer', async ({ page }) => {
+    await loadDesktop(page);
+    await page.getByRole('button', { name: /^Open Terminal/ }).click();
+
+    const terminal = windowByTitle(page, 'Terminal');
+    const input = terminal.getByLabel('Terminal input');
+    await expect(input).toBeVisible();
+
+    // No API key in CI → the local assistant answers. A hiring question must
+    // surface a real contact path, never a "missing API key" error.
+    await runCommand(input, 'can I hire luka?');
+    await expect(terminal.getByText(/email|linkedin|sudo hire/i).first()).toBeVisible({ timeout: 10_000 });
+    await expect(terminal.getByText(/API_KEY|missing/i)).toHaveCount(0);
+  });
 });
 
 test.describe('notes', () => {

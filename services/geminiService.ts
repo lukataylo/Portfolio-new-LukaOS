@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { generateLocalResponse } from './localAssistant';
 
 // Safe access to process.env.API_KEY for browser environments
 const getApiKey = () => {
@@ -13,45 +13,54 @@ const getApiKey = () => {
 };
 
 const apiKey = getApiKey();
-// Initialize only if we have a key (or let it fail gracefully later)
-// We pass the key regardless, but the safe accessor prevents the crash during module load.
-const ai = new GoogleGenAI({ apiKey: apiKey || 'MISSING_KEY' });
+
+/** True when a real model is available; false means we serve local responses. */
+export const hasApiKey = Boolean(apiKey && apiKey !== 'MISSING_KEY');
+
+/** Small artificial delay so local replies feel like a round-trip, not a lookup. */
+const humanPause = () => new Promise((r) => setTimeout(r, 350 + Math.random() * 500));
 
 export const generateChatResponse = async (history: string[], userMessage: string): Promise<string> => {
+  // No key configured → serve the hand-written local assistant. It's
+  // comprehensive enough that the terminal feels alive with no model behind
+  // it; the moment a key is added we use Gemini instead. (See localAssistant.ts.)
+  if (!hasApiKey) {
+    await humanPause();
+    return generateLocalResponse(history, userMessage);
+  }
+
   try {
-    if (!apiKey || apiKey === 'MISSING_KEY') {
-      return "System Error: API_KEY is missing from environment. Please configure your API key to use the AI assistant.";
-    }
+    // Imported lazily so the SDK only loads when a key is actually present.
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey });
 
     const systemPrompt = `
-      You are an AI assistant embedded in a portfolio website. 
+      You are an AI assistant embedded in a portfolio website.
       The website uses a 'Nothing' (tech brand) aesthetic and a desktop OS metaphor.
-      Keep your answers concise, technical, and slightly robotic but helpful.
-      You represent the engineer who built this site.
-      Do not use markdown formatting extensively, plain text is preferred for this raw terminal look.
+      You represent Luka Dadiani, a Product Manager & Senior Designer in London with 9+ years of experience.
+      Keep your answers concise, technical, and dryly witty but helpful.
+      Do not use markdown formatting; plain text suits this raw terminal look.
     `;
 
-    const model = 'gemini-2.5-flash';
-    
-    // We construct a simple prompt chain here for the single-turn effect or basic history
     const prompt = `
       ${systemPrompt}
-      
+
       Conversation History:
       ${history.join('\n')}
-      
+
       User: ${userMessage}
       Assistant:
     `;
 
     const response = await ai.models.generateContent({
-      model: model,
+      model: 'gemini-2.5-flash',
       contents: prompt,
     });
 
-    return response.text || "I processed that, but have no output.";
+    return response.text || generateLocalResponse(history, userMessage);
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "Error: Communication with the neural link failed. Please try again.";
+    console.error('Gemini API Error:', error);
+    // Fall back to the local assistant rather than surfacing a raw error.
+    return generateLocalResponse(history, userMessage);
   }
 };

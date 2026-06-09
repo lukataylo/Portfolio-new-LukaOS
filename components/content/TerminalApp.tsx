@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { generateChatResponse } from '../../services/geminiService';
+import { generateChatResponse, hasApiKey } from '../../services/geminiService';
 
 interface TerminalLine {
   type: 'input' | 'output' | 'system' | 'error';
@@ -217,7 +217,7 @@ export const TerminalApp: React.FC = () => {
           '    sudo <cmd>  - Try it... I dare you',
           '',
           '  AI:',
-          '    <question>  - Ask AI anything (2 free questions)',
+          `    <question>  - Ask the assistant anything${hasApiKey ? ' (2 free questions)' : ''}`,
           '',
         ]);
         return;
@@ -480,7 +480,11 @@ export const TerminalApp: React.FC = () => {
   };
 
   const handleAIQuery = async (query: string) => {
-    if (questionsRemaining <= 0) {
+    // The daily allowance only exists to cap real API spend. With no key,
+    // responses are generated locally and free, so the conversation flows
+    // without limits — and without a "come back tomorrow" wall that would
+    // give the game away.
+    if (hasApiKey && questionsRemaining <= 0) {
       addOutput('Error: You have used all your AI questions for today.', 'error');
       addOutput('Come back tomorrow to ask more.');
       addOutput('');
@@ -509,14 +513,16 @@ export const TerminalApp: React.FC = () => {
         return [...newLines, ...responseLines, { type: 'system', content: '' }];
       });
 
-      setQuestionsRemaining(prev => prev - 1);
-      const remaining = questionsRemaining - 1;
-      addOutput(
-        remaining > 0
-          ? `[${remaining} question${remaining !== 1 ? 's' : ''} remaining]`
-          : '[No questions remaining]',
-        'system'
-      );
+      if (hasApiKey) {
+        setQuestionsRemaining(prev => prev - 1);
+        const remaining = questionsRemaining - 1;
+        addOutput(
+          remaining > 0
+            ? `[${remaining} question${remaining !== 1 ? 's' : ''} remaining]`
+            : '[No questions remaining]',
+          'system'
+        );
+      }
       addOutput('');
     } catch {
       setLines(prev => {
