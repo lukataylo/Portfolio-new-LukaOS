@@ -75,10 +75,16 @@ const getTypeLabel = (type: FileType) => {
 export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('icons');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [currentPath, setCurrentPath] = useState<string[]>(['LukaOS']);
 
+  // First click/tap selects; a second activates. Double-click still works for
+  // mouse users, but this also makes items openable on touch devices, where
+  // double-click events never fire.
   const handleItemClick = (item: DesktopItem) => {
-    setSelectedItem(item.id);
+    if (selectedItem === item.id) {
+      onItemClick(item);
+    } else {
+      setSelectedItem(item.id);
+    }
   };
 
   const handleItemDoubleClick = (item: DesktopItem) => {
@@ -88,17 +94,12 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
   return (
     <div className="h-full flex flex-col bg-white dark:bg-[#1c1c1e]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-black/5 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1 text-sm">
-          {currentPath.map((segment, index) => (
-            <React.Fragment key={index}>
-              {index > 0 && <ChevronRight size={14} className="text-zinc-400" />}
-              <button className="px-2 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-700 dark:text-zinc-300 transition-colors">
-                {segment}
-              </button>
-            </React.Fragment>
-          ))}
+          <span className="px-2 py-1 text-zinc-700 dark:text-zinc-300">LukaOS</span>
+          <ChevronRight size={14} className="text-zinc-400" />
+          <span className="px-2 py-1 text-zinc-500 dark:text-zinc-400">Desktop</span>
         </div>
 
         {/* View Mode Buttons */}
@@ -130,30 +131,12 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
       {/* Sidebar + Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <div className="w-48 border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 overflow-y-auto">
+        <div className="w-48 border-r border-black/5 dark:border-white/10 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 overflow-y-auto">
           <div className="mb-4">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2 px-2">Favorites</h4>
-            <button className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-700 dark:text-zinc-300">
-              <Folder size={16} className="text-blue-500" />
+            <div className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg bg-zinc-200/60 dark:bg-zinc-800 text-sm text-zinc-700 dark:text-zinc-300">
+              <Folder size={16} className="text-red-600" />
               Desktop
-            </button>
-          </div>
-
-          <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2 px-2">Tags</h4>
-            <div className="space-y-1">
-              <button className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-xs text-zinc-600 dark:text-zinc-400">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                Work
-              </button>
-              <button className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-xs text-zinc-600 dark:text-zinc-400">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                Personal
-              </button>
-              <button className="w-full flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-xs text-zinc-600 dark:text-zinc-400">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                Projects
-              </button>
             </div>
           </div>
         </div>
@@ -173,17 +156,17 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
                     onDoubleClick={() => handleItemDoubleClick(item)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${
                       isSelected
-                        ? 'bg-blue-500/10 ring-2 ring-blue-500'
+                        ? 'bg-red-600/5 ring-1 ring-red-600/60'
                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                   >
                     <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                      isSelected ? 'bg-blue-500' : 'bg-zinc-100 dark:bg-zinc-800'
+                      isSelected ? 'bg-red-600' : 'bg-zinc-100 dark:bg-zinc-800'
                     }`}>
                       <Icon size={32} className={isSelected ? 'text-white' : 'text-zinc-500 dark:text-zinc-400'} />
                     </div>
                     <span className={`text-xs text-center line-clamp-2 ${
-                      isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-700 dark:text-zinc-300'
+                      isSelected ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-300'
                     }`}>
                       {item.title}
                     </span>
@@ -212,7 +195,7 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
                     onDoubleClick={() => handleItemDoubleClick(item)}
                     className={`w-full flex items-center px-3 py-2 rounded-lg transition-colors ${
                       isSelected
-                        ? 'bg-blue-500 text-white'
+                        ? 'bg-red-600 text-white'
                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
@@ -244,17 +227,17 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
                     onClick={() => handleItemClick(item)}
                     onDoubleClick={() => handleItemDoubleClick(item)}
                     className={`rounded-xl overflow-hidden transition-all ${
-                      isSelected ? 'ring-2 ring-blue-500' : ''
+                      isSelected ? 'ring-1 ring-red-600/60' : ''
                     }`}
                   >
                     <div className={`aspect-video flex items-center justify-center ${
-                      isSelected ? 'bg-blue-500/20' : 'bg-zinc-100 dark:bg-zinc-800'
+                      isSelected ? 'bg-red-600/10' : 'bg-zinc-100 dark:bg-zinc-800'
                     }`}>
-                      <Icon size={48} className={isSelected ? 'text-blue-500' : 'text-zinc-400'} />
+                      <Icon size={48} className={isSelected ? 'text-red-600' : 'text-zinc-400'} />
                     </div>
-                    <div className={`p-3 ${isSelected ? 'bg-blue-500/10' : 'bg-white dark:bg-zinc-900'}`}>
+                    <div className={`p-3 ${isSelected ? 'bg-red-600/5' : 'bg-white dark:bg-zinc-900'}`}>
                       <p className={`text-sm font-medium truncate ${
-                        isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-700 dark:text-zinc-300'
+                        isSelected ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-300'
                       }`}>
                         {item.title}
                       </p>
@@ -271,7 +254,7 @@ export const FinderApp: React.FC<FinderAppProps> = ({ items, onItemClick }) => {
       </div>
 
       {/* Status Bar */}
-      <div className="px-4 py-2 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+      <div className="px-4 py-2 border-t border-black/5 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900">
         <p className="text-[10px] text-zinc-400">
           {items.length} items
           {selectedItem && ` • "${items.find(i => i.id === selectedItem)?.title}" selected`}

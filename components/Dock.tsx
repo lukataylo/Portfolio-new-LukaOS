@@ -82,15 +82,15 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
 
   return (
     <nav
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999]"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[120]"
       role="toolbar"
       aria-label="Application dock"
     >
       <div className="
         flex items-center gap-2 px-4 py-2
         bg-white/70 dark:bg-zinc-900/80 backdrop-blur-xl
-        border border-zinc-200 dark:border-zinc-800
-        rounded-2xl shadow-2xl transition-colors
+        border border-black/5 dark:border-white/10
+        rounded-[22px] shadow-dock transition-colors
       ">
         {displayItems.map((item) => {
           const Icon = item.icon;
@@ -133,7 +133,7 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
               {/* Window Preview Bubble */}
               {isHovered && targetWindow && (
                 <div className="absolute -top-52 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-200 z-50 pointer-events-none">
-                    <div className="relative p-2 bg-zinc-100 dark:bg-zinc-900 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-zinc-300 dark:border-zinc-700">
+                    <div className="relative p-2 bg-zinc-100 dark:bg-zinc-900 rounded-2xl shadow-panel border border-black/5 dark:border-white/10">
                         
                         {/* Preview Header */}
                         <div className="flex items-center justify-between w-full mb-2 pl-1 pr-1 gap-4">
@@ -175,7 +175,7 @@ export const Dock: React.FC<DockProps> = ({ items, onAppClick, openItemIds, wind
                         </div>
                         
                         {/* Arrow */}
-                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-zinc-100 dark:bg-zinc-900 rotate-45 border-r border-b border-zinc-300 dark:border-zinc-700"></div>
+                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 bg-zinc-100 dark:bg-zinc-900 rotate-45 border-r border-b border-black/5 dark:border-white/10"></div>
                     </div>
                 </div>
               )}

@@ -23,9 +23,11 @@ import { ContextMenu } from './components/ContextMenu';
 import { PrivacyNotice } from './components/PrivacyNotice';
 import { Spotlight } from './components/Spotlight';
 import { MobileAppDrawer } from './components/MobileAppDrawer';
+import { AppSwitcher } from './components/layout/AppSwitcher';
+import { NotificationCenter } from './components/layout/NotificationCenter';
 import { ClockWidget, WeatherWidget, GitHubWidget, MenuBarClock } from './components/widgets';
 import { WelcomeBackModal } from './components/WelcomeBackModal';
-import { Sun, Moon, Search, Volume2, VolumeX, Bell, X, Settings } from 'lucide-react';
+import { Sun, Moon, Search, Volume2, VolumeX, Bell, Settings } from 'lucide-react';
 // Gemini SDK is dynamically imported on first use to keep the initial bundle small.
 import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
 import { playSound as playSoundFx, type SoundType } from './utils/sound';
@@ -118,9 +120,6 @@ const App: React.FC = () => {
 
   // Mobile App Drawer State
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-
-  // Loading cursor state (beach ball effect)
-  const [isLoading, setIsLoading] = useState(false);
 
   // Easter Egg States
   const [konamiActivated, setKonamiActivated] = useState(false);
@@ -388,6 +387,8 @@ const App: React.FC = () => {
       if (e.key === 'Escape') {
         if (isAppSwitcherOpen) {
           setIsAppSwitcherOpen(false);
+        } else if (isSpotlightOpen) {
+          setIsSpotlightOpen(false);
         }
       }
     };
@@ -409,7 +410,7 @@ const App: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [activeWindowId, windows, isAppSwitcherOpen, appSwitcherIndex]);
+  }, [activeWindowId, windows, isAppSwitcherOpen, appSwitcherIndex, isSpotlightOpen]);
 
   const playSound = useCallback((type: SoundType) => playSoundFx(type, soundEnabled), [soundEnabled]);
 
@@ -522,8 +523,11 @@ const App: React.FC = () => {
   const bringToFront = (id: string) => {
     setActiveWindowId(id);
     setWindows(prev => {
-      const maxZ = prev.length > 0 ? Math.max(10, ...prev.map(w => w.zIndex)) : 10;
-      return prev.map(w => w.id === id ? { ...w, zIndex: maxZ + 1 } : w);
+      // Renormalize z-indexes into a compact 10..n band so repeated focusing
+      // never pushes windows above the fixed chrome (menu bar, dock, overlays).
+      const ordered = [...prev].sort((a, b) => a.zIndex - b.zIndex);
+      const zOf = new Map(ordered.map((w, i) => [w.id, 10 + i]));
+      return prev.map(w => ({ ...w, zIndex: w.id === id ? 10 + prev.length : zOf.get(w.id)! }));
     });
   };
 
@@ -643,23 +647,22 @@ const App: React.FC = () => {
     setActiveWindowId(newWindow.id);
   };
 
+  // The visually topmost of the remaining windows, by z-index (array order is
+  // insertion order, which says nothing about stacking).
+  const topmostWindowId = (excludeId: string): string | null => {
+    const remaining = windows.filter(w => w.id !== excludeId && !w.isMinimized);
+    if (remaining.length === 0) return null;
+    return remaining.reduce((top, w) => (w.zIndex > top.zIndex ? w : top)).id;
+  };
+
   const closeWindow = (id: string) => {
     setWindows(prev => prev.filter(w => w.id !== id));
-    // Focus another window or clear active
-    setActiveWindowId(prev => {
-      if (prev === id) {
-        const remaining = windows.filter(w => w.id !== id && !w.isMinimized);
-        return remaining.length > 0 ? remaining[remaining.length - 1].id : null;
-      }
-      return prev;
-    });
+    setActiveWindowId(prev => (prev === id ? topmostWindowId(id) : prev));
   };
 
   const minimizeWindow = (id: string) => {
     setWindows(prev => prev.map(w => w.id === id ? { ...w, isMinimized: true } : w));
-    // Focus another window
-    const remaining = windows.filter(w => w.id !== id && !w.isMinimized);
-    setActiveWindowId(remaining.length > 0 ? remaining[remaining.length - 1].id : null);
+    setActiveWindowId(topmostWindowId(id));
   };
 
   const maximizeWindow = (id: string) => {
@@ -830,6 +833,9 @@ const App: React.FC = () => {
             onThemeChange={setTheme}
             soundEnabled={soundEnabled}
             onSoundChange={setSoundEnabled}
+            reduceMotion={reduceMotion}
+            onReduceMotionChange={setReduceMotion}
+            onPlaySound={playSound}
           />
         );
       default:
@@ -887,6 +893,8 @@ const App: React.FC = () => {
             onThemeChange={() => {}}
             soundEnabled={soundEnabled}
             onSoundChange={() => {}}
+            reduceMotion={reduceMotion}
+            onReduceMotionChange={() => {}}
           />
         );
       default:
@@ -899,13 +907,13 @@ const App: React.FC = () => {
       {/* Skip Navigation Link for Accessibility */}
       <a
         href="#main-desktop"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[1000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:outline-none"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[1000] focus:px-4 focus:py-2 focus:bg-red-600 focus:text-white focus:rounded focus:outline-none"
       >
         Skip to main content
       </a>
 
       <div
-        className={`min-h-screen relative overflow-hidden bg-[#f0f0f0] dark:bg-[#0f0f0f] transition-colors duration-500 ${konamiActivated ? 'konami-retro' : ''}`}
+        className={`min-h-screen relative overflow-hidden bg-[#f0f0f0] dark:bg-[#0f0f0f] transition-colors duration-300 ${konamiActivated ? 'konami-retro' : ''}`}
         onContextMenu={handleContextMenu}
         onClick={() => setContextMenu(null)}
       >
@@ -921,7 +929,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Menu Bar */}
-        <header className="fixed top-0 left-0 right-0 h-9 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4 z-50 transition-colors">
+        <header className="fixed top-0 left-0 right-0 h-9 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/10 flex items-center justify-between px-4 z-50 transition-colors">
           <div className="flex items-center gap-4">
             {/* LukaOS Menu (Apple-style) */}
             <div className="relative">
@@ -935,9 +943,9 @@ const App: React.FC = () => {
                 </span>
               </div>
               {activeMenu === 'about' && (
-                <div className="absolute top-8 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl p-0 w-[320px] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-3rem)] overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute top-8 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-2xl shadow-panel p-0 w-[320px] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-3rem)] overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   {/* Header */}
-                  <div className="p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+                  <div className="p-4 bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 border-b border-black/5 dark:border-white/10">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-white dark:bg-black rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shadow-sm">
                         <div className="w-4 h-4 bg-red-600 rounded-full" />
@@ -1014,7 +1022,7 @@ const App: React.FC = () => {
                   File
                 </span>
                 {activeMenu === 'file' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-xl shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <button onClick={() => flashAndCloseMenu("Creating new file... just kidding, I'm a portfolio!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">New File (Pretend)</button>
                     <button onClick={() => flashAndCloseMenu("Opening... my heart to new opportunities!")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Open Happiness</button>
                     <button onClick={() => flashAndCloseMenu("Saved to your memory! (Hopefully)")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Save to Memory</button>
@@ -1033,7 +1041,7 @@ const App: React.FC = () => {
                   Edit
                 </span>
                 {activeMenu === 'edit' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-xl shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <button onClick={() => flashAndCloseMenu("Undo what? Your life choices? Same.")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Undo Regrets</button>
                     <button onClick={() => flashAndCloseMenu("Redoing... *types furiously*")} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Redo That Thing</button>
                     <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
@@ -1053,7 +1061,7 @@ const App: React.FC = () => {
                   View
                 </span>
                 {activeMenu === 'view' && (
-                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="absolute top-6 left-0 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 rounded-xl shadow-panel p-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <button onClick={() => { document.body.style.transform = 'scale(1.5)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("ZOOMING IN!", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom In (Dramatically)</button>
                     <button onClick={() => { document.body.style.transform = 'scale(0.8)'; setTimeout(() => document.body.style.transform = '', 500); flashAndCloseMenu("zooming out...", 2000); }} className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors">Zoom Out (Quietly)</button>
                     <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
@@ -1204,7 +1212,7 @@ const App: React.FC = () => {
                   top: dragCurrentPos.y - dragOffset.y,
                 }}
               >
-                <div className="flex flex-col items-center justify-center p-2 w-28 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm shadow-2xl ring-2 ring-blue-500 scale-105">
+                <div className="flex flex-col items-center justify-center p-2 w-28 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm shadow-panel ring-1 ring-red-600/50 scale-105">
                   <div className="relative mb-2">
                     <div className="w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shadow-lg">
                       <Icon className="w-7 h-7 text-black dark:text-white" strokeWidth={1.5} />
@@ -1279,101 +1287,22 @@ const App: React.FC = () => {
         />
 
         {/* App Switcher (Cmd+Tab) */}
-        {isAppSwitcherOpen && (
-          <>
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200]" />
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] animate-in fade-in zoom-in-95 duration-150">
-              <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl p-4">
-                <div className="flex items-center gap-4">
-                  {windows.filter(w => !w.isMinimized).map((win, index) => {
-                    const item = [...DESKTOP_ITEMS, ...DOCK_ITEMS].find(i => i.id === win.itemId);
-                    const Icon = item?.icon;
-                    const isSelected = index === appSwitcherIndex;
-
-                    return (
-                      <div
-                        key={win.id}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
-                          isSelected ? 'bg-blue-500 scale-110' : 'bg-zinc-100 dark:bg-zinc-800'
-                        }`}
-                      >
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                          isSelected ? 'bg-white/20' : 'bg-white dark:bg-zinc-700'
-                        }`}>
-                          {Icon && <Icon size={28} className={isSelected ? 'text-white' : 'text-black dark:text-white'} />}
-                        </div>
-                        <span className={`text-[10px] font-medium truncate max-w-[80px] ${
-                          isSelected ? 'text-white' : 'text-zinc-600 dark:text-zinc-300'
-                        }`}>
-                          {win.title}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="text-center text-[10px] text-zinc-400 mt-3">
-                  Release ⌘ to switch
-                </p>
-              </div>
-            </div>
-          </>
-        )}
+        <AppSwitcher
+          isOpen={isAppSwitcherOpen}
+          windows={windows}
+          selectedIndex={appSwitcherIndex}
+          allItems={[...DESKTOP_ITEMS, ...DOCK_ITEMS]}
+        />
 
         {/* Notification Center */}
-        {isNotificationCenterOpen && (
-          <>
-            <div
-              className="fixed inset-0 z-[150]"
-              onClick={() => setIsNotificationCenterOpen(false)}
-            />
-            <div className="fixed top-10 right-2 w-80 max-h-[500px] overflow-hidden z-[151] animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-black dark:text-white">Notifications</h3>
-                  {notifications.length > 0 && (
-                    <button
-                      onClick={() => setNotifications([])}
-                      className="text-[10px] text-blue-500 hover:text-blue-600"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-                <div className="max-h-[400px] overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <Bell size={32} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-2" />
-                      <p className="text-xs text-zinc-400">No notifications</p>
-                    </div>
-                  ) : (
-                    notifications.map(notif => (
-                      <div
-                        key={notif.id}
-                        className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-black dark:text-white">{notif.title}</p>
-                            <p className="text-xs text-zinc-500 mt-0.5">{notif.message}</p>
-                            <p className="text-[10px] text-zinc-400 mt-1">
-                              {notif.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => removeNotification(notif.id)}
-                            className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-colors"
-                          >
-                            <X size={12} className="text-zinc-400" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        <NotificationCenter
+          isOpen={isNotificationCenterOpen}
+          notifications={notifications}
+          onClose={() => setIsNotificationCenterOpen(false)}
+          onDismiss={removeNotification}
+          onClearAll={() => setNotifications([])}
+        />
+
 
         {/* Mobile App Drawer */}
         <MobileAppDrawer
@@ -1384,25 +1313,6 @@ const App: React.FC = () => {
           onOpen={() => setIsMobileDrawerOpen(true)}
         />
 
-        {/* Loading Cursor (Beach Ball) */}
-        {isLoading && (
-          <div className="fixed inset-0 z-[300] pointer-events-none flex items-center justify-center">
-            <div className="w-8 h-8 animate-spin">
-              <svg viewBox="0 0 32 32" className="w-full h-full">
-                <defs>
-                  <linearGradient id="beachball" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#ff6b6b" />
-                    <stop offset="25%" stopColor="#4ecdc4" />
-                    <stop offset="50%" stopColor="#45b7d1" />
-                    <stop offset="75%" stopColor="#96e6a1" />
-                    <stop offset="100%" stopColor="#ff6b6b" />
-                  </linearGradient>
-                </defs>
-                <circle cx="16" cy="16" r="14" fill="none" stroke="url(#beachball)" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

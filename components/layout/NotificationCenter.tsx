@@ -67,14 +67,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
       {/* Panel */}
       <div className="fixed top-10 right-2 w-80 max-h-[500px] overflow-hidden z-[151] animate-in fade-in slide-in-from-top-2 duration-200">
-        <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden">
+        <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl border border-black/5 dark:border-white/10 shadow-panel overflow-hidden">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-black/5 dark:border-white/10 flex items-center justify-between">
             <h3 className="font-bold text-sm text-black dark:text-white">Notifications</h3>
             {notifications.length > 0 && (
               <button
                 onClick={onClearAll}
-                className="text-[10px] text-blue-500 hover:text-blue-600 transition-colors"
+                className="text-[10px] text-red-600 hover:text-red-700 transition-colors"
               >
                 Clear All
               </button>

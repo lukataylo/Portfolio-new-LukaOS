@@ -53,7 +53,7 @@ export const AppSwitcher: React.FC<AppSwitcherProps> = ({
 
       {/* Switcher Panel */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[201] animate-in fade-in zoom-in-95 duration-150">
-        <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-2xl p-4">
+        <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl border border-black/5 dark:border-white/10 shadow-panel p-4">
           <div className="flex items-center gap-4">
             {openWindows.map((win, index) => {
               const item = allItems.find((i) => i.id === win.itemId);
@@ -64,7 +64,7 @@ export const AppSwitcher: React.FC<AppSwitcherProps> = ({
                 <div
                   key={win.id}
                   className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
-                    isSelected ? 'bg-blue-500 scale-110' : 'bg-zinc-100 dark:bg-zinc-800'
+                    isSelected ? 'bg-red-600 scale-110' : 'bg-zinc-100 dark:bg-zinc-800'
                   }`}
                 >
                   <div

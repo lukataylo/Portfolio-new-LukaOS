@@ -46,7 +46,14 @@ const config: Config = {
         },
       },
       borderRadius: {
-        window: '14px',
+        window: '16px',
+      },
+      boxShadow: {
+        // Soft, diffuse elevation scale — no hard edges.
+        soft: '0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.07)',
+        panel: '0 2px 6px rgba(0, 0, 0, 0.04), 0 10px 28px -8px rgba(0, 0, 0, 0.14)',
+        window: '0 2px 8px rgba(0, 0, 0, 0.05), 0 18px 44px -14px rgba(0, 0, 0, 0.16)',
+        dock: '0 2px 8px rgba(0, 0, 0, 0.05), 0 14px 36px -12px rgba(0, 0, 0, 0.16)',
       },
       transitionTimingFunction: {
         'nothing-out': 'cubic-bezier(.2,.8,.2,1)',

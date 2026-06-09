@@ -24,8 +24,13 @@ export const ChatApp: React.FC<ChatAppProps> = ({ messages, onSendMessage }) => 
     setInput('');
     setLoading(true);
 
-    await onSendMessage(userMsg);
-    setLoading(false);
+    try {
+      await onSendMessage(userMsg);
+    } finally {
+      // Without this, a rejected send (offline, chunk-load failure) would leave
+      // the composer permanently stuck on "Processing...".
+      setLoading(false);
+    }
   };
 
   return (

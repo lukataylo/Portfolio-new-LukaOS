@@ -64,6 +64,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   // not the stale closure captured when the effect first ran.
   const snapPreviewRef = useRef(snapPreview);
   snapPreviewRef.current = snapPreview;
+  // Same for windowState: the move/up listeners are bound once per drag session,
+  // so position/size must be read through a ref to see the latest values.
+  const windowStateRef = useRef(windowState);
+  windowStateRef.current = windowState;
   // Tracks whether this drag began from a maximized/snapped state; used to
   // skip the redundant snap-restore on mouseup that would cause a small jump.
   const unsnappedAtDragStart = useRef(false);
@@ -86,13 +90,13 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     // 3. Set 'opening' to trigger CSS transition to target position.
     const timer1 = setTimeout(() => {
         setAnimState('opening');
-    }, 50);
+    }, 30);
 
     // 4. After transition completes, set to 'open' to enable full interaction.
-    // Duration matches the CSS transition time (500ms)
+    // Duration matches the CSS transition time (300ms)
     const timer2 = setTimeout(() => {
         setAnimState('open');
-    }, 550); 
+    }, 330);
 
     return () => {
         clearTimeout(timer1);
@@ -115,7 +119,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     }
     setAnimState('closing');
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => onClose(windowState.id), 350);
+    closeTimer.current = setTimeout(() => onClose(windowState.id), 260);
   };
 
   // Restore a maximized / snapped window to its previous size and place it
@@ -336,7 +340,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       // the cursor naturally and re-applying the snap-restore formula would cause a hop.
       if (
         isDragging &&
-        windowState.isSnapped &&
+        windowStateRef.current.isSnapped &&
         !snapPreviewRef.current &&
         !unsnappedAtDragStart.current
       ) {
@@ -351,29 +355,29 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         const padding = 50; // Minimum visible pixels
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
-        const winWidth = windowState.size.width;
-        const winHeight = windowState.size.height;
-        let newX = windowState.position.x;
-        let newY = windowState.position.y;
+        const { position, size } = windowStateRef.current;
+        const winWidth = size.width;
+        let newX = position.x;
+        let newY = position.y;
         let needsBounce = false;
 
         // Check left boundary (window went too far left)
-        if (windowState.position.x + winWidth < padding) {
+        if (position.x + winWidth < padding) {
           newX = padding - winWidth + 100;
           needsBounce = true;
         }
         // Check right boundary (window went too far right)
-        if (windowState.position.x > screenWidth - padding) {
+        if (position.x > screenWidth - padding) {
           newX = screenWidth - padding - 100;
           needsBounce = true;
         }
         // Check top boundary (window went above viewport)
-        if (windowState.position.y < MENU_BAR_H) {
+        if (position.y < MENU_BAR_H) {
           newY = 50;
           needsBounce = true;
         }
         // Check bottom boundary (window went too far down)
-        if (windowState.position.y > screenHeight - padding) {
+        if (position.y > screenHeight - padding) {
           newY = screenHeight - padding - 100;
           needsBounce = true;
         }
@@ -430,17 +434,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     }
 
     if (animState === 'opening') {
-        // Overshoot on transform for the "pop" effect
+        // Gentle overshoot on transform for the "pop" effect
         // Smooth ease-out on layout properties to follow the transform
-        return 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.5s cubic-bezier(0.19, 1, 0.22, 1), top 0.5s cubic-bezier(0.19, 1, 0.22, 1), width 0.5s cubic-bezier(0.19, 1, 0.22, 1), height 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.4s ease-out';
+        return 'transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), left 0.3s cubic-bezier(0.19, 1, 0.22, 1), top 0.3s cubic-bezier(0.19, 1, 0.22, 1), width 0.3s cubic-bezier(0.19, 1, 0.22, 1), height 0.3s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.25s ease-out';
     }
     if (animState === 'closing') {
         // Snappy closing
-        return 'all 0.3s cubic-bezier(0.32, 0, 0.67, 0)';
+        return 'all 0.25s cubic-bezier(0.32, 0, 0.67, 0)';
     }
 
     // Default for Maximize/Restore interactions
-    return 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+    return 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
   };
 
   if (windowState.isMaximized && !isAnimating) {
@@ -532,17 +536,17 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       {/* Snap Preview Indicator */}
       {snapPreview && snapPreviewStyle && (
         <div
-          className="fixed snap-preview bg-blue-500/20 border-2 border-blue-500 rounded-lg pointer-events-none z-[999]"
+          className="fixed snap-preview bg-red-600/10 border border-red-600/40 rounded-window pointer-events-none z-[999]"
           style={snapPreviewStyle}
         />
       )}
 
       <div
         className={`
-          absolute flex flex-col shadow-2xl
-          border border-zinc-200 dark:border-zinc-800
+          absolute flex flex-col shadow-window
+          border border-black/5 dark:border-white/10
           bg-white dark:bg-[#0f0f0f]
-          ${!windowState.isMaximized ? 'rounded-lg' : ''}
+          ${!windowState.isMaximized ? 'rounded-window' : ''}
           ${isAnimating ? 'pointer-events-none overflow-hidden' : ''}
           ${animState === 'opening' ? 'window-spring-enter' : ''}
         `}
@@ -566,19 +570,23 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       ))}
 
       {/* Title Bar */}
-      <div 
-        className="h-9 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-3 select-none cursor-move shrink-0"
+      <div
+        className={`h-9 bg-zinc-50 dark:bg-zinc-900 border-b border-black/5 dark:border-white/5 flex items-center justify-between px-3 select-none cursor-move shrink-0 ${!windowState.isMaximized ? 'rounded-t-window' : ''}`}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onDoubleClick={() => onMaximize(windowState.id)}
       >
-        <div className="flex gap-1.5 group relative z-[60]">
+        {/* Traffic lights. touchstart must not bubble to the title bar (it would
+            start a drag); tap activation then comes through the normal click. */}
+        <div
+          className="flex gap-1.5 group relative z-[60]"
+          onTouchStart={(e) => e.stopPropagation()}
+        >
           {/* Close */}
           <button
             onClick={(e) => { e.stopPropagation(); handleCloseRequest(); }}
-            className="rounded-full bg-red-500 hover:bg-red-600 border border-red-600 transition-colors flex items-center justify-center flex-shrink-0"
+            className="rounded-full bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center flex-shrink-0"
             style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
-            onTouchEnd={(e) => { e.stopPropagation(); handleCloseRequest(); }}
             aria-label="Close window"
             title="Close"
           >
@@ -587,9 +595,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Minimize */}
           <button
             onClick={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
-            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-yellow-400 border border-zinc-400 dark:border-zinc-600 transition-colors flex-shrink-0"
+            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-zinc-400 dark:hover:bg-zinc-500 transition-colors flex-shrink-0"
             style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
-            onTouchEnd={(e) => { e.stopPropagation(); onMinimize(windowState.id); }}
             aria-label="Minimize window"
             title="Minimize"
           />
@@ -597,9 +604,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Maximize */}
           <button
             onClick={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
-            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-green-500 border border-zinc-400 dark:border-zinc-600 transition-colors flex-shrink-0"
+            className="rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-zinc-400 dark:hover:bg-zinc-500 transition-colors flex-shrink-0"
             style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }}
-            onTouchEnd={(e) => { e.stopPropagation(); onMaximize(windowState.id); }}
             aria-label={windowState.isMaximized ? "Restore window" : "Maximize window"}
             title={windowState.isMaximized ? "Restore" : "Maximize"}
           />
@@ -612,7 +618,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
       {/* Content Area */}
         <div
-          className="flex-1 overflow-hidden relative bg-white dark:bg-zinc-950"
+          className={`flex-1 overflow-hidden relative bg-white dark:bg-zinc-950 ${!windowState.isMaximized ? 'rounded-b-window' : ''}`}
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -634,7 +640,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
             {/* Context Menu */}
             <div
-              className="fixed z-[201] min-w-[160px] bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-100 rounded-lg backdrop-blur-3xl"
+              className="fixed z-[201] min-w-[160px] bg-white dark:bg-black border border-black/5 dark:border-white/10 shadow-panel p-1 animate-in fade-in zoom-in-95 duration-100 rounded-xl backdrop-blur-3xl"
               style={{
                 top: Math.min(windowContextMenu.y, window.innerHeight - 180),
                 left: Math.min(windowContextMenu.x, window.innerWidth - 180)
@@ -649,7 +655,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
                   onClick={() => { onMinimize(windowState.id); setWindowContextMenu(null); }}
                   className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
                 >
-                  <Minus size={14} className="group-hover:text-yellow-500 transition-colors" />
+                  <Minus size={14} className="group-hover:text-red-600 transition-colors" />
                   <span className="font-mono text-xs">Minimize</span>
                 </button>
 
@@ -657,7 +663,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
                   onClick={() => { onMaximize(windowState.id); setWindowContextMenu(null); }}
                   className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
                 >
-                  <Maximize2 size={14} className="group-hover:text-green-500 transition-colors" />
+                  <Maximize2 size={14} className="group-hover:text-red-600 transition-colors" />
                   <span className="font-mono text-xs">{windowState.isMaximized ? 'Restore' : 'Maximize'}</span>
                 </button>
 
@@ -671,7 +677,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
                   }}
                   className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
                 >
-                  <RotateCcw size={14} className="group-hover:text-blue-500 transition-colors" />
+                  <RotateCcw size={14} className="group-hover:text-red-600 transition-colors" />
                   <span className="font-mono text-xs">Refresh</span>
                 </button>
 
@@ -682,7 +688,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
                   }}
                   className="flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded transition-colors group text-left"
                 >
-                  <Copy size={14} className="group-hover:text-purple-500 transition-colors" />
+                  <Copy size={14} className="group-hover:text-red-600 transition-colors" />
                   <span className="font-mono text-xs">Copy Title</span>
                 </button>
 

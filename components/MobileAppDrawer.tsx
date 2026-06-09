@@ -111,40 +111,45 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
         style={getDrawerStyle()}
       >
         {/* Handle Area */}
-        <div
-          className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-t-3xl border-t border-x border-zinc-200 dark:border-zinc-800 shadow-2xl"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Pull Handle */}
+        <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-t-3xl border-t border-x border-black/5 dark:border-white/10 shadow-panel">
+          {/* Swipe region: handle + header only. Attaching the gesture here
+              keeps normal scrolling inside the app grid from dragging the
+              drawer closed. */}
           <div
-            className="flex items-center justify-center py-3 cursor-pointer"
-            onClick={handleClick}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            <div className="w-10 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
+            {/* Pull Handle */}
+            <div
+              className="flex items-center justify-center py-3 cursor-pointer"
+              onClick={handleClick}
+            >
+              <div className="w-10 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
+            </div>
+
+            {/* Header when open */}
+            {isOpen && (
+              <div className="flex items-center justify-between px-6 pb-3">
+                <h3 className="text-sm font-bold text-black dark:text-white">All Apps</h3>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                  aria-label="Close app drawer"
+                >
+                  <X size={18} className="text-zinc-500" />
+                </button>
+              </div>
+            )}
+
+            {/* Peek preview when closed */}
+            {!isOpen && (
+              <div className="flex items-center justify-center gap-2 pb-4 px-4">
+                <ChevronUp size={16} className="text-zinc-400" />
+                <span className="text-xs text-zinc-400">Swipe up for apps</span>
+              </div>
+            )}
           </div>
-
-          {/* Header when open */}
-          {isOpen && (
-            <div className="flex items-center justify-between px-6 pb-3">
-              <h3 className="text-sm font-bold text-black dark:text-white">All Apps</h3>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
-              >
-                <X size={18} className="text-zinc-500" />
-              </button>
-            </div>
-          )}
-
-          {/* Peek preview when closed */}
-          {!isOpen && (
-            <div className="flex items-center justify-center gap-2 pb-4 px-4">
-              <ChevronUp size={16} className="text-zinc-400" />
-              <span className="text-xs text-zinc-400">Swipe up for apps</span>
-            </div>
-          )}
 
           {/* App Grid */}
           <div
@@ -161,7 +166,7 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
                     className="flex flex-col items-center gap-2 p-2 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all"
                     aria-label={`Open ${item.title}`}
                   >
-                    <div className="w-14 h-14 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 rounded-2xl flex items-center justify-center shadow-sm border border-zinc-200 dark:border-zinc-700">
+                    <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center shadow-soft border border-black/5 dark:border-white/10">
                       <Icon size={28} className="text-zinc-600 dark:text-zinc-300" aria-hidden="true" />
                     </div>
                     <span className="text-[10px] text-zinc-600 dark:text-zinc-400 text-center line-clamp-2 leading-tight">

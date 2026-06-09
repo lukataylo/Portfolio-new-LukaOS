@@ -4,50 +4,68 @@ import {
   Moon,
   Volume2,
   VolumeX,
-  Monitor,
   Palette,
-  Bell,
   Keyboard,
-  Mouse,
   Info,
   ChevronLeft,
   Check
 } from 'lucide-react';
+import type { SoundType } from '../../utils/sound';
 
 interface SystemPreferencesProps {
   theme: 'light' | 'dark';
   onThemeChange: (theme: 'light' | 'dark') => void;
   soundEnabled: boolean;
   onSoundChange: (enabled: boolean) => void;
+  reduceMotion: boolean;
+  onReduceMotionChange: (enabled: boolean) => void;
+  onPlaySound?: (type: SoundType) => void;
 }
 
-type PreferenceSection = 'main' | 'appearance' | 'sound' | 'notifications' | 'shortcuts' | 'about';
+type PreferenceSection = 'main' | 'appearance' | 'sound' | 'shortcuts' | 'about';
+
+const Toggle: React.FC<{ on: boolean; onClick: () => void; label: string }> = ({ on, onClick, label }) => (
+  <button
+    onClick={onClick}
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    className={`w-12 h-7 rounded-full transition-colors ${
+      on ? 'bg-red-600' : 'bg-zinc-300 dark:bg-zinc-600'
+    }`}
+  >
+    <div className={`w-5 h-5 bg-white rounded-full shadow-soft transition-transform ${
+      on ? 'translate-x-6' : 'translate-x-1'
+    }`} />
+  </button>
+);
 
 export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
   theme,
   onThemeChange,
   soundEnabled,
-  onSoundChange
+  onSoundChange,
+  reduceMotion,
+  onReduceMotionChange,
+  onPlaySound
 }) => {
   const [activeSection, setActiveSection] = useState<PreferenceSection>('main');
-  const [reduceMotion, setReduceMotion] = useState(false);
 
   const renderMainMenu = () => (
     <div className="grid grid-cols-3 gap-4 p-6">
       {[
-        { id: 'appearance', icon: Palette, label: 'Appearance', color: 'bg-purple-500' },
-        { id: 'sound', icon: Volume2, label: 'Sound', color: 'bg-pink-500' },
-        { id: 'notifications', icon: Bell, label: 'Notifications', color: 'bg-red-500' },
-        { id: 'shortcuts', icon: Keyboard, label: 'Shortcuts', color: 'bg-blue-500' },
-        { id: 'about', icon: Info, label: 'About', color: 'bg-zinc-500' },
+        { id: 'appearance', icon: Palette, label: 'Appearance' },
+        { id: 'sound', icon: Volume2, label: 'Sound' },
+        { id: 'shortcuts', icon: Keyboard, label: 'Shortcuts' },
+        { id: 'about', icon: Info, label: 'About' },
       ].map(item => (
         <button
           key={item.id}
           onClick={() => setActiveSection(item.id as PreferenceSection)}
           className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
         >
-          <div className={`w-14 h-14 ${item.color} rounded-xl flex items-center justify-center shadow-lg`}>
-            <item.icon size={28} className="text-white" />
+          <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 rounded-2xl flex items-center justify-center shadow-soft">
+            <item.icon size={26} className="text-black dark:text-white" strokeWidth={1.5} />
           </div>
           <span className="text-xs text-zinc-700 dark:text-zinc-300">{item.label}</span>
         </button>
@@ -62,55 +80,50 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
         <div className="flex gap-4">
           <button
             onClick={() => onThemeChange('light')}
-            className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+            className={`flex-1 p-4 rounded-2xl border transition-all ${
               theme === 'light'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
+                ? 'border-red-600 bg-red-50 dark:bg-red-900/10'
+                : 'border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
             }`}
           >
-            <div className="w-full aspect-video bg-white border border-zinc-200 rounded-lg mb-3 flex items-center justify-center">
-              <Sun size={24} className="text-yellow-500" />
+            <div className="w-full aspect-video bg-white border border-black/5 rounded-xl mb-3 flex items-center justify-center">
+              <Sun size={24} className="text-zinc-500" />
             </div>
             <div className="flex items-center justify-center gap-2">
-              {theme === 'light' && <Check size={14} className="text-blue-500" />}
+              {theme === 'light' && <Check size={14} className="text-red-600" />}
               <span className="text-sm text-zinc-700 dark:text-zinc-300">Light</span>
             </div>
           </button>
           <button
             onClick={() => onThemeChange('dark')}
-            className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+            className={`flex-1 p-4 rounded-2xl border transition-all ${
               theme === 'dark'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'
+                ? 'border-red-600 bg-red-50 dark:bg-red-900/10'
+                : 'border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
             }`}
           >
-            <div className="w-full aspect-video bg-zinc-900 border border-zinc-700 rounded-lg mb-3 flex items-center justify-center">
-              <Moon size={24} className="text-blue-400" />
+            <div className="w-full aspect-video bg-zinc-900 border border-white/10 rounded-xl mb-3 flex items-center justify-center">
+              <Moon size={24} className="text-zinc-400" />
             </div>
             <div className="flex items-center justify-center gap-2">
-              {theme === 'dark' && <Check size={14} className="text-blue-500" />}
+              {theme === 'dark' && <Check size={14} className="text-red-600" />}
               <span className="text-sm text-zinc-700 dark:text-zinc-300">Dark</span>
             </div>
           </button>
         </div>
       </div>
 
-      <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
+      <div className="border-t border-black/5 dark:border-white/10 pt-6">
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-sm font-medium text-black dark:text-white">Reduce Motion</h4>
             <p className="text-xs text-zinc-500 mt-0.5">Minimize animations throughout the system</p>
           </div>
-          <button
-            onClick={() => setReduceMotion(!reduceMotion)}
-            className={`w-12 h-7 rounded-full transition-colors ${
-              reduceMotion ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600'
-            }`}
-          >
-            <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-              reduceMotion ? 'translate-x-6' : 'translate-x-1'
-            }`} />
-          </button>
+          <Toggle
+            on={reduceMotion}
+            onClick={() => onReduceMotionChange(!reduceMotion)}
+            label="Reduce motion"
+          />
         </div>
       </div>
     </div>
@@ -130,61 +143,33 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
             <p className="text-xs text-zinc-500">Play sounds for UI interactions</p>
           </div>
         </div>
-        <button
+        <Toggle
+          on={soundEnabled}
           onClick={() => onSoundChange(!soundEnabled)}
-          className={`w-12 h-7 rounded-full transition-colors ${
-            soundEnabled ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600'
-          }`}
-        >
-          <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-            soundEnabled ? 'translate-x-6' : 'translate-x-1'
-          }`} />
-        </button>
+          label="Sound effects"
+        />
       </div>
 
-      <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
+      <div className="border-t border-black/5 dark:border-white/10 pt-6">
         <h4 className="text-sm font-medium text-black dark:text-white mb-4">Sound Effects Preview</h4>
         <div className="space-y-2">
-          {['Pop', 'Close', 'Minimize', 'Notification'].map(sound => (
+          {([
+            ['Pop', 'pop'],
+            ['Close', 'close'],
+            ['Minimize', 'minimize'],
+            ['Notification', 'notification'],
+          ] as Array<[string, SoundType]>).map(([label, type]) => (
             <button
-              key={sound}
-              className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+              key={label}
+              onClick={() => onPlaySound?.(type)}
+              disabled={!soundEnabled}
+              className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="text-sm text-zinc-700 dark:text-zinc-300">{sound}</span>
-              <span className="text-xs text-blue-500">Play</span>
+              <span className="text-sm text-zinc-700 dark:text-zinc-300">{label}</span>
+              <span className="text-xs text-red-600">Play</span>
             </button>
           ))}
         </div>
-      </div>
-    </div>
-  );
-
-  const renderNotifications = () => (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="text-sm font-medium text-black dark:text-white">Show Notifications</h4>
-          <p className="text-xs text-zinc-500">Display system notifications</p>
-        </div>
-        <button className="w-12 h-7 rounded-full bg-blue-500 transition-colors">
-          <div className="w-5 h-5 bg-white rounded-full shadow-md translate-x-6" />
-        </button>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="text-sm font-medium text-black dark:text-white">Sound Alerts</h4>
-          <p className="text-xs text-zinc-500">Play sound when notification appears</p>
-        </div>
-        <button
-          className={`w-12 h-7 rounded-full transition-colors ${
-            soundEnabled ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-600'
-          }`}
-        >
-          <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-            soundEnabled ? 'translate-x-6' : 'translate-x-1'
-          }`} />
-        </button>
       </div>
     </div>
   );
@@ -194,7 +179,6 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
       <h3 className="text-sm font-medium text-black dark:text-white mb-4">Keyboard Shortcuts</h3>
       {[
         { keys: '⌘ + Space', action: 'Open Spotlight Search' },
-        { keys: '⌘ + Tab', action: 'Switch between windows' },
         { keys: '⌘ + W', action: 'Close active window' },
         { keys: '⌘ + M', action: 'Minimize active window' },
         { keys: '⌘ + Q', action: 'Quit application (nice try!)' },
@@ -203,7 +187,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
       ].map(shortcut => (
         <div
           key={shortcut.keys}
-          className="flex items-center justify-between py-2 border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+          className="flex items-center justify-between py-2 border-b border-black/5 dark:border-white/5 last:border-0"
         >
           <span className="text-sm text-zinc-700 dark:text-zinc-300">{shortcut.action}</span>
           <kbd className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-xs font-mono text-zinc-600 dark:text-zinc-400">
@@ -216,13 +200,13 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
 
   const renderAbout = () => (
     <div className="p-6 text-center">
-      <div className="w-20 h-20 mx-auto bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+      <div className="w-20 h-20 mx-auto bg-red-600 rounded-2xl flex items-center justify-center mb-4 shadow-soft">
         <div className="w-8 h-8 bg-white rounded-full" />
       </div>
       <h2 className="text-xl font-bold text-black dark:text-white">LukaOS</h2>
       <p className="text-sm text-zinc-500 mt-1">Version 1.0.0</p>
 
-      <div className="mt-6 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-left">
+      <div className="mt-6 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl text-left">
         <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
           A portfolio disguised as an operating system. Built with React, TypeScript, and Tailwind CSS.
         </p>
@@ -240,7 +224,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           href="https://github.com/lukataylo"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-red-600 hover:underline"
         >
           GitHub
         </a>
@@ -248,7 +232,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           href="https://x.com/lukadadiani"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-red-600 hover:underline"
         >
           Twitter
         </a>
@@ -256,7 +240,7 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           href="https://linkedin.com/in/luka-dadiani-3293a915"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-red-600 hover:underline"
         >
           LinkedIn
         </a>
@@ -268,7 +252,6 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
     switch (activeSection) {
       case 'appearance': return 'Appearance';
       case 'sound': return 'Sound';
-      case 'notifications': return 'Notifications';
       case 'shortcuts': return 'Keyboard Shortcuts';
       case 'about': return 'About This Mac';
       default: return 'System Preferences';
@@ -278,11 +261,12 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
   return (
     <div className="h-full flex flex-col bg-white dark:bg-[#1c1c1e]">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-black/5 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900">
         {activeSection !== 'main' && (
           <button
             onClick={() => setActiveSection('main')}
             className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-colors"
+            aria-label="Back to all preferences"
           >
             <ChevronLeft size={18} className="text-zinc-600 dark:text-zinc-400" />
           </button>
@@ -295,7 +279,6 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
         {activeSection === 'main' && renderMainMenu()}
         {activeSection === 'appearance' && renderAppearance()}
         {activeSection === 'sound' && renderSound()}
-        {activeSection === 'notifications' && renderNotifications()}
         {activeSection === 'shortcuts' && renderShortcuts()}
         {activeSection === 'about' && renderAbout()}
       </div>

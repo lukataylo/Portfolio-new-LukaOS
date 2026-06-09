@@ -71,7 +71,9 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => Math.min(prev + 1, filteredItems.length - 1));
+        if (filteredItems.length > 0) {
+          setSelectedIndex(prev => Math.min(prev + 1, filteredItems.length - 1));
+        }
         break;
       case 'ArrowUp':
         e.preventDefault();
@@ -91,20 +93,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
     }
   }, [filteredItems, selectedIndex, onSelectItem, onClose]);
 
-  // Global keyboard shortcut
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.code === 'Space') {
-        e.preventDefault();
-        if (isOpen) {
-          onClose();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [isOpen, onClose]);
+  // Cmd+Space toggling (open and close) is owned by App's global shortcut handler.
 
   if (!isOpen) return null;
 
@@ -118,9 +107,9 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
 
       {/* Spotlight Container */}
       <div className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-[640px] z-[101] px-4 animate-in fade-in slide-in-from-top-4 duration-200">
-        <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-zinc-200/50 dark:border-zinc-700/50 overflow-hidden">
+        <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-panel border border-black/5 dark:border-white/10 overflow-hidden">
           {/* Search Input */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-black/5 dark:border-white/10">
             <Search size={20} className="text-zinc-400 flex-shrink-0" />
             <input
               ref={inputRef}
@@ -165,7 +154,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
                     className={`
                       flex items-center gap-4 px-5 py-3 cursor-pointer transition-colors
                       ${isSelected
-                        ? 'bg-blue-500 text-white'
+                        ? 'bg-red-600 text-white'
                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
                       }
                     `}
@@ -199,7 +188,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ isOpen, onClose, items, on
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+          <div className="px-5 py-3 border-t border-black/5 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900/50">
             <div className="flex items-center justify-between text-[10px] text-zinc-400">
               <span>{filteredItems.length} result{filteredItems.length !== 1 ? 's' : ''}</span>
               <div className="flex items-center gap-3">

@@ -7,7 +7,7 @@
  * @module components/DesktopIcon
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DesktopItem, WindowRect } from '../types';
 
 interface DesktopIconProps {
@@ -32,6 +32,20 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
   const Icon = item.icon;
   const iconRef = useRef<HTMLDivElement>(null);
   const [isDraggingLocal, setIsDraggingLocal] = useState(false);
+
+  // Releasing the pointer outside the icon never fires the element's own
+  // mouseup/touchend, which would leave the drag flag stuck and swallow the
+  // next double-click. A window-level listener guarantees cleanup.
+  useEffect(() => {
+    if (!isDraggingLocal) return;
+    const reset = () => setIsDraggingLocal(false);
+    window.addEventListener('mouseup', reset);
+    window.addEventListener('touchend', reset);
+    return () => {
+      window.removeEventListener('mouseup', reset);
+      window.removeEventListener('touchend', reset);
+    };
+  }, [isDraggingLocal]);
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -113,9 +127,9 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({
         <div
           ref={iconRef}
           className={`
-            w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700
-            flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform
-            ${isDragging ? 'ring-2 ring-blue-500 shadow-2xl' : ''}
+            w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl border border-black/5 dark:border-white/10
+            flex items-center justify-center shadow-soft group-hover:scale-105 transition-transform
+            ${isDragging ? 'ring-1 ring-red-600/50 shadow-panel' : ''}
           `}
         >
           <Icon className="w-7 h-7 text-black dark:text-white" strokeWidth={1.5} />

@@ -16,7 +16,10 @@ export const WelcomeBackModal: React.FC<WelcomeBackModalProps> = ({
 
   const getTimeAwayText = () => {
     if (awayDuration < 1) return 'a moment';
-    if (awayDuration < 60) return `${Math.round(awayDuration)} minute${awayDuration >= 2 ? 's' : ''}`;
+    if (awayDuration < 60) {
+      const minutes = Math.round(awayDuration);
+      return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    }
     const hours = Math.floor(awayDuration / 60);
     return `${hours} hour${hours > 1 ? 's' : ''}`;
   };
@@ -43,10 +46,13 @@ export const WelcomeBackModal: React.FC<WelcomeBackModalProps> = ({
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center z-[301] p-4">
+      {/* Modal — the wrapper covers the backdrop, so it must close on click too */}
+      <div
+        className="fixed inset-0 flex items-center justify-center z-[301] p-4"
+        onClick={onClose}
+      >
         <div
-          className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 max-w-sm w-full overflow-hidden animate-in zoom-in-95 fade-in duration-200"
+          className="bg-white dark:bg-zinc-900 rounded-2xl shadow-panel border border-black/5 dark:border-white/10 max-w-sm w-full overflow-hidden animate-in zoom-in-95 fade-in duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with icon */}

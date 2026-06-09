@@ -51,6 +51,13 @@ export const playSound = (type: SoundType, enabled: boolean = true): void => {
   const ctx = getAudioContext();
   if (!ctx) return;
 
+  // Autoplay policy: a context created outside a user gesture starts (and can
+  // be moved back to) 'suspended'. Resume on each play so sounds recover as
+  // soon as the user has interacted with the page.
+  if (ctx.state === 'suspended') {
+    void ctx.resume().catch(() => {});
+  }
+
   try {
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
