@@ -181,28 +181,28 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
     title: 'About_Me.pdf',
     icon: Briefcase,
     type: FileType.PRESENTATION,
-    seoDescription: 'CV of Luka Dadiani — product and design leadership across complex, regulated domains.',
+    seoDescription: 'CV of Luka Dadiani: product and design leadership across complex, regulated domains.',
     slug: 'about',
     content: [
       {
         title: 'Luka Dadiani',
-        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nI run xTrade, Howden\'s specialty risk placement platform — five lines of business (Renewables, Aviation, Fine Art, Terrorism), a 15–20 engineer team, and the roadmap that keeps it all pointed somewhere useful.\n\nBefore that I spent seven years as a designer, which is why my PRDs come with opinions about the UI. I\'ve never seen the hand-off between product and design produce a better product. So I don\'t hand off.'
+        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nMy job is making complex domains legible: to the users who work in them, the engineers building for them, and the executives funding them. Same product, three audiences, one coherent story.\n\nRight now that\'s xTrade, Howden\'s specialty risk placement platform. Five lines of business and a 15–20 engineer team shipping into a regulated, multi-stakeholder space where every edge case has a lawyer.\n\nI run product and design as one discipline, with a decade of craft behind the roadmap decisions. Teams move faster when the person setting direction can also sit in the Figma file.'
       },
       {
         title: 'Now',
-        body: 'xTrade — Product Manager, Howden Group\nNov 2021 – Present\n\nI own the roadmap, run the research, and set the design direction. The team ships into a domain where an edge case is a satellite or a fine-art shipment, and the users are brokers with no patience for bad software.\n\nThe case study is on the desktop — NDA-locked, but worth asking about.'
+        body: 'xTrade, Product Manager at Howden Group\nNov 2021 – Present\n\nI own the roadmap, run the research, and set the design direction. The team ships into a domain where an edge case is a satellite or a fine-art shipment, and the users are brokers with no patience for bad software.\n\nThe case study is on the desktop. It\'s NDA-locked, but worth asking about.'
       },
       {
         title: 'Track Record',
-        body: 'Hyperion X (2018–22) — Senior UX Designer. Built the design system that unified UX and visual language across the venture\'s products.\n\nInsyt — Designed the brand-redemption platform we pitched to Google, LG and Philips. Case study on the desktop.\n\nInteroute (2016–18) — Designed high-conversion marketing and product sites; ran the external dev agency.\n\nEasynet (2015–16) — Led creative design in the marketing team.\n\nPawPost (2014–15) — Co-founded a pet subscription startup straight out of university. Learned more from its pivot than from anything since.\n\nBBA Management, University of Lancaster (2010–14).'
+        body: 'Hyperion X (2018–22), Senior UX Designer. Built the design system that unified UX and visual language across the venture\'s products.\n\nInsyt: designed the brand-redemption platform we pitched to Google, LG and Philips. Case study on the desktop.\n\nInteroute (2016–18): designed high-conversion marketing and product sites and ran the external dev agency.\n\nEasynet (2015–16): led creative design in the marketing team.\n\nPawPost (2014–15): co-founded a pet subscription startup straight out of university. Learned more from its pivot than from anything since.\n\nBBA Management, University of Lancaster (2010–14).'
       },
       {
         title: 'How I Work',
-        body: 'Find the constraint limiting the system, not the screen in front of me.\n\nKill features that don\'t earn their complexity — the best one is sometimes the one you don\'t build.\n\nStay close enough to the craft to be useful in the Figma file and the sprint board on the same day.'
+        body: 'Find the constraint limiting the system, not the screen in front of me.\n\nKill features that don\'t earn their complexity. The best feature is sometimes the one you don\'t build.\n\nStay close enough to the craft to be useful in the Figma file and the sprint board on the same day.'
       },
       {
         title: 'Contact',
-        body: 'The fastest route is the Email app in the dock — it opens a message straight to me. LinkedIn works too; both are one click away.\n\nIf you\'d rather test me first, the Terminal answers questions.'
+        body: 'The fastest route is the Email app in the dock, which opens a message straight to me. LinkedIn works too; both are one click away.\n\nIf you\'d rather test me first, the Terminal answers questions.'
       }
     ]
   },
