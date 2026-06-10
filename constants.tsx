@@ -186,43 +186,23 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
     content: [
       {
         title: 'Luka Dadiani',
-        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nI\'m a product and design leader who works best in complex domains — holding strategy and craft together rather than handing off between them.\n\nOver seven years at Howden, I\'ve led product and design work across enterprise platforms, consumer products, mobile apps, and global internal tools—always in environments where the problem space is messy, regulated, or multi-stakeholder.'
+        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nI run xTrade, Howden\'s specialty risk placement platform — five lines of business (Renewables, Aviation, Fine Art, Terrorism), a 15–20 engineer team, and the roadmap that keeps it all pointed somewhere useful.\n\nBefore that I spent seven years as a designer, which is why my PRDs come with opinions about the UI. I\'ve never seen the hand-off between product and design produce a better product. So I don\'t hand off.'
       },
       {
-        title: 'I\'m Most Effective When...',
-        body: '• The domain is complex and requires deep understanding to get right\n\n• Product and design need to be held together, not handed off between silos\n\n• Outcomes matter more than artefacts\n\n• Teams need someone who can own the roadmap and stay close to the craft'
+        title: 'Now',
+        body: 'xTrade — Product Manager, Howden Group\nNov 2021 – Present\n\nI own the roadmap, run the research, and set the design direction. The team ships into a domain where an edge case is a satellite or a fine-art shipment, and the users are brokers with no patience for bad software.\n\nThe case study is on the desktop — NDA-locked, but worth asking about.'
       },
       {
-        title: 'What Runs Through My Work',
-        body: 'Systems thinking:\nI look for the constraint limiting the whole system, not just the screen in front of me\n\nStrategic pragmatism:\nThe best feature is sometimes the one you don\'t build\n\nClarity as leadership:\nI create space for teams to execute by ensuring goals and learnings are understood by everyone\n\nCraft that ships:\nI design within real constraints—platform limitations, engineering trade-offs, business realities'
+        title: 'Track Record',
+        body: 'Hyperion X (2018–22) — Senior UX Designer. Built the design system that unified UX and visual language across the venture\'s products.\n\nInsyt — Designed the brand-redemption platform we pitched to Google, LG and Philips. Case study on the desktop.\n\nInteroute (2016–18) — Designed high-conversion marketing and product sites; ran the external dev agency.\n\nEasynet (2015–16) — Led creative design in the marketing team.\n\nPawPost (2014–15) — Co-founded a pet subscription startup straight out of university. Learned more from its pivot than from anything since.\n\nBBA Management, University of Lancaster (2010–14).'
       },
       {
-        title: 'Key Skills',
-        body: '• Product Management & Strategy\n• Product design & UX strategy (B2B and B2C)\n• Mobile and responsive UI design\n• Design systems and component libraries\n• User research: interviews, workshops, usability testing\n• Data-informed design (qualitative and quantitative)\n• Stakeholder facilitation & cross‑functional collaboration\n• Agile delivery with distributed teams'
+        title: 'How I Work',
+        body: 'Find the constraint limiting the system, not the screen in front of me.\n\nKill features that don\'t earn their complexity — the best one is sometimes the one you don\'t build.\n\nStay close enough to the craft to be useful in the Figma file and the sprint board on the same day.'
       },
       {
-        title: 'xTrade (Howden Group)',
-        body: 'Product Manager\nNov 2021 – Present\n\n• Managed a specialty risk placement platform, delivering five specialty lines including Renewables, Aviation, Fine Art and Terrorism.\n• Led and managed a cross-functional development team of 15-20 engineers, running standups, sprint planning, and backlog refinement.\n• Authored detailed, research-backed technical tickets and requirements to ensure precision in delivery.\n• Created and executed the product roadmap, liaising directly with senior stakeholders to align on strategic business goals.\n• Conducted continuous UX research to validate features and improve product-market fit.'
-      },
-      {
-        title: 'Hyperion X',
-        body: 'Senior UX Designer\nSep 2018 – May 2022\n\n• Designed end‑to‑end experiences for multiple B2B and B2C products.\n• Partnered with product managers, engineers and marketers from discovery to delivery.\n• Created a new design system to unify UX and visual language.\n• Led workshops and validation activities to support internal startup initiatives.'
-      },
-      {
-        title: 'Interoute',
-        body: 'Digital Designer (UX/UI)\nJan 2016 – Aug 2018\n\n• Designed high‑conversion marketing and product websites.\n• Managed external development agency for campaign sites.\n• Produced interactive prototypes (Sketch, InVision, code).\n• Redesigned the company intranet improving information architecture.'
-      },
-      {
-        title: 'Easynet',
-        body: 'Senior Designer\nFeb 2015 – Jan 2016\n\n• Led creative design within the marketing team.\n• Redefined the internal intranet experience through stakeholder research.\n• Partnered with global stakeholders to deliver integrated product campaigns.\n• Managed external developers for accurate implementation.'
-      },
-      {
-        title: 'PawPost',
-        body: 'CTO & Co‑Founder\nMar 2014 – Jan 2015\n\n• Co‑founded a pet‑focused subscription box startup.\n• Conducted market research, user interviews and focus groups.\n• Designed packaging and end‑to‑end customer journeys.\n• Ran user testing and led a pivot to influencer‑driven marketing strategy.'
-      },
-      {
-        title: 'Education',
-        body: 'BBA Management\nUniversity of Lancaster (2010 – 2014)'
+        title: 'Contact',
+        body: 'The fastest route is the Email app in the dock — it opens a message straight to me. LinkedIn works too; both are one click away.\n\nIf you\'d rather test me first, the Terminal answers questions.'
       }
     ]
   },
