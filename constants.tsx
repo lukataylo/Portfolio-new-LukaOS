@@ -186,7 +186,7 @@ export const DESKTOP_ITEMS: DesktopItem[] = [
     content: [
       {
         title: 'Luka Dadiani',
-        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nMy job is making complex domains legible: to the users who work in them, the engineers building for them, and the executives funding them. Same product, three audiences, one coherent story.\n\nRight now that\'s xTrade, Howden\'s specialty risk placement platform. Five lines of business and a 15–20 engineer team shipping into a regulated, multi-stakeholder space where every edge case has a lawyer.\n\nI run product and design as one discipline, with a decade of craft behind the roadmap decisions. Teams move faster when the person setting direction can also sit in the Figma file.'
+        body: 'Product Manager / Senior Product Designer\nLondon, United Kingdom\n\nI\'m Luka Dadiani. I run a specialty risk placement platform in the London insurance market. Before that I spent seven years as a designer, and it shows.\n\nComplicated, regulated products are my thing. Insurance for aviation and fine art. Software for brokers who hate software.'
       },
       {
         title: 'Now',
