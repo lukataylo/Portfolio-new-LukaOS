@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { loadDesktop, windowByTitle } from './helpers';
 
-const RED_600 = 'rgb(220, 38, 38)';
+// red-600 (light mode) or red-500 (dark mode) — the selected-tab accent.
+const RED = /rgb\((220, 38, 38|239, 68, 68)\)/;
 
 test.describe('mobile shell', () => {
   test('shows the tab bar instead of the dock', async ({ page }) => {
@@ -25,7 +26,7 @@ test.describe('mobile shell', () => {
     const aboutColor = await aboutTab.locator('span').evaluate(
       (el) => getComputedStyle(el).color,
     );
-    expect(aboutColor).toBe(RED_600);
+    expect(aboutColor).toMatch(RED);
 
     // A non-selected tab must not be red.
     const terminalTab = tabBar.getByRole('button', { name: /^Open Terminal/ });
@@ -33,7 +34,7 @@ test.describe('mobile shell', () => {
     const terminalColor = await terminalTab.locator('span').evaluate(
       (el) => getComputedStyle(el).color,
     );
-    expect(terminalColor).not.toBe(RED_600);
+    expect(terminalColor).not.toMatch(RED);
   });
 
   test('LinkedIn + GitHub links are above the fold and point to the right profiles', async ({ page }) => {

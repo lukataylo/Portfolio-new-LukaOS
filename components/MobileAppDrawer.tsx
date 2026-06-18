@@ -26,7 +26,6 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startY = useRef(0);
-  const drawerRef = useRef<HTMLDivElement>(null);
 
   // Escape closes the drawer.
   useEffect(() => {
@@ -94,7 +93,6 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
 
       {/* Drawer */}
       <div
-        ref={drawerRef}
         role="dialog"
         aria-label="App drawer"
         aria-modal="true"
@@ -115,7 +113,7 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close app drawer"
+              aria-label="Dismiss app drawer"
               className="w-full flex flex-col items-center pt-2.5 pb-1 active:scale-95 transition-transform"
             >
               <span className="w-12 h-1.5 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
