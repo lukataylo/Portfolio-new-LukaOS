@@ -16,11 +16,10 @@ interface TerminalLine {
 
 // Virtual file system for navigation commands
 const FILE_SYSTEM: Record<string, string[]> = {
-  '~': ['about-me', 'case-studies', 'notes', 'library', 'sitemap', '.secrets'],
+  '~': ['about-me', 'case-studies', 'notes', 'sitemap', '.secrets'],
   '~/about-me': ['cv.pdf', 'skills.txt', 'experience.md'],
   '~/case-studies': ['insyt.md', 'driving-data.md', 'dashboards.md', 'xtrade.locked'],
   '~/notes': ['agency-and-anxiety.md', 'future-of-product-management.md', 'when-adults-were-wrong.md'],
-  '~/library': ['zero-to-one.txt', 'stubborn-attachments.txt', 'boom.txt'],
   '~/.secrets': ['coffee-addiction.log', 'vim-exit-attempts.log'],
 };
 

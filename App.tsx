@@ -12,7 +12,6 @@ const PresentationViewer = lazy(() => import('./components/content/PresentationV
 const ChatApp = lazy(() => import('./components/content/ChatApp').then(m => ({ default: m.ChatApp })));
 const BrowserApp = lazy(() => import('./components/content/BrowserApp').then(m => ({ default: m.BrowserApp })));
 const BlogApp = lazy(() => import('./components/content/BlogApp').then(m => ({ default: m.BlogApp })));
-const BooksApp = lazy(() => import('./components/content/BooksApp').then(m => ({ default: m.BooksApp })));
 const TerminalApp = lazy(() => import('./components/content/TerminalApp').then(m => ({ default: m.TerminalApp })));
 const MailCompose = lazy(() => import('./components/content/MailCompose').then(m => ({ default: m.MailCompose })));
 const SitemapViewer = lazy(() => import('./components/content/SitemapViewer').then(m => ({ default: m.SitemapViewer })));
@@ -20,14 +19,12 @@ const FinderApp = lazy(() => import('./components/content/FinderApp').then(m => 
 const SystemPreferences = lazy(() => import('./components/content/SystemPreferences').then(m => ({ default: m.SystemPreferences })));
 const ContentEditorApp = lazy(() => import('./components/content/ContentEditorApp').then(m => ({ default: m.ContentEditorApp })));
 import { ContextMenu } from './components/ContextMenu';
-import { PrivacyNotice } from './components/PrivacyNotice';
 import { Spotlight } from './components/Spotlight';
 import { MobileAppDrawer } from './components/MobileAppDrawer';
 import { MobileTabBar } from './components/MobileTabBar';
 import { AppSwitcher } from './components/layout/AppSwitcher';
 import { NotificationCenter } from './components/layout/NotificationCenter';
 import { ClockWidget, WeatherWidget, GitHubWidget, MenuBarClock } from './components/widgets';
-import { WelcomeBackModal } from './components/WelcomeBackModal';
 import { Sun, Moon, Search, Volume2, VolumeX, Bell, Settings } from 'lucide-react';
 // Gemini SDK is dynamically imported on first use to keep the initial bundle small.
 import { loadTheme, saveTheme, loadSoundEnabled, saveSoundEnabled, loadReduceMotion, saveReduceMotion, loadIconPositions, saveIconPositions, IconPosition } from './utils/storage';
@@ -46,16 +43,12 @@ const App: React.FC = () => {
   // Admin mode
   const { isAdminMode, isAuthenticated } = useAdmin();
 
-  // Content management (CMS) — books + presentations only. Notes/blog posts
-  // are sourced from MDX files in `src/content/notes/`.
+  // Content management (CMS) — presentations only. Notes/blog posts are
+  // sourced from MDX files in `src/content/notes/`.
   const {
-    books,
     desktopItems: managedDesktopItems,
     isLoaded: contentLoaded,
     saveContent,
-    addBook,
-    updateBook,
-    deleteBook,
     updateDesktopItem,
     updateSlide,
     addSlide,
@@ -125,12 +118,6 @@ const App: React.FC = () => {
   // Easter Egg States
   const [konamiActivated, setKonamiActivated] = useState(false);
 
-  // Welcome Back Modal State
-  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
-  const [awayDuration, setAwayDuration] = useState(0);
-  const lastActiveTime = useRef<number>(Date.now());
-  const AWAY_THRESHOLD = 60 * 1000; // 1 minute minimum to show modal
-
   // Lifted States
   const [unlockedItemIds, setUnlockedItemIds] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -158,27 +145,6 @@ const App: React.FC = () => {
       saveIconPositions(iconPositions);
     }
   }, [iconPositions]);
-
-  // Welcome back modal - detect when user returns after being away
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // User is leaving - record the time
-        lastActiveTime.current = Date.now();
-      } else if (document.visibilityState === 'visible') {
-        // User is returning - check how long they were away
-        const timeAway = Date.now() - lastActiveTime.current;
-        if (timeAway >= AWAY_THRESHOLD && windows.length > 0) {
-          // Only show if they have windows open and were away for at least the threshold
-          setAwayDuration(timeAway / (1000 * 60)); // Convert to minutes
-          setShowWelcomeBack(true);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [windows.length, AWAY_THRESHOLD]);
 
   // Get saved icon position
   const getIconPosition = useCallback((itemId: string): { x: number; y: number } | null => {
@@ -774,11 +740,7 @@ const App: React.FC = () => {
     if (itemId === 'content-editor') {
       return (
         <ContentEditorApp
-          books={books}
           desktopItems={desktopItems}
-          onUpdateBook={updateBook}
-          onAddBook={addBook}
-          onDeleteBook={deleteBook}
           onUpdateDesktopItem={updateDesktopItem}
           onUpdateSlide={updateSlide}
           onAddSlide={addSlide}
@@ -810,8 +772,6 @@ const App: React.FC = () => {
         return <BrowserApp initialUrl={item.url || ''} />;
       case FileType.BLOG:
         return <BlogApp />;
-      case FileType.BOOKS:
-        return <BooksApp books={books} />;
       case FileType.TERMINAL:
         return <TerminalApp />;
       case FileType.MAIL:
@@ -1230,16 +1190,6 @@ const App: React.FC = () => {
             onCleanUp={cleanUpIcons}
           />
         )}
-
-        {/* Cookie Notice */}
-        <PrivacyNotice />
-
-        {/* Welcome Back Modal */}
-        <WelcomeBackModal
-          isOpen={showWelcomeBack}
-          onClose={() => setShowWelcomeBack(false)}
-          awayDuration={awayDuration}
-        />
 
         {/* Spotlight Search */}
         <Spotlight

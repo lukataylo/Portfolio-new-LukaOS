@@ -7,7 +7,6 @@ import {
   FileText,
   Lock,
   BookOpen,
-  Library,
   Terminal,
   Mail,
   Map,
@@ -24,8 +23,6 @@ export const getIconForType = (type: FileType): LucideIcon => {
       return Lock;
     case FileType.BLOG:
       return BookOpen;
-    case FileType.BOOKS:
-      return Library;
     case FileType.TERMINAL:
       return Terminal;
     case FileType.MAIL:
@@ -48,8 +45,6 @@ export const getTypeLabel = (type: FileType): string => {
       return 'Protected';
     case FileType.BLOG:
       return 'Notes';
-    case FileType.BOOKS:
-      return 'Library';
     case FileType.TERMINAL:
       return 'Terminal';
     case FileType.MAIL:

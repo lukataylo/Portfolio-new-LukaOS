@@ -229,14 +229,6 @@ export const SystemPreferences: React.FC<SystemPreferencesProps> = ({
           GitHub
         </a>
         <a
-          href="https://x.com/lukadadiani"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-red-600 hover:underline"
-        >
-          Twitter
-        </a>
-        <a
           href="https://linkedin.com/in/luka-dadiani-3293a915"
           target="_blank"
           rel="noopener noreferrer"

@@ -34,7 +34,6 @@ Every portfolio looks the same, and doing something different usually means wors
 | Notes | MDX essays compiled at build time from `src/content/notes/` |
 | Terminal | Virtual file system, command history, tab completion, and a rate-limited AI assistant |
 | Finder | Icon / list / gallery views over everything on the site |
-| Library | Book reviews with ratings |
 | Mail | Composer that hands off to the visitor's mail client |
 | System Preferences | Theme, sound, reduce motion |
 
@@ -48,7 +47,7 @@ Every portfolio looks the same, and doing something different usually means wors
 
 ```
 ├── App.tsx                  # Shell: window state, menu bar, desktop, routing glue
-├── constants.tsx            # All content: desktop items, dock items, case studies, books
+├── constants.tsx            # All content: desktop items, dock items, case studies
 ├── types.ts                 # Shared types (DesktopItem, WindowState, FileType, …)
 ├── components/
 │   ├── window/WindowFrame.tsx   # Window chrome: drag, resize, snap, animations

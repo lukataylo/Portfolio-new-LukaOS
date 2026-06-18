@@ -33,8 +33,6 @@ export enum FileType {
   BLOG = 'BLOG',
   /** Site navigation and file listing */
   SITEMAP = 'SITEMAP',
-  /** Book library with reviews */
-  BOOKS = 'BOOKS',
   /** AI-powered terminal */
   TERMINAL = 'TERMINAL',
   /** Email composition window */
@@ -48,28 +46,6 @@ export enum FileType {
 // ============================================================================
 // CONTENT TYPES
 // ============================================================================
-
-/**
- * Book review data for the Library app.
- */
-export interface Book {
-  /** Unique identifier */
-  id: string;
-  /** Book title */
-  title: string;
-  /** Author name */
-  author: string;
-  /** Category (Business, History, Economics, etc.) */
-  category: string;
-  /** Rating out of 10 */
-  rating: number;
-  /** Cover image URL */
-  cover: string;
-  /** Amazon purchase link */
-  amazonUrl: string;
-  /** Personal review text */
-  review: string;
-}
 
 /**
  * Individual slide in a presentation.
@@ -111,8 +87,6 @@ export interface DesktopItem {
   appId?: string;
   /** Content revealed after password unlock */
   lockedContent?: ContentSlide[];
-  /** Books for BOOKS type */
-  books?: Book[];
   /** SEO meta description */
   seoDescription?: string;
   /** URL-friendly slug for routing */

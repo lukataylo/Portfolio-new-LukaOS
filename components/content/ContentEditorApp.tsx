@@ -11,19 +11,13 @@ import {
   Lock,
   LogOut,
   Image,
-  Layers,
-  Library,
-  Star
+  Layers
 } from 'lucide-react';
-import { DesktopItem, ContentSlide, FileType, Book } from '../../types';
+import { DesktopItem, ContentSlide, FileType } from '../../types';
 import { useAdmin } from '../../contexts/AdminContext';
 
 interface ContentEditorAppProps {
-  books: Book[];
   desktopItems: DesktopItem[];
-  onUpdateBook: (id: string, updates: Partial<Book>) => void;
-  onAddBook: (book: Omit<Book, 'id'>) => Book;
-  onDeleteBook: (id: string) => void;
   onUpdateDesktopItem: (id: string, updates: Partial<DesktopItem>) => void;
   onUpdateSlide: (itemId: string, slideIndex: number, updates: Partial<ContentSlide>, isLocked?: boolean) => void;
   onAddSlide: (itemId: string, slide: ContentSlide, isLocked?: boolean) => void;
@@ -32,7 +26,7 @@ interface ContentEditorAppProps {
   onReset: () => void;
 }
 
-type EditorSection = 'books' | 'pages' | 'settings';
+type EditorSection = 'pages' | 'settings';
 
 // Login screen component
 const AdminLogin: React.FC = () => {
@@ -103,11 +97,7 @@ const AdminLogin: React.FC = () => {
 };
 
 export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
-  books,
   desktopItems,
-  onUpdateBook,
-  onAddBook,
-  onDeleteBook,
   onUpdateDesktopItem,
   onUpdateSlide,
   onAddSlide,
@@ -116,7 +106,7 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
   onReset
 }) => {
   const { isAuthenticated, logout } = useAdmin();
-  const [activeSection, setActiveSection] = useState<EditorSection>('books');
+  const [activeSection, setActiveSection] = useState<EditorSection>('pages');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -149,101 +139,7 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
     item.type === FileType.PRESENTATION || item.type === FileType.PROTECTED
   );
 
-  const selectedBook = books.find(b => b.id === selectedItemId);
   const selectedDesktopItem = editableItems.find(i => i.id === selectedItemId);
-
-  const renderBooksEditor = () => {
-    if (!selectedBook) {
-      return (
-        <div className="flex-1 flex items-center justify-center text-zinc-400 font-mono text-sm">
-          Select a book to edit or add a new one
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Title</label>
-            <input
-              type="text"
-              value={selectedBook.title}
-              onChange={(e) => onUpdateBook(selectedBook.id, { title: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Author</label>
-              <input
-                type="text"
-                value={selectedBook.author}
-                onChange={(e) => onUpdateBook(selectedBook.id, { author: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Category</label>
-              <input
-                type="text"
-                value={selectedBook.category}
-                onChange={(e) => onUpdateBook(selectedBook.id, { category: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">
-              <Star size={10} className="inline mr-1" /> Rating (1-10)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={selectedBook.rating}
-              onChange={(e) => onUpdateBook(selectedBook.id, { rating: parseInt(e.target.value) || 0 })}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">
-              <Image size={10} className="inline mr-1" /> Cover Image URL
-            </label>
-            <input
-              type="text"
-              value={selectedBook.cover}
-              onChange={(e) => onUpdateBook(selectedBook.id, { cover: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Amazon URL</label>
-            <input
-              type="text"
-              value={selectedBook.amazonUrl}
-              onChange={(e) => onUpdateBook(selectedBook.id, { amazonUrl: e.target.value })}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2">Review</label>
-            <textarea
-              value={selectedBook.review}
-              onChange={(e) => onUpdateBook(selectedBook.id, { review: e.target.value })}
-              rows={8}
-              className="w-full px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg font-mono text-sm focus:outline-none focus:border-black dark:focus:border-white resize-none"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const renderPagesEditor = () => {
     if (!selectedDesktopItem) {
@@ -386,7 +282,6 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
       <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <div className="flex items-center gap-1">
           {[
-            { id: 'books' as EditorSection, icon: Library, label: 'Books' },
             { id: 'pages' as EditorSection, icon: FileText, label: 'Pages' },
             { id: 'settings' as EditorSection, icon: RotateCcw, label: 'Settings' },
           ].map(({ id, icon: Icon, label }) => (
@@ -419,58 +314,11 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
           <div className="w-64 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-y-auto">
             <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
               <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-                {activeSection === 'books' ? 'Books' : 'Pages'}
+                Pages
               </span>
-              {activeSection === 'books' && (
-                <button
-                  onClick={() => {
-                    const newBook = onAddBook({
-                      title: 'New Book', author: 'Author Name', category: 'Category',
-                      rating: 7, cover: '', amazonUrl: '', review: 'Write your review...'
-                    });
-                    setSelectedItemId(newBook.id);
-                  }}
-                  className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
-                >
-                  <Plus size={14} />
-                </button>
-              )}
             </div>
 
-            {activeSection === 'books' && books.map(book => (
-              // div+role, not <button>: the row contains a nested delete button
-              // and button-in-button is invalid HTML that browsers may reparent.
-              <div
-                key={book.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedItemId(book.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedItemId(book.id);
-                  }
-                }}
-                className={`w-full p-4 text-left border-b border-zinc-100 dark:border-zinc-900 group cursor-pointer
-                  ${selectedItemId === book.id ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50'} transition-colors`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-black dark:text-white truncate">{book.title}</div>
-                    <div className="text-[10px] text-zinc-400 font-mono mt-1">{book.author}</div>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDeleteBook(book.id); if (selectedItemId === book.id) setSelectedItemId(null); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
-                    aria-label={`Delete ${book.title}`}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {activeSection === 'pages' && editableItems.map(item => (
+            {editableItems.map(item => (
               <button
                 key={item.id}
                 onClick={() => { setSelectedItemId(item.id); setSelectedSlideIndex(0); }}
@@ -490,7 +338,6 @@ export const ContentEditorApp: React.FC<ContentEditorAppProps> = ({
           </div>
         )}
 
-        {activeSection === 'books' && renderBooksEditor()}
         {activeSection === 'pages' && renderPagesEditor()}
         {activeSection === 'settings' && renderSettings()}
       </div>

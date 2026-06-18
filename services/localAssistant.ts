@@ -301,14 +301,6 @@ const RULES: Rule[] = [
       'The honest version: I\'m a terminal. But Luka\'s note "Advice is autobiography" is genuinely good on this. Run your own experiments.',
     ],
   },
-  {
-    id: 'books',
-    test: /\b(books?|reading|read|library|recommend|favou?rite book)\b/i,
-    responses: [
-      'The Library app has the full shelf with reviews — Zero to One, Boom, Stubborn Attachments, a Max Hastings doorstop on Vietnam. Open it.',
-      'Reading list with opinions lives in the Library. `cat ~/library/zero-to-one.txt` for a taste, or double-click the app.',
-    ],
-  },
 
   // ---- Playful / deflections --------------------------------------------
   {

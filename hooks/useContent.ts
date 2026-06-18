@@ -1,27 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DesktopItem, ContentSlide, Book } from '../types';
+import { DesktopItem, ContentSlide } from '../types';
 import { DESKTOP_ITEMS } from '../constants';
 
 const STORAGE_KEY = 'lukaos_content';
 
 interface StoredContent {
-  books: Book[];
   desktopItems: Partial<DesktopItem>[];
   lastModified: string;
 }
 
-const getInitialBooks = (): Book[] => {
-  const booksItem = DESKTOP_ITEMS.find((item) => item.id === 'books');
-  return booksItem?.books || [];
-};
-
 /**
- * Local CMS state for the (Konami-code) admin editor. Persists books and
- * presentation slides to localStorage. Notes/blog posts live in MDX files
- * under `src/content/notes/` and are not editable through this hook.
+ * Local CMS state for the (Konami-code) admin editor. Persists presentation
+ * slides to localStorage. Notes/blog posts live in MDX files under
+ * `src/content/notes/` and are not editable through this hook.
  */
 export const useContent = () => {
-  const [books, setBooks] = useState<Book[]>(getInitialBooks());
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>(DESKTOP_ITEMS);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -30,10 +23,6 @@ export const useContent = () => {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed: StoredContent = JSON.parse(stored);
-
-        if (parsed.books && parsed.books.length > 0) {
-          setBooks(parsed.books);
-        }
 
         if (parsed.desktopItems && parsed.desktopItems.length > 0) {
           const mergedItems = DESKTOP_ITEMS.map((originalItem) => {
@@ -71,7 +60,6 @@ export const useContent = () => {
       }));
 
       const content: StoredContent = {
-        books,
         desktopItems: serializedItems,
         lastModified: new Date().toISOString(),
       };
@@ -81,22 +69,7 @@ export const useContent = () => {
       console.error('Failed to save content:', e);
       return false;
     }
-  }, [books, desktopItems]);
-
-  // Book operations
-  const addBook = useCallback((book: Omit<Book, 'id'>) => {
-    const newBook: Book = { ...book, id: `book-${Date.now()}` };
-    setBooks((prev) => [newBook, ...prev]);
-    return newBook;
-  }, []);
-
-  const updateBook = useCallback((id: string, updates: Partial<Book>) => {
-    setBooks((prev) => prev.map((book) => (book.id === id ? { ...book, ...updates } : book)));
-  }, []);
-
-  const deleteBook = useCallback((id: string) => {
-    setBooks((prev) => prev.filter((book) => book.id !== id));
-  }, []);
+  }, [desktopItems]);
 
   // Desktop item operations (presentations / case studies)
   const updateDesktopItem = useCallback((id: string, updates: Partial<DesktopItem>) => {
@@ -144,26 +117,13 @@ export const useContent = () => {
 
   const resetToDefaults = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setBooks(getInitialBooks());
     setDesktopItems(DESKTOP_ITEMS);
   }, []);
 
-  // Surface books on the Library item so dock previews / call sites work.
-  const getDesktopItemsWithContent = useCallback((): DesktopItem[] => {
-    return desktopItems.map((item) => {
-      if (item.id === 'books') return { ...item, books };
-      return item;
-    });
-  }, [desktopItems, books]);
-
   return {
-    books,
-    desktopItems: getDesktopItemsWithContent(),
+    desktopItems,
     isLoaded,
     saveContent,
-    addBook,
-    updateBook,
-    deleteBook,
     updateDesktopItem,
     updateSlide,
     addSlide,
