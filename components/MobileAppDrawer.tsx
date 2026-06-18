@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DesktopItem } from '../types';
-import { X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 
 interface MobileAppDrawerProps {
   items: DesktopItem[];
@@ -9,10 +9,13 @@ interface MobileAppDrawerProps {
   onClose: () => void;
 }
 
+// Swipe further than this (px) on the handle to dismiss.
+const SWIPE_CLOSE_THRESHOLD = 60;
+
 /**
- * Bottom-sheet app drawer for mobile. Fully hidden when closed — it is
- * opened via the tab bar's Apps tab and dismissed by backdrop tap, the
- * close button, or swiping the handle down.
+ * Bottom-sheet app drawer for mobile. Fully hidden when closed. Closing is
+ * intentionally easy: tap the backdrop, tap the grabber/close button, press
+ * Escape, or swipe the handle down.
  */
 export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
   items,
@@ -24,6 +27,16 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const startY = useRef(0);
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  // Escape closes the drawer.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   // Swipe-down on the handle to close
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -39,7 +52,7 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
 
   const handleTouchEnd = () => {
     setIsDragging(false);
-    if (dragY > 100) {
+    if (dragY > SWIPE_CLOSE_THRESHOLD) {
       onClose();
     }
     setDragY(0);
@@ -69,11 +82,13 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — tap anywhere to close */}
       {isOpen && (
         <div
+          data-testid="drawer-backdrop"
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[130] transition-opacity duration-300"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
@@ -87,37 +102,40 @@ export const MobileAppDrawer: React.FC<MobileAppDrawerProps> = ({
         style={getDrawerStyle()}
         aria-hidden={!isOpen}
       >
-        <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-t-3xl border-t border-x border-black/5 dark:border-white/10 shadow-panel">
-          {/* Swipe region: handle + header only. Attaching the gesture here
-              keeps normal scrolling inside the app grid from dragging the
-              drawer closed. */}
+        <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl border-t border-x border-black/5 dark:border-white/10 shadow-panel">
+          {/* Swipe + tap region: the whole header closes the drawer. Attaching
+              the gesture here keeps normal scrolling inside the app grid from
+              dragging the drawer closed. */}
           <div
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Pull Handle */}
-            <div
-              className="flex items-center justify-center py-3 cursor-pointer"
+            {/* Pull handle — a large, obvious tap target that closes the sheet */}
+            <button
+              type="button"
               onClick={onClose}
+              aria-label="Close app drawer"
+              className="w-full flex flex-col items-center pt-2.5 pb-1 active:scale-95 transition-transform"
             >
-              <div className="w-10 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
-            </div>
+              <span className="w-12 h-1.5 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
+            </button>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pb-3">
+            <div className="flex items-center justify-between px-6 pb-3 pt-1">
               <h3 className="text-sm font-bold text-black dark:text-white">All Apps</h3>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 -mr-1 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
                 aria-label="Close app drawer"
               >
-                <X size={18} className="text-zinc-500" />
+                <ChevronDown size={16} aria-hidden="true" />
+                <X size={16} aria-hidden="true" />
               </button>
             </div>
           </div>
 
-          {/* App Grid — includes external links (GitHub, Twitter, …), which
+          {/* App Grid — includes external links (GitHub, LinkedIn, …), which
               open in a new tab via the normal open-item path. */}
           <div className="px-4 pb-8 max-h-[70dvh] overflow-y-auto pb-safe">
             <div className="grid grid-cols-4 gap-4">

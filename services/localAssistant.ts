@@ -241,7 +241,7 @@ const RULES: Rule[] = [
   },
   {
     id: 'contact',
-    test: /\b(contact|email|reach|get in touch|message|connect|linkedin|twitter|github|social|dm)\b/i,
+    test: /\b(contact|email|reach|get in touch|message|connect|linkedin|github|social|dm)\b/i,
     responses: [
       'Email: luka.dadiani@me.com. Or use the Email and LinkedIn tabs at the bottom — they\'re the prominent ones for a reason.',
       'LinkedIn and Email are one tap away on the dock (or the mobile tab bar). GitHub\'s there too if you want to read the source of this very terminal.',

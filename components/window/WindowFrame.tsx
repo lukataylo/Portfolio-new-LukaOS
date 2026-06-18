@@ -7,6 +7,8 @@ import { MENU_BAR_H, DOCK_H, SNAP_THRESHOLD, WINDOW_MIN_W, WINDOW_MIN_H } from '
 interface WindowFrameProps {
   windowState: WindowState;
   onClose: (id: string) => void;
+  /** Fired the instant the close animation begins, before removal. */
+  onCloseStart?: (id: string) => void;
   onMinimize: (id: string) => void;
   onMaximize: (id: string) => void;
   onFocus: (id: string) => void;
@@ -41,6 +43,7 @@ const RESIZE_HANDLES: ResizeHandleSpec[] = [
 export const WindowFrame: React.FC<WindowFrameProps> = ({
   windowState,
   onClose,
+  onCloseStart,
   onMinimize,
   onMaximize,
   onFocus,
@@ -118,9 +121,20 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       if (windowState.isMaximized) onMaximize(windowState.id);
     }
     setAnimState('closing');
+    onCloseStart?.(windowState.id);
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => onClose(windowState.id), 260);
   };
+
+  // Revive: if a re-open clears the closing flag mid-animation, cancel the
+  // pending removal and snap the window back open instead of letting it die.
+  useEffect(() => {
+    if (windowState.isClosing === false && animState === 'closing') {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      setAnimState('open');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [windowState.isClosing]);
 
   // Restore a maximized / snapped window to its previous size and place it
   // under the cursor so the user can keep dragging from where they grabbed it.

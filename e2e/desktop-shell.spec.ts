@@ -72,4 +72,27 @@ test.describe('desktop shell', () => {
     await loadDesktop(page, '#/notes');
     await expect(windowByTitle(page, 'Notes')).toBeVisible();
   });
+
+  test('LinkedIn + GitHub links sit above the fold in the menu bar', async ({ page }) => {
+    await loadDesktop(page);
+
+    const github = page.getByTestId('social-github');
+    await expect(github).toBeVisible();
+    await expect(github).toHaveAttribute('href', /github\.com\/lukataylo/);
+    await expect(github).toHaveAttribute('target', '_blank');
+    await expect(github).toHaveAttribute('rel', /noopener/);
+
+    const linkedin = page.getByTestId('social-linkedin');
+    await expect(linkedin).toBeVisible();
+    await expect(linkedin).toHaveAttribute('href', /linkedin\.com\/in\//);
+  });
+
+  test('no cookie popup and no Library app remain', async ({ page }) => {
+    await loadDesktop(page);
+
+    await expect(page.getByText('Cookie Policy')).toHaveCount(0);
+    await expect(page.getByText(/tracking cookies/i)).toHaveCount(0);
+    // Library was removed entirely — no desktop icon, dock item, or window.
+    await expect(page.getByRole('button', { name: 'Open Library' })).toHaveCount(0);
+  });
 });

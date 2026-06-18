@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
+import { Search, ChevronLeft } from 'lucide-react';
 import { NOTES } from '../../src/content/loader';
 import type { LoadedNote } from '../../src/content/types';
 
@@ -81,6 +81,15 @@ const NoteBody: React.FC<NoteBodyProps> = ({ note }) => {
 export const BlogApp: React.FC = () => {
   const [activeSlug, setActiveSlug] = useState<string | null>(NOTES[0]?.slug ?? null);
   const [searchQuery, setSearchQuery] = useState('');
+  // On mobile the two panes can't coexist (the article would be crushed), so
+  // we show one at a time: the list, or the reader. Ignored at md+ where both
+  // panes render side by side.
+  const [mobileView, setMobileView] = useState<'list' | 'reading'>('list');
+
+  const openNote = (slug: string) => {
+    setActiveSlug(slug);
+    setMobileView('reading');
+  };
 
   const activeNote = useMemo(
     () => NOTES.find((n) => n.slug === activeSlug) ?? null,
@@ -100,8 +109,12 @@ export const BlogApp: React.FC = () => {
 
   return (
     <div className="h-full flex bg-[#f5f5f7] dark:bg-[#1c1c1e]">
-      {/* Sidebar */}
-      <aside className="w-72 shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-[#f5f5f7] dark:bg-[#2c2c2e]">
+      {/* Sidebar — full width on mobile (list view), fixed rail on desktop */}
+      <aside
+        className={`w-full md:w-72 md:shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex-col bg-[#f5f5f7] dark:bg-[#2c2c2e] ${
+          mobileView === 'reading' ? 'hidden md:flex' : 'flex'
+        }`}
+      >
         <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -127,7 +140,7 @@ export const BlogApp: React.FC = () => {
             return (
               <button
                 key={note.slug}
-                onClick={() => setActiveSlug(note.slug)}
+                onClick={() => openNote(note.slug)}
                 className={`w-full text-left px-4 py-3 border-b border-zinc-100 dark:border-zinc-800/50 transition-colors ${
                   isActive
                     ? 'bg-red-600/10 border-l-2 border-l-red-600'
@@ -161,7 +174,20 @@ export const BlogApp: React.FC = () => {
       </aside>
 
       {/* Detail */}
-      <section className="flex-1 flex flex-col bg-white dark:bg-[#1c1c1e] min-w-0">
+      <section
+        className={`flex-1 flex-col bg-white dark:bg-[#1c1c1e] min-w-0 ${
+          mobileView === 'list' ? 'hidden md:flex' : 'flex'
+        }`}
+      >
+        {/* Back to list — mobile only */}
+        <button
+          onClick={() => setMobileView('list')}
+          className="md:hidden flex items-center gap-1 px-4 py-3 text-sm font-medium text-red-600 border-b border-zinc-200 dark:border-zinc-800 shrink-0"
+          aria-label="Back to notes list"
+        >
+          <ChevronLeft size={18} aria-hidden="true" />
+          Notes
+        </button>
         {activeNote ? (
           <div className="flex-1 overflow-y-auto" key={activeNote.slug}>
             <NoteHeader note={activeNote} />

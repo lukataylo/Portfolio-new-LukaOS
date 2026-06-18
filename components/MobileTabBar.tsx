@@ -2,9 +2,9 @@
  * Mobile Tab Bar Component
  *
  * iOS-style bottom tab bar shown on mobile instead of the macOS dock.
- * Five large, labeled targets with the two contact actions (LinkedIn, Email)
- * tinted in the accent colour. Everything else lives in the app drawer,
- * opened via the Apps tab.
+ * The currently selected (foreground) app is tinted red; every other tab is
+ * grey. LinkedIn + GitHub also live above the fold in the menu bar, so this
+ * bar focuses on navigation.
  *
  * @module components/MobileTabBar
  */
@@ -19,16 +19,18 @@ interface MobileTabBarProps {
   onAppsClick: () => void;
   /** Opens a dock item (window or external link). */
   onItemClick: (item: DesktopItem) => void;
-  /** Item ids with an open window — used for the active dot. */
+  /** Item ids with an open window — used for the "running" dot. */
   openItemIds: string[];
+  /** Item id of the foreground window — rendered in red as the selected tab. */
+  activeItemId: string | null;
 }
 
-// Tabs surfaced directly in the bar; accent marks the contact actions.
-const TAB_IDS: Array<{ id: string; label: string; accent: boolean }> = [
-  { id: 'about-me', label: 'About', accent: false },
-  { id: 'terminal', label: 'Terminal', accent: false },
-  { id: 'linkedin', label: 'LinkedIn', accent: true },
-  { id: 'email', label: 'Email', accent: true },
+// Tabs surfaced directly in the bar, in order.
+const TAB_IDS: Array<{ id: string; label: string }> = [
+  { id: 'about-me', label: 'About' },
+  { id: 'terminal', label: 'Terminal' },
+  { id: 'linkedin', label: 'LinkedIn' },
+  { id: 'email', label: 'Email' },
 ];
 
 // About Me lives on the desktop, not in the dock — look both up.
@@ -38,6 +40,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
   onAppsClick,
   onItemClick,
   openItemIds,
+  activeItemId,
 }) => {
   const tabs = TAB_IDS.map(tab => ({
     ...tab,
@@ -60,10 +63,13 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
           <span className="text-[10px] leading-none text-zinc-500 dark:text-zinc-400">Apps</span>
         </button>
 
-        {tabs.map(({ id, label, accent, item }) => {
+        {tabs.map(({ id, label, item }) => {
           const Icon = item.icon;
-          const isOpen = openItemIds.includes(item.appId ?? item.id);
-          const tint = accent
+          const itemKey = item.appId ?? item.id;
+          const isActive = activeItemId === itemKey;
+          const isOpen = openItemIds.includes(itemKey);
+          // Selected (foreground) tab is red; everything else is grey.
+          const tint = isActive
             ? 'text-red-600 dark:text-red-500'
             : 'text-zinc-500 dark:text-zinc-400';
 
@@ -71,15 +77,16 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
             <button
               key={id}
               onClick={() => onItemClick(item)}
+              aria-current={isActive ? 'page' : undefined}
               className="relative flex-1 flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform"
-              aria-label={`Open ${label}${isOpen ? ' (running)' : ''}`}
+              aria-label={`Open ${label}${isActive ? ' (selected)' : isOpen ? ' (running)' : ''}`}
             >
-              <Icon size={20} className={tint} strokeWidth={accent ? 2 : 1.75} />
-              <span className={`text-[10px] leading-none ${tint} ${accent ? 'font-semibold' : ''}`}>
+              <Icon size={20} className={tint} strokeWidth={isActive ? 2 : 1.75} />
+              <span className={`text-[10px] leading-none ${tint} ${isActive ? 'font-semibold' : ''}`}>
                 {label}
               </span>
-              {isOpen && (
-                <span className="absolute top-1 right-1/2 translate-x-4 w-1 h-1 rounded-full bg-red-600" />
+              {isOpen && !isActive && (
+                <span className="absolute top-1 right-1/2 translate-x-4 w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500" />
               )}
             </button>
           );

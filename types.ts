@@ -141,6 +141,9 @@ export interface WindowState {
   preSnapRect?: { x: number; y: number; width: number; height: number };
   /** Whether window is currently snapped (left, right, or full) */
   isSnapped?: boolean;
+  /** True while the close animation is playing. Lets a re-open "revive" the
+   *  window (cancelling the pending removal) instead of focusing a dying frame. */
+  isClosing?: boolean;
 }
 
 // ============================================================================

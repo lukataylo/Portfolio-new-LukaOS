@@ -19,6 +19,15 @@ import { DesktopItem, FileType } from './types';
 export const INITIAL_WINDOW_WIDTH = 880;
 export const INITIAL_WINDOW_HEIGHT = 620;
 
+/**
+ * Canonical external profile URLs. Single source of truth so the above-the-fold
+ * social bar, the dock, and the mobile tab bar can't drift apart.
+ */
+export const SOCIAL_LINKS = {
+  github: 'https://github.com/lukataylo',
+  linkedin: 'https://www.linkedin.com/in/luka-dadiani-3293a915',
+} as const;
+
 
 export const DESKTOP_ITEMS: DesktopItem[] = [
   {
@@ -316,7 +325,7 @@ export const DOCK_ITEMS: DesktopItem[] = [
     title: 'GitHub',
     icon: Github,
     type: FileType.EXTERNAL_LINK,
-    url: 'https://github.com/lukataylo',
+    url: SOCIAL_LINKS.github,
     seoDescription: 'GitHub profile of Luka Dadiani.'
   },
   {
@@ -324,7 +333,7 @@ export const DOCK_ITEMS: DesktopItem[] = [
     title: 'LinkedIn',
     icon: Linkedin,
     type: FileType.EXTERNAL_LINK,
-    url: 'https://www.linkedin.com/in/luka-dadiani-3293a915',
+    url: SOCIAL_LINKS.linkedin,
     seoDescription: 'LinkedIn Professional Profile.'
   },
   {

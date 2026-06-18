@@ -19,6 +19,7 @@ const FinderApp = lazy(() => import('./components/content/FinderApp').then(m => 
 const SystemPreferences = lazy(() => import('./components/content/SystemPreferences').then(m => ({ default: m.SystemPreferences })));
 const ContentEditorApp = lazy(() => import('./components/content/ContentEditorApp').then(m => ({ default: m.ContentEditorApp })));
 import { ContextMenu } from './components/ContextMenu';
+import { SocialLinks } from './components/SocialLinks';
 import { Spotlight } from './components/Spotlight';
 import { MobileAppDrawer } from './components/MobileAppDrawer';
 import { MobileTabBar } from './components/MobileTabBar';
@@ -519,9 +520,11 @@ const App: React.FC = () => {
 
     const existingWindow = windows.find(w => w.itemId === targetId);
     if (existingWindow) {
-      if (existingWindow.isMinimized) {
-        // Restore window
-        setWindows(prev => prev.map(w => w.id === existingWindow.id ? { ...w, isMinimized: false } : w));
+      // Revive a window caught mid-close, or restore one that's minimized.
+      if (existingWindow.isClosing || existingWindow.isMinimized) {
+        setWindows(prev => prev.map(w =>
+          w.id === existingWindow.id ? { ...w, isClosing: false, isMinimized: false } : w
+        ));
       }
       bringToFront(existingWindow.id);
       return;
@@ -627,6 +630,12 @@ const App: React.FC = () => {
     setActiveWindowId(prev => (prev === id ? topmostWindowId(id) : prev));
   };
 
+  // Marks a window as closing the instant its animation begins, so a re-open
+  // during the ~260ms close can revive it rather than focus a dying frame.
+  const startClosingWindow = (id: string) => {
+    setWindows(prev => prev.map(w => (w.id === id ? { ...w, isClosing: true } : w)));
+  };
+
   const minimizeWindow = (id: string) => {
     setWindows(prev => prev.map(w => w.id === id ? { ...w, isMinimized: true } : w));
     setActiveWindowId(topmostWindowId(id));
@@ -722,6 +731,11 @@ const App: React.FC = () => {
   const getOpenItemIds = (): string[] => {
     return windows.map(w => w.itemId);
   };
+
+  // The foreground (active, non-minimized) window's item id. Drives the
+  // "selected nav item is red, everything else grey" treatment in the tab bar.
+  const activeItemId =
+    windows.find(w => w.id === activeWindowId && !w.isMinimized)?.itemId ?? null;
 
   /**
    * Renders an app's content for a window (interactive) or a dock preview
@@ -997,9 +1011,12 @@ const App: React.FC = () => {
             </nav>
           </div>
           <div className="flex items-center gap-2">
+            {/* Always-visible LinkedIn + GitHub links (above the fold) */}
+            <SocialLinks />
+            <span className="hidden sm:block w-px h-4 bg-black/10 dark:bg-white/10" aria-hidden="true" />
             {/* Fun Message Toast */}
             {funMessage && (
-              <span className="text-[10px] font-mono text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-right-4 duration-300 max-w-[200px] truncate mr-2">
+              <span className="hidden sm:inline text-[10px] font-mono text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-right-4 duration-300 max-w-[200px] truncate mr-2">
                 {funMessage}
               </span>
             )}
@@ -1156,6 +1173,7 @@ const App: React.FC = () => {
             key={win.id}
             windowState={win}
             onClose={closeWindow}
+            onCloseStart={startClosingWindow}
             onMinimize={minimizeWindow}
             onMaximize={maximizeWindow}
             onFocus={bringToFront}
@@ -1222,6 +1240,7 @@ const App: React.FC = () => {
           onAppsClick={() => setIsMobileDrawerOpen(true)}
           onItemClick={handleOpenItem}
           openItemIds={getOpenItemIds()}
+          activeItemId={activeItemId}
         />
 
         {/* Mobile App Drawer (opened via the Apps tab) */}
